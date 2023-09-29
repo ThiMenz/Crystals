@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="de">
+
+ <!-- HEADER -->
+ 
+	<head>
+	
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Möhrchens Website</title>
+		
+	</head>
+  
+  
+ <!-- BODY -->
+ 
+	<body>
+		<h1>WoLiEngine v2</h1>
+		<label for="startingpoint">Digit Starting Point</label>
+		<input oninput="PreviewNextDigits()" id="startingpoint">
+		<h3 id="nextplaces"><i>3.1415926535 [Enter Offset...]</i></h3>
+		
+		<div id="manageenginebtn"></div>
+		
+		<h5 id="loadingtime"><h5>
+		<h5 id="result"><h5>
+		
+		<!--<h3>Use Website as Guest</h3>
+		<button type="submit">Continue as Guest</button>
+		<br></br>
+		<h3>or use your Password to Log In</h3>
+		<label for="password">Password</label>
+		<input id="inp_password", type="password"> 
+		<button onclick="SubmitPassword()", type="submit">Log In</button>-->
+		
+		
+		<!--<br>
+		<label for="customwordlength">Length Of Custom Word</label>
+		<input id="customwordlength">
+		<button type="submit">Turn Engine On</button>-->
+	</body>
+	
+	<script src="Data.js">
+	</script>
+	<script>
+	
+	
+		// Log In Data
+		const adminLogIns = [[5935135109685, "Thilo"]];
+		
+		// URLs
+		const mainURL = "MyWebside.html"; //index.html
+		const errorURL = "Error.html"; //Error.html
+		const woliengineURL = "woliengine.html"; //Error.html
+		
+		// Engine
+		var WOLI_LEXICON = {};
+		
+		//PageLoad();
+		//function PageLoad() {
+		//
+		//}
+		
+		function PreviewNextDigits() {
+			if(isNaN(parseInt(document.getElementById("startingpoint").value))) return;
+		
+			document.getElementById("manageenginebtn").innerHTML = `<button onclick="StartEngine()", type="submit"">Start Engine</button>`;
+			var offset = parseInt(document.getElementById("startingpoint").value);
+			var dotdotdot = "";
+			if (offset > 0) dotdotdot = "[...]";
+			else if (offset === 0) dotdotdot = "3.";
+			document.getElementById("nextplaces").innerHTML = "<i>" + dotdotdot + pi.substr(2 + offset, 40) + "</i>";
+		}
+		
+		function StartEngine() {
+			
+			//document.getElementById("startenginebtn").style.visibility = 'hidden';
+			document.getElementById("manageenginebtn").innerHTML = "<br>";
+			const perfStart = performance.now();
+			const allwords = words.split(";");
+			const itLen = allwords.length - 1;
+			for (var i = 0; i < itLen; i++) {
+				const tempSpl = allwords[i].split(":");
+				
+				if (tempSpl[1] == " ") continue;
+				
+				var tstr;
+				const convertedWord = ConvertStringToNumberString(tempSpl[1]);
+				
+				if (typeof WOLI_LEXICON[convertedWord] === 'undefined') {
+					tstr = "";
+				}
+				else tstr = WOLI_LEXICON[convertedWord] + ",";
+				
+				tstr += tempSpl[0];
+				WOLI_LEXICON[convertedWord] = tstr;
+			}
+			const perfEnd = performance.now();
+			document.getElementById("manageenginebtn").innerHTML = '<h5>Engine Successfully Started in ' + (perfEnd - perfStart) + 'ms</h5>'
+			+ '<label for="searchtime">Search Time (in ms) </label><input id="searchtime"></input>'
+			+ '<br><label for="maxdigits">Maximum Digits </label><input id="maxdigits"></input>'
+			+ '<br><br><button onclick="StartSearch()", type="submit"">Start Search</button>';
+		}
+						
+		var digitIndexInfos = [];
+		var digitIndexRecords = [];
+		var digitIndexSynonymRecords = [];
+		var pvDigitIndexes = [];
+		
+		var goalDigit = 0;
+		var overAllRecord = 0;
+		var totalSynonymScore = 0;
+		var overAllRecordLine = [];
+		
+		function StartSearch() {
+			goalDigit = parseInt(document.getElementById("maxdigits").value);
+			var FUTURE_DIGIT_COUNT = goalDigit + 20;
+			var MAX_SEARCH_TIME = parseInt(document.getElementById("searchtime").value);
+			var STARTING_DIGIT_OFFSET = parseInt(document.getElementById("startingpoint").value);
+			
+			const curNumberSeq = pi.substr(STARTING_DIGIT_OFFSET + 1, FUTURE_DIGIT_COUNT);
+			
+			CreateHeuristics(FUTURE_DIGIT_COUNT);
+			ResetHeuristics(FUTURE_DIGIT_COUNT);
+			for (var i = 0; i < FUTURE_DIGIT_COUNT; i++) {
+				digitIndexInfos[i] = [];
+				digitIndexSynonymRecords[i] = 1;
+				digitIndexRecords[i] = 1000000;
+				pvDigitIndexes[i] = 0;
+				var s = curNumberSeq.substr(1+i, curNumberSeq.length-1-i);
+				
+				for (var w = 1; w < 21; w++) {
+				
+					if (w > s.length) continue;
+					
+					var s2 = s.substr(0, w);
+					if (typeof WOLI_LEXICON[s2] === 'undefined') continue;
+					
+					digitIndexInfos[i].push({ synonyms: WOLI_LEXICON[s2].split(","), digitlen: w });
+				}
+			}
+					
+			const perfStart = performance.now();
+			var it = 5;
+			while ((performance.now() - perfStart) < MAX_SEARCH_TIME) {
+			
+				for (var p = 0; p < FUTURE_DIGIT_COUNT; p++)
+				{
+					digitIndexRecords[p] = 10000;
+					digitIndexSynonymRecords[p] = 1;
+				}
+				
+				RecursiveSearch(0, it, [], [], 0, 0);
+				it++;
+				if (overAllRecord >= goalDigit) break;
+			}
+			
+			var pr = "";
+			for (var v = 0; v < overAllRecordLine.length; v++) {
+				pr += overAllRecordLine[v] + ", ";
+				if ((i-4) % 50 == 0) pr += "\n";
+			}
+			pr += "[...]";
+			
+			var roundedAvrg = (overAllRecord / overAllRecordLine.length);
+			var roundedSynS = (totalSynonymScore / overAllRecordLine.length);
+			
+			var highest = 1;
+			var highestCount = 0;
+			for (var c = 0; c < overAllRecordLine.length; c++)
+			{
+				var curInt = overAllRecordLine[c];
+
+				if (curInt > highest)
+				{
+					highestCount = 1;
+					highest = curInt;
+				}
+				else if(curInt == highest) highestCount++;
+			}
+			
+			window.alert("FINISHED :)");
+			
+            //var test = digitIndexInfos[0][3].synonyms;
+			//for (var i = 0; i < test.length; i++) {
+			//	window.alert(test[i]);
+			//}
+			
+			document.getElementById("result").innerHTML = "<b>[Depth = " + overAllRecordLine.length + "] [Digits = " + overAllRecord + "] [Avrg = " + roundedAvrg.toFixed(3) + "] [Syns = " + roundedSynS.toFixed(3) + "] [Max = " + highest + " (x" + highestCount + ")]<br>" + pr + "</b>";
+			//window.alert(overAllRecordLine);
+		}
+		
+		function CreateHeuristics(size) {
+			digitIndexInfos = new Array(size);
+			digitIndexRecords = new Array(size);
+			digitIndexSynonymRecords = new Array(size);
+			pvDigitIndexes = new Array(size);
+		}
+		
+		function ResetHeuristics(size) {
+			overAllRecord = 0;
+			overAllRecordLine = [];
+			totalSynonymScore = 0;
+			for (var i = 0; i < size; i++) {
+				digitIndexRecords[i] = 1000000;
+				digitIndexSynonymRecords[i] = 1;
+				pvDigitIndexes[i] = 0;
+			}
+		}
+		
+		function RecursiveSearch(curPos, depth, curLine, indexLine, plyCount, curSynonymCount) {
+		
+			if ((curLine.length < digitIndexRecords[curPos]) || (curLine.length == digitIndexRecords[curPos] && curSynonymCount > digitIndexSynonymRecords[curPos])) {
+				digitIndexRecords[curPos] = curLine.length;
+				digitIndexSynonymRecords[curPos] = curSynonymCount;
+			}
+			else return;
+			
+			if (depth == 0 || curPos > goalDigit) {		
+				if (overAllRecord <= curPos) {
+					totalSynonymScore = curSynonymCount;
+					overAllRecord = curPos;
+					overAllRecordLine = [];
+					var a = 0;
+					for (var i = 0; i < curLine.length; i++) {
+						overAllRecordLine.push(curLine[i]);
+						pvDigitIndexes[a] = indexLine[i];
+						a += curLine[i];
+					}
+				}
+				return;
+			}
+			
+			const nodeOptions = digitIndexInfos[curPos];
+			
+			var pvNode = pvDigitIndexes[curPos];
+			var tlpv = nodeOptions[pvNode].digitlen;
+			curLine.push(tlpv);
+			indexLine.push(pvNode);
+			RecursiveSearch(curPos + tlpv, depth - 1, curLine, indexLine, plyCount + 1, curSynonymCount + Clamp(nodeOptions[pvNode].synonyms.length, 0, 15));
+			curLine.pop();
+			indexLine.pop();
+			
+			const l = nodeOptions.length;
+			for (var i = l - 1; i > -1; i--) {
+				if (pvNode == i) continue;
+				var tl = nodeOptions[i].digitlen;
+				curLine.push(tl);
+				indexLine.push(i);
+				RecursiveSearch(curPos + tl, depth - 1, curLine, indexLine, plyCount + 1, curSynonymCount + Clamp(nodeOptions[i].synonyms.length, 0, 15));
+				curLine.pop();
+				indexLine.pop();
+			}
+		}
+		
+		const charDigits = "0123456789".split('');
+		const letterDigits = [0, 4, 8, 4, 0, 8, 6, 9, 0, 9, 8, 3, 7, 1, 0, 6, 3, 0, 2, 5, 0, 7, 5, 9, 9, 7];
+		function ConvertStringToNumberString(strs)
+		{
+			strs = strs.toLowerCase().replace(" ", "");
+			var r = "";
+			for (var i = 0; i < strs.length; i++)
+			{
+				r += charDigits[letterDigits[strs.charCodeAt(i) - 97]];
+			}
+			return r;
+		}
+		
+		function ConvertCharArrayToString(charArr) {
+			var r = "";
+			for (var i = 0; i < charArr.length; i++) {
+				r += charArr[i];
+			}
+			return r;
+		}
+		
+		function Clamp(val, min, max) {
+		    return Math.min(Math.max(val, min), max);
+		}
+	
+	</script>
+  
+</html>
