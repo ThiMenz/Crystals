@@ -15,67 +15,74 @@
  <!-- BODY -->
  
 	<body>
+		<button onclick="GoToMainPage()", type="submit">Main Page</button>
 		<h1>WoLiEngine v2</h1>
 		<label for="startingpoint">Digit Starting Point</label>
-		<input oninput="PreviewNextDigits()" id="startingpoint">
+		<input oninput="PreviewNextDigits()" id="startingpoint"></input>
 		<h3 id="nextplaces"><i>3.1415926535 [Enter Offset...]</i></h3>
 		
 		<div id="manageenginebtn"></div>
 		
-		<h5 id="loadingtime"><h5>
-		<h5 id="result"><h5>
+		<h5 id="loadingtime"></h5>
 		
-		<!--<h3>Use Website as Guest</h3>
-		<button type="submit">Continue as Guest</button>
-		<br></br>
-		<h3>or use your Password to Log In</h3>
-		<label for="password">Password</label>
-		<input id="inp_password", type="password"> 
-		<button onclick="SubmitPassword()", type="submit">Log In</button>-->
+		<h3 id="selectedWords"></h3>
+		<button id="btnDelete", onclick="DeleteLastWord()">Delete Last Word</button>
 		
+		<h5 id="preresult"></h5>
+		<h5 id="result"></h5>
 		
-		<!--<br>
-		<label for="customwordlength">Length Of Custom Word</label>
-		<input id="customwordlength">
-		<button type="submit">Turn Engine On</button>-->
 	</body>
 	
 	<script src="Data.js">
 	</script>
-	<script>
-	
-	
-		// Log In Data
-		const adminLogIns = [[5935135109685, "Thilo"]];
-		
-		// URLs
-		const mainURL = "MyWebside.html"; //index.html
-		const errorURL = "Error.html"; //Error.html
-		const woliengineURL = "woliengine.html"; //Error.html
-		
-		// Engine
+	<script id="worker" type="application/x-worker">
 		var WOLI_LEXICON = {};
+								
+		var digitIndexInfos = [];
+		var digitIndexRecords = [];
+		var digitIndexSynonymRecords = [];
+		var pvDigitIndexes = [];
 		
-		//PageLoad();
-		//function PageLoad() {
-		//
-		//}
+		var goalDigit = 0;
+		var overAllRecord = 0;
+		var totalSynonymScore = 0;
+		var overAllRecordLine = [];
 		
-		function PreviewNextDigits() {
-			if(isNaN(parseInt(document.getElementById("startingpoint").value))) return;
+		var pi;
+		var words;
+		var FUTURE_DIGIT_COUNT;
+		var MAX_SEARCH_TIME;
+		var STARTING_DIGIT_OFFSET;
+		var DEPTH_LIMIT = 100000;
+		var VIS_DIG_ADD = 0;
+		var VIS_SYN_ADD = 0;
+		var resultCheck = false;
 		
-			document.getElementById("manageenginebtn").innerHTML = `<button onclick="StartEngine()", type="submit"">Start Engine</button>`;
-			var offset = parseInt(document.getElementById("startingpoint").value);
-			var dotdotdot = "";
-			if (offset > 0) dotdotdot = "[...]";
-			else if (offset === 0) dotdotdot = "3.";
-			document.getElementById("nextplaces").innerHTML = "<i>" + dotdotdot + pi.substr(2 + offset, 40) + "</i>";
-		}
+		var RECURSIVE_ERROR = false;
+		var RECURSIVE_FINISHED = false;
+		
+		self.addEventListener("message", function(m) {
+		    var args = m.data.args;
+			if (args.length == 2) {
+				pi = args[0];
+				words = args[1];	
+				StartEngine();
+			}
+			else if (args.length == 3) {
+				STARTING_DIGIT_OFFSET = args[0];
+				goalDigit = args[1];
+				FUTURE_DIGIT_COUNT = goalDigit + 20;
+				MAX_SEARCH_TIME = args[2];
+			    SearchHeadFunction();
+			}
+			else if (args.length == 1) {
+				STARTING_DIGIT_OFFSET += args[0];
+				self.postMessage("RsltReset:" + STARTING_DIGIT_OFFSET);
+				SearchHeadFunction();
+			}
+		}, false);
 		
 		function StartEngine() {
-			
-			//document.getElementById("startenginebtn").style.visibility = 'hidden';
-			document.getElementById("manageenginebtn").innerHTML = "<br>";
 			const perfStart = performance.now();
 			const allwords = words.split(";");
 			const itLen = allwords.length - 1;
@@ -96,98 +103,143 @@
 				WOLI_LEXICON[convertedWord] = tstr;
 			}
 			const perfEnd = performance.now();
-			document.getElementById("manageenginebtn").innerHTML = '<h5>Engine Successfully Started in ' + (perfEnd - perfStart) + 'ms</h5>'
+			const ret = 'EnSt:<h5>Engine Successfully Started in ' + (perfEnd - perfStart) + 'ms</h5>'
 			+ '<label for="searchtime">Search Time (in ms) </label><input id="searchtime"></input>'
 			+ '<br><label for="maxdigits">Maximum Digits </label><input id="maxdigits"></input>'
 			+ '<br><br><button onclick="StartSearch()", type="submit"">Start Search</button>';
+		    self.postMessage(ret);
 		}
+		
+		function SearchHeadFunction() {
+			const fdc = FUTURE_DIGIT_COUNT;
+			const gd = goalDigit;
+			const mst = MAX_SEARCH_TIME;
+			const sdo = STARTING_DIGIT_OFFSET;
+			
+			MAX_SEARCH_TIME = 1000000;
+			DEPTH_LIMIT = 100;
+			FUTURE_DIGIT_COUNT = 520;
+			goalDigit = 500;
+			resultCheck = false;
+			
+			const curNumberSeq = pi.substr(STARTING_DIGIT_OFFSET + 2, FUTURE_DIGIT_COUNT - 1);
+			var offsetOptions = [];
+			for (var w = 1; w < 21; w++) {
+					
+				if (w > curNumberSeq.length) continue;
+				
+				var s2 = curNumberSeq.substr(0, w);
+				if (typeof WOLI_LEXICON[s2] === 'undefined') continue;
+				
+				offsetOptions.push({ len: w, synC: Clamp(WOLI_LEXICON[s2].split(",").length, 0, 15), synonyms: WOLI_LEXICON[s2] });
+			}
+			
+			for (var v = 0; v < offsetOptions.length; v++) {
+				STARTING_DIGIT_OFFSET = offsetOptions[v].len + sdo;
+				VIS_SYN_ADD = offsetOptions[v].synC;
+				VIS_DIG_ADD = offsetOptions[v].len;
+				var syns = offsetOptions[v].synonyms.split(",");
+				var tr = "";
+				for (var i = 0; i < syns.length; i++) {
+					tr += syns[i] + ", ";
+				}
+				tr = tr.substr(0, tr.length - 2);
+				self.postMessage("Rslt1:<br>➢ " + tr + "<br>");
+				StartSearch();
+			}
+			
+			resultCheck = true;
+			STARTING_DIGIT_OFFSET = sdo;
+			DEPTH_LIMIT = 100000;
+			MAX_SEARCH_TIME = mst;
+			FUTURE_DIGIT_COUNT = fdc;
+			VIS_SYN_ADD = 0;
+			VIS_DIG_ADD = 0;
+			goalDigit = gd;
+			
+			StartSearch();
+		}
+		
+	    function StartSearch() {
+		
+			try  {
+				const curNumberSeq = pi.substr(STARTING_DIGIT_OFFSET + 1, FUTURE_DIGIT_COUNT);
+				RECURSIVE_ERROR = false;
+				CreateHeuristics(FUTURE_DIGIT_COUNT);
+				ResetHeuristics(FUTURE_DIGIT_COUNT);
+				for (var i = 0; i < FUTURE_DIGIT_COUNT; i++) {
+					digitIndexInfos[i] = [];
+					digitIndexSynonymRecords[i] = 1;
+					digitIndexRecords[i] = 1000000;
+					pvDigitIndexes[i] = -1;
+					var s = curNumberSeq.substr(1+i, curNumberSeq.length-1-i);
+					
+					for (var w = 1; w < 21; w++) {
+					
+						if (w > s.length) continue;
 						
-		var digitIndexInfos = [];
-		var digitIndexRecords = [];
-		var digitIndexSynonymRecords = [];
-		var pvDigitIndexes = [];
-		
-		var goalDigit = 0;
-		var overAllRecord = 0;
-		var totalSynonymScore = 0;
-		var overAllRecordLine = [];
-		
-		function StartSearch() {
-			goalDigit = parseInt(document.getElementById("maxdigits").value);
-			var FUTURE_DIGIT_COUNT = goalDigit + 20;
-			var MAX_SEARCH_TIME = parseInt(document.getElementById("searchtime").value);
-			var STARTING_DIGIT_OFFSET = parseInt(document.getElementById("startingpoint").value);
-			
-			const curNumberSeq = pi.substr(STARTING_DIGIT_OFFSET + 1, FUTURE_DIGIT_COUNT);
-			
-			CreateHeuristics(FUTURE_DIGIT_COUNT);
-			ResetHeuristics(FUTURE_DIGIT_COUNT);
-			for (var i = 0; i < FUTURE_DIGIT_COUNT; i++) {
-				digitIndexInfos[i] = [];
-				digitIndexSynonymRecords[i] = 1;
-				digitIndexRecords[i] = 1000000;
-				pvDigitIndexes[i] = 0;
-				var s = curNumberSeq.substr(1+i, curNumberSeq.length-1-i);
-				
-				for (var w = 1; w < 21; w++) {
-				
-					if (w > s.length) continue;
-					
-					var s2 = s.substr(0, w);
-					if (typeof WOLI_LEXICON[s2] === 'undefined') continue;
-					
-					digitIndexInfos[i].push({ synonyms: WOLI_LEXICON[s2].split(","), digitlen: w });
+						var s2 = s.substr(0, w);
+						if (typeof WOLI_LEXICON[s2] === 'undefined') continue;
+						
+						digitIndexInfos[i].push({ synonyms: WOLI_LEXICON[s2].split(","), digitlen: w });
+					}
 				}
-			}
-					
-			const perfStart = performance.now();
-			var it = 5;
-			while ((performance.now() - perfStart) < MAX_SEARCH_TIME) {
-			
-				for (var p = 0; p < FUTURE_DIGIT_COUNT; p++)
-				{
-					digitIndexRecords[p] = 10000;
-					digitIndexSynonymRecords[p] = 1;
-				}
-				
-				RecursiveSearch(0, it, [], [], 0, 0);
-				it++;
-				if (overAllRecord >= goalDigit) break;
-			}
-			
-			var pr = "";
-			for (var v = 0; v < overAllRecordLine.length; v++) {
-				pr += overAllRecordLine[v] + ", ";
-				if ((i-4) % 50 == 0) pr += "\n";
-			}
-			pr += "[...]";
-			
-			var roundedAvrg = (overAllRecord / overAllRecordLine.length);
-			var roundedSynS = (totalSynonymScore / overAllRecordLine.length);
-			
-			var highest = 1;
-			var highestCount = 0;
-			for (var c = 0; c < overAllRecordLine.length; c++)
-			{
-				var curInt = overAllRecordLine[c];
 
-				if (curInt > highest)
-				{
-					highestCount = 1;
-					highest = curInt;
+				const perfStart = performance.now();
+				var it = 5;
+				while ((performance.now() - perfStart) < MAX_SEARCH_TIME) {
+				
+					for (var p = 0; p < FUTURE_DIGIT_COUNT; p++)
+					{
+						digitIndexRecords[p] = 100000;
+						digitIndexSynonymRecords[p] = 1;
+					}
+				    curLine = [];
+				    indexLine = [];	
+					RecursiveSearch(0, it, 0);
+					it++;
+					if (it % 100 == 0) self.postMessage("Rslt2:Digits = " + overAllRecord);
+					if (overAllRecord >= goalDigit || RECURSIVE_ERROR || it == DEPTH_LIMIT) break;
 				}
-				else if(curInt == highest) highestCount++;
+				if (VIS_DIG_ADD != 0) {
+					overAllRecord += VIS_DIG_ADD;
+					overAllRecordLine.unshift(VIS_DIG_ADD);
+					totalSynonymScore += VIS_SYN_ADD;
+				}
+				var pr = "";
+				for (var v = 0; v < overAllRecordLine.length; v++) {
+					pr += overAllRecordLine[v] + ", ";
+					if ((i-4) % 50 == 0) pr += "<br>";
+				}
+				pr += "[...]";
+				
+				var roundedAvrg = (overAllRecord / overAllRecordLine.length);
+				var roundedSynS = (totalSynonymScore / overAllRecordLine.length);
+				
+				var highest = 1;
+				var highestCount = 0;
+				for (var c = 0; c < overAllRecordLine.length; c++)
+				{
+					var curInt = overAllRecordLine[c];
+			
+					if (curInt > highest)
+					{
+						highestCount = 1;
+						highest = curInt;
+					}
+					else if(curInt == highest) highestCount++;
+				}
+				
+				var wordSelBtn = "";
+				if (!resultCheck) wordSelBtn = '<br><input id="selword' + VIS_DIG_ADD + '"></input><br><button onclick="SelectWord(' + VIS_DIG_ADD + ')">Select Word</button>';
+				
+				const ret = "Rslt" + ((resultCheck) ? "2" : "1") + ":<b>[Depth = " + overAllRecordLine.length + "] [Digits = " + overAllRecord + "] [Avrg = " + roundedAvrg.toFixed(3) + "] [Syns = " + roundedSynS.toFixed(3) + "] [Max = " + highest + " (x" + highestCount + ")]<br>" + pr + "</b><br>" + wordSelBtn + "<br><br>";
+				self.postMessage(ret);
+				
+			} catch(exc) {
+				self.postMessage("Error :/ -> " + exc);
+				self.postMessage(exc);
 			}
-			
-			window.alert("FINISHED :)");
-			
-            //var test = digitIndexInfos[0][3].synonyms;
-			//for (var i = 0; i < test.length; i++) {
-			//	window.alert(test[i]);
-			//}
-			
-			document.getElementById("result").innerHTML = "<b>[Depth = " + overAllRecordLine.length + "] [Digits = " + overAllRecord + "] [Avrg = " + roundedAvrg.toFixed(3) + "] [Syns = " + roundedSynS.toFixed(3) + "] [Max = " + highest + " (x" + highestCount + ")]<br>" + pr + "</b>";
-			//window.alert(overAllRecordLine);
 		}
 		
 		function CreateHeuristics(size) {
@@ -202,14 +254,17 @@
 			overAllRecordLine = [];
 			totalSynonymScore = 0;
 			for (var i = 0; i < size; i++) {
-				digitIndexRecords[i] = 1000000;
+				digitIndexRecords[i] = 100000;
 				digitIndexSynonymRecords[i] = 1;
-				pvDigitIndexes[i] = 0;
+				pvDigitIndexes[i] = -1;
 			}
 		}
 		
-		function RecursiveSearch(curPos, depth, curLine, indexLine, plyCount, curSynonymCount) {
+		var curLine = [];
+		var indexLine = [];
 		
+		function RecursiveSearch(curPos, depth, curSynonymCount) {
+			try {
 			if ((curLine.length < digitIndexRecords[curPos]) || (curLine.length == digitIndexRecords[curPos] && curSynonymCount > digitIndexSynonymRecords[curPos])) {
 				digitIndexRecords[curPos] = curLine.length;
 				digitIndexSynonymRecords[curPos] = curSynonymCount;
@@ -230,26 +285,35 @@
 				}
 				return;
 			}
-			
 			const nodeOptions = digitIndexInfos[curPos];
 			
 			var pvNode = pvDigitIndexes[curPos];
-			var tlpv = nodeOptions[pvNode].digitlen;
-			curLine.push(tlpv);
-			indexLine.push(pvNode);
-			RecursiveSearch(curPos + tlpv, depth - 1, curLine, indexLine, plyCount + 1, curSynonymCount + Clamp(nodeOptions[pvNode].synonyms.length, 0, 15));
-			curLine.pop();
-			indexLine.pop();
-			
+			if (pvNode != -1) {	
+				var tlpv = nodeOptions[pvNode].digitlen;
+				curLine.push(tlpv);
+				indexLine.push(pvNode);
+				var tsc = nodeOptions[pvNode].synonyms.length;
+				if (tsc > 15) tsc = 15;
+				RecursiveSearch(curPos + tlpv, depth - 1, curSynonymCount + tsc);
+				curLine.pop();
+				indexLine.pop();
+			}
 			const l = nodeOptions.length;
 			for (var i = l - 1; i > -1; i--) {
 				if (pvNode == i) continue;
 				var tl = nodeOptions[i].digitlen;
 				curLine.push(tl);
 				indexLine.push(i);
-				RecursiveSearch(curPos + tl, depth - 1, curLine, indexLine, plyCount + 1, curSynonymCount + Clamp(nodeOptions[i].synonyms.length, 0, 15));
+				var tsc = nodeOptions[i].synonyms.length;
+				if (tsc > 15) tsc = 15;
+				RecursiveSearch(curPos + tl, depth - 1, curSynonymCount + tsc);
 				curLine.pop();
 				indexLine.pop();
+			}
+			
+			} catch (exc) {
+				console.log(exc);
+				RECURSIVE_ERROR = true;
 			}
 		}
 		
@@ -266,18 +330,103 @@
 			return r;
 		}
 		
-		function ConvertCharArrayToString(charArr) {
-			var r = "";
-			for (var i = 0; i < charArr.length; i++) {
-				r += charArr[i];
-			}
-			return r;
-		}
-		
 		function Clamp(val, min, max) {
 		    return Math.min(Math.max(val, min), max);
+		}
+		 
+	</script>
+	<script>
+	
+		// Log In Data
+		const adminLogIns = [[5935135109685, "Thilo"]];
+		
+		// URLs
+		const mainURL = "MyWebside.html"; //index.html
+		const errorURL = "Error.html"; //Error.html
+		const woliengineURL = "woliengine.html"; //Error.html
+		
+		// Engine
+		var SELECTED_WORDS = [];
+		let worker;
+		
+		document.getElementById("btnDelete").style.visibility = "hidden";
+		
+		function GoToMainPage() {
+			window.location.replace(mainURL);
+		}
+		
+		function PreviewNextDigits() {
+			if(isNaN(parseInt(document.getElementById("startingpoint").value))) return;
+		
+			document.getElementById("manageenginebtn").innerHTML = `<button onclick="StartEngine()", type="submit"">Start Engine</button>`;
+			var offset = parseInt(document.getElementById("startingpoint").value);
+			var dotdotdot = "";
+			if (offset > 0) dotdotdot = "[...]";
+			else if (offset === 0) dotdotdot = "3.";
+			document.getElementById("nextplaces").innerHTML = "<i>" + dotdotdot + pi.substr(2 + offset, 40) + "</i>";
+		}
+		
+		function StartEngine() {
+			
+			try {
+			
+				document.getElementById("manageenginebtn").innerHTML = "<br>";
+			    let workerSource = document.querySelector("script#worker");
+			    let workerBlob = new Blob([workerSource.text], { type: "application/javascript" });
+			    let workerUrl = URL.createObjectURL(workerBlob);
+			    worker = new Worker(workerUrl);
+			    URL.revokeObjectURL(workerUrl);
+				worker.postMessage({ "args": [pi, words] });
+				
+			    worker.addEventListener("message", function(messageEvent) {
+					const m = messageEvent.data.split(':');
+					if (m[0] == "EnSt") document.getElementById("manageenginebtn").innerHTML = m[1];
+					else if (m[0] == "Rslt1") document.getElementById("preresult").innerHTML = document.getElementById("preresult").innerHTML + "<br>" + m[1];
+					else if (m[0] == "Rslt2") document.getElementById("result").innerHTML = m[1];
+					else if (m[0] == "RsltReset") {
+						document.getElementById("result").innerHTML = (document.getElementById("preresult").innerHTML = "");
+						document.getElementById("startingpoint").value = m[1];
+					}
+					else window.alert("Der thilonische Thread ist sauer: " + messageEvent.data);
+			    });
+			
+			} catch(exc) { window.alert(exc); }
+		}
+		
+		function SelectWord(len) {
+			document.getElementById("btnDelete").style.visibility = "visible";
+			const nxtWord = document.getElementById("selword" + len).value;
+			SELECTED_WORDS.push({word:nxtWord, len:len});
+			UpdateSelectedWords();
+			worker.postMessage({ "args": [len] });
+		}
+		
+		function DeleteLastWord() {
+			if (SELECTED_WORDS.length == 1) document.getElementById("btnDelete").style.visibility = "hidden";
+			const popped = SELECTED_WORDS.pop();
+			worker.postMessage({ "args": [-popped.len] });
+			UpdateSelectedWords();
+		}
+		
+		function UpdateSelectedWords() {
+			var tr = "➪ ";
+			for (var i = 0; i < SELECTED_WORDS.length; i++) {
+				tr += SELECTED_WORDS[i].word + ", ";
+			}
+			tr = tr.substr(0, tr.length - 2);
+			document.getElementById("selectedWords").innerHTML = tr;
+		}
+		
+		function StartSearch() {
+			document.getElementById("result").innerHTML = (document.getElementById("preresult").innerHTML = "");
+			var goalDigit = parseInt(document.getElementById("maxdigits").value);
+			var FUTURE_DIGIT_COUNT = goalDigit + 20;
+			var MAX_SEARCH_TIME = parseInt(document.getElementById("searchtime").value);
+			var STARTING_DIGIT_OFFSET = parseInt(document.getElementById("startingpoint").value);
+			worker.postMessage({ "args": [STARTING_DIGIT_OFFSET, goalDigit, MAX_SEARCH_TIME] });
 		}
 	
 	</script>
   
 </html>
+
