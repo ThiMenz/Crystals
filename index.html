@@ -18,7 +18,8 @@
 		<h1>Möhrchens Website</h1>
 		<h3>{ Programming }</h3>
 		<h3>{ Pi Memorizing }</h3>
-		<button onclick="LoadWoLiEngine()", type="submit">WoLiEngine v2</button>
+		<button onclick="LoadWoLiEngine()", type="submit">WoLiEngine v2</button> <br> <br>
+		<button onclick="GoToWoLiHistoryURL()", type="submit">WoLi History</button>
 		
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
@@ -45,9 +46,15 @@
 		const mainURL = "MyWebside.html"; //index.html
 		const errorURL = "Error.html"; //error.html
 		const woliengineURL = "woliengine.html"; 
+		const wolihistoryURL = "wolihistory.html"; //Error.html
 		
 		function LoadWoLiEngine() {
 			window.location.replace(woliengineURL);
+		}
+		
+				
+		function GoToWoLiHistoryURL() {
+			window.location.replace(wolihistoryURL);
 		}
 	
 		function SubmitPassword() {

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+
+ <!-- HEADER -->
+ 
+	<head>
+	
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Möhrchens Website</title>
+		
+	</head>
+  
+  
+ <!-- BODY -->
+ 
+	<body>
+	
+		<button onclick="GoToMainPage()", type="submit">Main Page</button>
+		<h1>WoLi History</h1>
+		<br>
+		<button onclick="RandomCheck()", type="submit">Random Word Check</button>
+		<div id="checkText"> </div>
+		<br><br><br><br><br>
+		<button onclick="UnShowWordList()", type="submit", id="visWorLis">Hide Word List</button>
+		<h3 id="wordList"></h3>
+		
+	</body>
+
+			
+	<script src="HistoryWords.js">
+	</script>
+
+	<script>
+	
+		const mainURL = "index.html"; //index.html
+		
+		var wordStringList = "";
+		var checkQuestion = "";
+		var solution = "";
+		var wordListVisible = true;
+		var solutionShowed = false;
+		var twords = [];
+		
+		Setup();
+		
+		function RandomCheck() {
+			
+			var tmax = twords.length - (twords.length % 5) - 1;
+			const rand = Math.floor(Math.random() * tmax);
+			
+			checkQuestion = "";
+			
+			for (var v = rand; v < rand + 5; v++) {
+				checkQuestion += twords[v];
+				if (v != rand + 4) checkQuestion += " >> ";
+				else checkQuestion += " [...] "
+			}
+			
+			solution = "";
+			for (var v = rand + 5; v < rand + 10; v++) {
+				solution += " >> " + twords[v];
+			}
+		
+			document.getElementById("checkText").innerHTML = '<h3>' + checkQuestion + '</h3><br><button onclick="ShowSolution()", type="submit">Show Solution</button>';
+		}
+		
+		function ShowSolution() {
+			document.getElementById("checkText").innerHTML = '<h3>' + checkQuestion + "</h3><br>" + solution;
+		}
+		
+		function UnShowWordList() {
+			wordListVisible = !wordListVisible;
+			document.getElementById("visWorLis").innerHTML = wordListVisible ? "Hide Word List" : "Show Word List";
+			document.getElementById("wordList").innerHTML = wordListVisible ? wordStringList : "";
+		}
+		
+		function Setup() {
+			const c = historyWords.split("§");
+			var tstr = "";
+			
+			for (var i = 2; i < c.length; i++) {
+				const t = c[i].split("³")[0];
+				twords.push(t);
+				if ((i - 1) % 6 == 0) tstr += t + "<br>";
+				else tstr += t + " >> ";
+				
+				if ((i - 1) % 60 == 0) tstr += "<br>";
+			}
+			
+			document.getElementById("wordList").innerHTML = wordStringList = tstr;
+		}
+		
+		function GoToMainPage() {
+			window.location.replace(mainURL);
+		}
+	
+	</script>
+  
+</html>
+
