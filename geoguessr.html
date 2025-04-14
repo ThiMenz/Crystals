@@ -1,212 +1,241 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>World Quiz App</title>
+  <meta charset="UTF-8">
+  <title>Geography Quiz</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h2, h3 { margin-top: 1em; }
-    ul { list-style: none; padding: 0; }
-    label { display: block; margin: 5px 0; }
-    #quizDisplay img { display: block; margin: 10px auto; max-width: 100%; max-height: 300px; object-fit: contain; }
-    #profileSection button { margin-left: 5px; padding: 3px 6px; font-size: 0.85em; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      display: flex;
+    }
+    .tree {
+      width: 30%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: white;
+      padding: 10px;
+      margin-right: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .quiz {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background: #007BFF;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .answer {
+      background: #e0ffe0;
+      padding: 10px;
+      border: 1px solid #90ee90;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin-left: 20px;
+    }
+    h3 {
+      margin-top: 0;
+    }
   </style>
 </head>
 <body>
-  <h2>Select Topics</h2>
-  <div id="selectionTree"></div>
-  <hr />
-  <div id="profileSection">
-    <h2>Profiles</h2>
-    <input type="text" id="profileName" placeholder="Enter profile name" />
-    <button onclick="saveProfile()">Save</button>
-    <ul id="profileList"></ul>
+  <h1>Geography Quiz</h1>
+  <div class="container">
+    <div class="tree" id="treeContainer"></div>
+    <div class="quiz">
+      <div id="quizDisplay"></div>
+      <button id="quizButton" onclick="quizButtonHandler()">Start Quiz</button>
+    </div>
   </div>
-  <hr />
-  <h2>Quiz</h2>
-  <button onclick="startQuiz()">Start Quiz</button>
-  <div id="quizDisplay"></div>
-
   <script>
-    const data = {/* your original data object here */};
-    let selections = {};
-    let currentQuizQueue = [], currentQuizQuestion = null;
-
-    function initSelections() {
-      for (const continent in data) {
-        selections[continent] = {};
-        for (const country in data[continent]) {
-          selections[continent][country] = {};
-          for (const header in data[continent][country].header) {
-            selections[continent][country][header] = data[continent][country].header[header].map(() => false);
+    const data = {
+      Europe: {
+        Germany: {
+          header: {
+            Culture: [
+              { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Brandenburger_Tor_abends.jpg/640px-Brandenburger_Tor_abends.jpg", html: "<p>The Brandenburg Gate is a neoclassical monument in Berlin.</p>" }
+            ]
+          }
+        }
+      },
+      Asia: {
+        Japan: {
+          header: {
+            Nature: [
+              { url: "https://upload.wikimedia.org/wikipedia/commons/6/6e/Mount_Fuji_from_Hakone.jpg", html: "<p>Mount Fuji is the highest volcano in Japan.</p>" }
+            ]
           }
         }
       }
+    };
+
+    let selections = {};
+    let treeState = {};
+    let recentQuestions = [];
+    let currentQuizQuestion = null;
+
+    function buildTree(container, obj, path = []) {
+      const ul = document.createElement("ul");
+      for (const key in obj) {
+        const li = document.createElement("li");
+        const currentPath = [...path, key];
+        const id = currentPath.join("-");
+
+        const expandBtn = document.createElement("button");
+        expandBtn.textContent = treeState[id] ? "[-]" : "[+]";
+        expandBtn.style.marginRight = "5px";
+        expandBtn.onclick = () => {
+          treeState[id] = !treeState[id];
+          renderTree();
+        };
+
+        li.appendChild(expandBtn);
+        li.appendChild(document.createTextNode(key));
+
+        if (typeof obj[key] === "object") {
+          if (!treeState[id]) {
+            ul.appendChild(li);
+            continue;
+          }
+          const child = buildTree(container, obj[key], currentPath);
+          if (child) li.appendChild(child);
+        }
+
+        if (Array.isArray(obj[key])) {
+          const checkboxes = document.createElement("div");
+          selections[path[0]] ??= {};
+          selections[path[0]][path[1]] ??= {};
+          selections[path[0]][path[1]][path[2]] ??= {};
+          obj[key].forEach((item, index) => {
+            selections[path[0]][path[1]][path[2]][index] ??= false;
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+            input.type = "checkbox";
+            input.checked = selections[path[0]][path[1]][path[2]][index];
+            input.onchange = () => {
+              selections[path[0]][path[1]][path[2]][index] = input.checked;
+              saveProfile();
+            };
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(` Question ${index + 1}`));
+            checkboxes.appendChild(label);
+          });
+          li.appendChild(checkboxes);
+        }
+
+        ul.appendChild(li);
+      }
+      return ul;
     }
 
     function renderTree() {
-      const container = document.getElementById("selectionTree");
+      const container = document.getElementById("treeContainer");
       container.innerHTML = "";
-      for (const continent in data) {
-        const continentDiv = document.createElement("div");
-        const continentCheckbox = document.createElement("input");
-        continentCheckbox.type = "checkbox";
-        continentCheckbox.onchange = (e) => {
-          const newVal = e.target.checked;
-          for (const country in data[continent]) {
-            for (const header in data[continent][country].header) {
-              selections[continent][country][header] = selections[continent][country][header].map(() => newVal);
-            }
-          }
-          renderTree();
-        };
-        continentDiv.appendChild(continentCheckbox);
-        continentDiv.appendChild(document.createTextNode(continent));
-        for (const country in data[continent]) {
-          const countryDiv = document.createElement("div");
-          countryDiv.style.marginLeft = "20px";
-          countryDiv.appendChild(document.createTextNode(country));
-          for (const header in data[continent][country].header) {
-            const headerDiv = document.createElement("div");
-            headerDiv.style.marginLeft = "20px";
-            headerDiv.appendChild(document.createTextNode(header));
-            data[continent][country].header[header].forEach((_, i) => {
-              const label = document.createElement("label");
-              const checkbox = document.createElement("input");
-              checkbox.type = "checkbox";
-              checkbox.checked = selections[continent][country][header][i];
-              checkbox.onchange = (e) => {
-                selections[continent][country][header][i] = e.target.checked;
-              };
-              label.appendChild(checkbox);
-              label.appendChild(document.createTextNode(` Step ${i + 1}`));
-              headerDiv.appendChild(label);
-            });
-            countryDiv.appendChild(headerDiv);
-          }
-          continentDiv.appendChild(countryDiv);
-        }
-        container.appendChild(continentDiv);
-      }
+      container.appendChild(buildTree(container, data));
     }
 
     function saveProfile() {
-      const name = document.getElementById("profileName").value;
-      if (!name) return alert("Enter profile name");
-      let profiles = loadProfiles();
-      profiles[name] = JSON.parse(JSON.stringify(selections));
-      setCookie("profileSelections", JSON.stringify(profiles), 30);
-      renderProfileList();
+      localStorage.setItem("quizProfile", JSON.stringify(selections));
     }
 
-    function loadProfiles() {
-      const raw = getCookie("profileSelections");
-      return raw ? JSON.parse(raw) : {};
+    function loadProfile() {
+      const saved = localStorage.getItem("quizProfile");
+      if (saved) selections = JSON.parse(saved);
     }
 
-    function loadProfile(name) {
-      const profiles = loadProfiles();
-      if (profiles[name]) {
-        selections = JSON.parse(JSON.stringify(profiles[name]));
-        renderTree();
-      }
-    }
-
-    function deleteProfile(name) {
-      let profiles = loadProfiles();
-      delete profiles[name];
-      setCookie("profileSelections", JSON.stringify(profiles), 30);
-      renderProfileList();
-    }
-
-    function updateProfile(name) {
-      let profiles = loadProfiles();
-      if (profiles[name]) {
-        profiles[name] = JSON.parse(JSON.stringify(selections));
-        setCookie("profileSelections", JSON.stringify(profiles), 30);
-        renderProfileList();
-        alert(`Profile "${name}" has been updated.`);
-      }
-    }
-
-    function renderProfileList() {
-      const ul = document.getElementById("profileList");
-      ul.innerHTML = "";
-      const profiles = loadProfiles();
-      for (const name in profiles) {
-        const li = document.createElement("li");
-        li.innerHTML = `${name} 
-          <button onclick="loadProfile('${name}')">Load</button> 
-          <button onclick="deleteProfile('${name}')">Delete</button>
-          <button onclick="updateProfile('${name}')">Update</button>`;
-        ul.appendChild(li);
-      }
-    }
-
-    function startQuiz() {
-      currentQuizQueue = [];
-      for (const continent in selections) {
-        for (const country in selections[continent]) {
-          for (const header in selections[continent][country]) {
-            selections[continent][country][header].forEach((val, i) => {
-              if (val) {
-                currentQuizQueue.push({
-                  continent,
-                  country,
-                  header,
-                  index: i,
-                  data: data[continent][country].header[header][i]
+    function getAllSelectedQuestions() {
+      let available = [];
+      for (const continent in data) {
+        for (const country in data[continent]) {
+          const headers = data[continent][country].header;
+          for (const header in headers) {
+            headers[header].forEach((step, index) => {
+              if (selections[continent]?.[country]?.[header]?.[index]) {
+                available.push({
+                  id: `${continent}-${country}-${header}-${index}`,
+                  continent, country, header, index, data: step
                 });
               }
             });
           }
         }
       }
-      quizButtonHandler();
+      return available;
+    }
+
+    function isImage(url) {
+      return url.match(/\.(jpeg|jpg|gif|png)$/i);
     }
 
     function quizButtonHandler() {
-      if (currentQuizQueue.length === 0) {
-        document.getElementById("quizDisplay").innerHTML = "<p>All done!</p>";
+      const quizDisplay = document.getElementById('quizDisplay');
+
+      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer';
+        answerDiv.style.marginTop = '10px';
+        answerDiv.innerHTML = currentQuizQuestion.data.html;
+        quizDisplay.appendChild(answerDiv);
+        currentQuizQuestion.answerShown = true;
+        document.getElementById('quizButton').textContent = "Next Question";
         return;
       }
-      const randomIndex = Math.floor(Math.random() * currentQuizQueue.length);
-      const randomEntry = currentQuizQueue.splice(randomIndex, 1)[0];
-      currentQuizQuestion = randomEntry;
-      const questionContent = randomEntry.data.url
-        ? `<img src="${randomEntry.data.url}" alt="Quiz Image" style="max-width:100%; max-height:300px; object-fit:contain;" />`
-        : "(No image available)";
-      document.getElementById("quizDisplay").innerHTML = `
+
+      const available = getAllSelectedQuestions();
+      if (available.length === 0) {
+        alert("No entries selected for the quiz. Please adjust your selections.");
+        return;
+      }
+
+      const filtered = available.filter(q => !recentQuestions.includes(q.id));
+      const candidates = filtered.length ? filtered : available;
+      const randomEntry = candidates[Math.floor(Math.random() * candidates.length)];
+
+      recentQuestions.push(randomEntry.id);
+      if (recentQuestions.length > 5) recentQuestions.shift();
+
+      currentQuizQuestion = { ...randomEntry, answerShown: false };
+
+      let questionContent = "";
+      if (isImage(randomEntry.data.url)) {
+        questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="max-width:100%; height:auto;" />`;
+      } else {
+        questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+      }
+
+      quizDisplay.innerHTML = `
+        <h3>${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})</h3>
         <div>${questionContent}</div>
-        <button onclick="showAnswer()">Show Answer</button>
       `;
+      document.getElementById('quizButton').textContent = "Show Answer";
     }
 
-    function showAnswer() {
-      document.getElementById("quizDisplay").innerHTML += `
-        <div class="answer">
-          <h3>${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})</h3>
-          ${currentQuizQuestion.data.html}
-          <br/><button onclick="quizButtonHandler()">Next</button>
-        </div>
-      `;
-    }
+    document.addEventListener('keydown', (e) => {
+      if (e.code === "Space" && !e.repeat) {
+        e.preventDefault();
+        quizButtonHandler();
+      }
+    });
 
-    function setCookie(name, value, days) {
-      const expires = new Date(Date.now() + days * 86400000).toUTCString();
-      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-    }
-
-    function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      return parts.length === 2 ? decodeURIComponent(parts.pop().split(';').shift()) : null;
-    }
-
-    initSelections();
+    loadProfile();
     renderTree();
-    renderProfileList();
   </script>
 </body>
 </html>
