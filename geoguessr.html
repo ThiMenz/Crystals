@@ -167,7 +167,7 @@
     // Render the selection tree using collapsible nodes.
     function renderTree() {
 	
-		if data == null {
+		if (data == null) {
 		console.log("?!")
 			data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
 		}
