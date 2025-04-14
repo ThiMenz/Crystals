@@ -303,86 +303,86 @@
   // --- Profile Functions ---
   // Save profile: Saves a deep copy of the current selections under the given profile name.
   function saveProfile() {
-    const name = document.getElementById('profileName').value.trim();
-    if (!name) {
-      alert("Please enter a profile name");
-      return;
-    }
-    let profiles = loadProfiles();
-    profiles[name] = JSON.parse(JSON.stringify(selections));
-    setCookie("profileSelections", JSON.stringify(profiles), 30);
+  const name = document.getElementById('profileName').value.trim();
+  if (!name) {
+    alert("Please enter a profile name");
+    return;
+  }
+  let profiles = loadProfiles();
+  profiles[name] = JSON.parse(JSON.stringify(selections));
+  localStorage.setItem("profileSelections", JSON.stringify(profiles));
+  renderProfileList();
+}
+
+// Update profile: Overwrites an existing profile with the current selections.
+function updateProfile(name) {
+  let profiles = loadProfiles();
+  if (!profiles[name]) {
+    alert("Profile does not exist. Please save it first.");
+    return;
+  }
+  profiles[name] = JSON.parse(JSON.stringify(selections));
+  localStorage.setItem("profileSelections", JSON.stringify(profiles));
+  renderProfileList();
+}
+
+// Load profiles from localStorage
+function loadProfiles() {
+  const profilesData = localStorage.getItem("profileSelections");
+  try {
+    return profilesData ? JSON.parse(profilesData) : {};
+  } catch(e) {
+    console.error("Error parsing localStorage profile data:", e);
+    return {};
+  }
+}
+
+// Loads a profile by name (replaces current selections)
+function loadProfile(name) {
+  const profiles = loadProfiles();
+  if (profiles[name]) {
+    selections = profiles[name];
+    renderTree();
+  }
+}
+
+// Delete a profile by name.
+function deleteProfile(name) {
+  let profiles = loadProfiles();
+  if (profiles[name]) {
+    delete profiles[name];
+    localStorage.setItem("profileSelections", JSON.stringify(profiles));
     renderProfileList();
   }
+}
 
-  // Update profile: Overwrites an existing profile with the current selections.
-  function updateProfile(name) {
-    let profiles = loadProfiles();
-    if (!profiles[name]) {
-      alert("Profile does not exist. Please save it first.");
-      return;
-    }
-    profiles[name] = JSON.parse(JSON.stringify(selections));
-    setCookie("profileSelections", JSON.stringify(profiles), 30);
-    renderProfileList();
+// Render the list of profile names along with Load, Update, and Delete buttons.
+function renderProfileList() {
+  const profileList = document.getElementById('profileList');
+  profileList.innerHTML = "";
+  const profiles = loadProfiles();
+  for (let name in profiles) {
+    const li = document.createElement('li');
+    li.textContent = name + " ";
+    
+    const loadBtn = document.createElement('button');
+    loadBtn.textContent = "Load";
+    loadBtn.addEventListener('click', () => loadProfile(name));
+    li.appendChild(loadBtn);
+    
+    const updateBtn = document.createElement('button');
+    updateBtn.textContent = "Update";
+    updateBtn.addEventListener('click', () => updateProfile(name));
+    li.appendChild(updateBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = "Delete";
+    deleteBtn.addEventListener('click', () => deleteProfile(name));
+    li.appendChild(deleteBtn);
+    
+    profileList.appendChild(li);
   }
-
-  // Load profiles from cookie
-  function loadProfiles() {
-    const cookie = getCookie("profileSelections");
-    try {
-      return cookie ? JSON.parse(cookie) : {};
-    } catch(e) {
-      console.error("Error parsing cookie:", e);
-      return {};
-    }
-  }
-
-  // Loads a profile by name (replaces current selections)
-  function loadProfile(name) {
-    const profiles = loadProfiles();
-    if (profiles[name]) {
-      selections = profiles[name];
-      renderTree();
-    }
-  }
-
-  // Delete a profile by name.
-  function deleteProfile(name) {
-    let profiles = loadProfiles();
-    if (profiles[name]) {
-      delete profiles[name];
-      setCookie("profileSelections", JSON.stringify(profiles), 30);
-      renderProfileList();
-    }
-  }
-
-  // Render the list of profile names along with Load, Update, and Delete buttons.
-  function renderProfileList() {
-    const profileList = document.getElementById('profileList');
-    profileList.innerHTML = "";
-    const profiles = loadProfiles();
-    for (let name in profiles) {
-      const li = document.createElement('li');
-      li.textContent = name + " ";
-      
-      const loadBtn = document.createElement('button');
-      loadBtn.textContent = "Load";
-      loadBtn.addEventListener('click', () => loadProfile(name));
-      li.appendChild(loadBtn);
-      
-      const updateBtn = document.createElement('button');
-      updateBtn.textContent = "Update";
-      updateBtn.addEventListener('click', () => updateProfile(name));
-      li.appendChild(updateBtn);
-      
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener('click', () => deleteProfile(name));
-      li.appendChild(deleteBtn);
-      
-      profileList.appendChild(li);
-    }
-  }
+}
 
   // Cookie utility functions
   function setCookie(name, value, days) {
