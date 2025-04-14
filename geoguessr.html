@@ -112,37 +112,7 @@
 
   <script>
     // Sample JSON data
-    const data = {
-      "Africa": {
-        "Botswana": {
-          "url": "/botswana",
-          "header": {
-            "Step 1 – Identifying Botswana": [
-              {
-                "url": "https://goo.gl/maps/4EnV3TLhsXdcpWkL9",
-                "html": `<p style="white-space:pre-wrap;">All of Botswana was covered by a <strong>white</strong> Google car without an antenna.</p>
-                         <p style="white-space:pre-wrap;"><span style="text-decoration:underline; color: #906E17;">NOTE</span>: Within Africa, this car can also be found in South Africa, Lesotho and Eswatini.</p>`
-              },
-              {
-                "url": "https://images.squarespace-cdn.com/content/v1/60f6054f4e76b03092956de8/dccfe034-a416-44cc-8607-ec8c1f527026/Botswana_License_Plate.png?format=15000w",
-                "html": `<p style="white-space:pre-wrap;">Botswana has <strong>white</strong> front plates and <strong>yellow</strong> rear plates, similar to UK-style plates.</p>
-                         <p style="white-space:pre-wrap;"><span style="text-decoration:underline; color: #906E17;">NOTE</span>: Botswana is the only country in southern Africa where yellow rear plates are predominantly found.</p>`
-              },
-              {
-                "url": "https://goo.gl/maps/YnWPMH2fRLYquQLj7",
-                "html": `<p style="white-space:pre-wrap;">Signs in Botswana are usually in <strong>English</strong>. Most town names, however, are derived from the indigenous languages.</p>
-                         <p style="white-space:pre-wrap;"><span style="text-decoration:underline; color: #906E17;">NOTE</span>: Afrikaans place names are rare in Botswana.</p>`
-              },
-              {
-                "url": "https://goo.gl/maps/XpY8HkD6abEAjNTR8",
-                "html": `<p style="white-space:pre-wrap;">The typical Botswana landscape is <strong>dry and mostly flat</strong>, with shrubs, small trees, and golden grasslands. Soil colors vary from white to red.</p>
-                         <p style="white-space:pre-wrap;"><span style="text-decoration:underline; color: #906E17;">NOTE</span>: The border region of South Africa may feature similar terrain.</p>`
-              }
-            ]
-          }
-        }
-      }
-    };
+    const data = await loadAJson("plonkit.json");
 	
 	// Global object to store collapse state for nodes (keys can be unique names per node)
 	let collapseState = {};
@@ -502,7 +472,7 @@ async function loadAJson(url) {
 
 	async function init() {
 	  console.log(loadAJson("plonkit.json"))
-	  window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+	  //window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
 	  initSelections();
 	  renderTree();
 	  renderProfileList();
