@@ -11,47 +11,85 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7fa;
     }
+
+    /* Container uses a flex layout with the sidebar, the vertical drag bar, and the main content */
     #container {
       display: flex;
       height: 100vh;
+      overflow: hidden; /* so that horizontal scrollbars do not appear unexpectedly */
     }
-    /* Upgraded Sidebar (left section): Wider, with gradient background, shadows, and smooth transition for collapsibles */
+
+    /* SIDEBAR (Left) */
     #sidebar {
-      width: 350px; /* increased width for better button layout */
+      width: 350px; /* initial width; user can drag to resize */
       overflow-y: auto;
       border-right: 1px solid #ccc;
       padding: 20px;
       box-sizing: border-box;
       background: linear-gradient(135deg, #ffffff, #e6f0f8);
       box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+      min-width: 200px; /* so it doesn't become too narrow */
+      max-width: 800px; /* optional limit, so it doesn't grow unbounded */
     }
     #sidebar h2 {
       margin-top: 0;
       font-size: 1.6em;
       color: #333;
     }
-    /* Main content area: Map & Quiz sections */
+
+    /* The vertical bar for dragging sidebar width */
+    #verticalDragBar {
+      width: 5px;
+      cursor: col-resize;
+      background-color: #ccc;
+      /* let the user see it clearly when hovering */
+      transition: background-color 0.2s ease;
+    }
+    #verticalDragBar:hover {
+      background-color: #888;
+    }
+
+    /* MAIN content area: itself contains (top) Map and (bottom) Quiz
+       with a horizontal bar in between for dragging heights */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-width: 0; /* prevents the main from over-expanding when sidebar grows */
     }
+
+    /* The map area and quiz area are separated by a horizontal bar for resizing */
     #mapWrapper {
-      flex: 1;
       position: relative;
       border-bottom: 1px solid #ccc;
+      /* let the user define how tall they want this portion to be */
+      height: 50%; /* initial height; user can drag the horizontal bar */
+      min-height: 100px; /* so it never gets too tiny */
     }
     #basicMap, iframe {
       width: 100%;
       height: 100%;
     }
-    /* Quiz area */
+
+    /* The horizontal bar that lets you resize map vs quiz */
+    #horizontalDragBar {
+      height: 5px;
+      cursor: row-resize;
+      background-color: #ccc;
+      transition: background-color 0.2s ease;
+    }
+    #horizontalDragBar:hover {
+      background-color: #888;
+    }
+
+    /* QUIZ area (below the map) */
     #quiz {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
       background-color: #fff;
     }
+
     /* Profile management styling */
     #profileSection {
       margin-top: 20px;
@@ -67,7 +105,6 @@
       padding: 0;
       margin: 0;
     }
-    /* Each profile list item using flexbox to keep buttons in one row */
     #profileSection li {
       margin-bottom: 8px;
       display: flex;
@@ -88,7 +125,8 @@
       background-color: #007acc;
       color: #fff;
     }
-    /* Styling for collapsible tree nodes with smooth animations */
+
+    /* Collapsible tree nodes: we remove max-height approach and use display toggling */
     .collapsible {
       cursor: pointer;
       user-select: none;
@@ -103,17 +141,17 @@
     }
     .content {
       margin-left: 15px;
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.35s ease;
+      display: none;
     }
-    /* When expanded, we set a max height high enough to display all items */
     .expanded > .content {
-      max-height: 1000px;
+      display: block;
     }
+
     label {
       cursor: pointer;
     }
+
+    /* General button styling for the Show Question / Next Question, etc. */
     button {
       margin: 5px 0;
       cursor: pointer;
@@ -128,7 +166,7 @@
       background-color: #005fa3;
     }
   </style>
-  <!-- OpenLayers -->
+  <!-- OpenLayers (if needed) -->
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
 </head>
 <body onload="init();">
@@ -140,19 +178,29 @@
       
       <div id="profileSection">
         <h3>Profiles</h3>
-        <input type="text" id="profileName" placeholder="Enter profile name" style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"/>
-        <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;">Save Profile</button>
+        <input type="text" id="profileName" placeholder="Enter profile name"
+               style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"/>
+        <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;">
+          Save Profile
+        </button>
         <ul id="profileList"></ul>
       </div>
     </div>
     
-    <!-- Main content: Map and Quiz -->
+    <!-- Vertical Drag Bar for resizing sidebar -->
+    <div id="verticalDragBar"></div>
+
+    <!-- Main content: includes Map (top), horizontal drag bar, and Quiz (bottom) -->
     <div id="main">
       <div id="mapWrapper">
         <iframe id="gmap_canvas" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
           src="https://maps.google.com/maps?width=800&amp;height=600&amp;hl=en&amp;q=%20+()&amp;t=&amp;z=12&amp;ie=UTF8&amp;iwloc=B&amp;output=embed">
         </iframe>
       </div>
+
+      <!-- Horizontal Drag Bar for resizing the map vs. quiz area -->
+      <div id="horizontalDragBar"></div>
+
       <div id="quiz">
         <h2>Quiz</h2>
         <button id="quizButton" onclick="quizButtonHandler()">Show Question</button>
@@ -162,18 +210,81 @@
   </div>
 
   <script>
-  // Sample JSON data
-  let data;
+  // ---------------------------------------------------------
+  //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
+  // ---------------------------------------------------------
+  let isDraggingVertical = false;
+  let isDraggingHorizontal = false;
   
-  // Global object to store collapse state for nodes (keys are unique per node)
+  let sidebar = null;
+  let verticalDragBar = null;
+  let horizontalDragBar = null;
+  let mapWrapper = null;
+  let mainContainer = null;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    sidebar = document.getElementById('sidebar');
+    verticalDragBar = document.getElementById('verticalDragBar');
+    horizontalDragBar = document.getElementById('horizontalDragBar');
+    mapWrapper = document.getElementById('mapWrapper');
+    mainContainer = document.getElementById('main');
+
+    // Vertical bar: on mousedown => start dragging
+    verticalDragBar.addEventListener('mousedown', function(e) {
+      isDraggingVertical = true;
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+    });
+
+    // Horizontal bar: on mousedown => start dragging
+    horizontalDragBar.addEventListener('mousedown', function(e) {
+      isDraggingHorizontal = true;
+      document.body.style.cursor = 'row-resize';
+      e.preventDefault();
+    });
+
+    // Listen for mousemove globally to handle drag
+    document.addEventListener('mousemove', function(e) {
+      // If dragging vertical bar
+      if (isDraggingVertical) {
+        // The new sidebar width is simply e.clientX
+        const newWidth = e.clientX;
+        // Some sanity checks
+        if (newWidth > 200 && newWidth < 800) {
+          sidebar.style.width = newWidth + 'px';
+        }
+      }
+      // If dragging horizontal bar
+      if (isDraggingHorizontal) {
+        // The top of #mapWrapper is top of main container
+        // The user is effectively specifying how tall #mapWrapper should be within #main
+        // We can compute the offset from main's top, then clamp if needed
+        const rect = mainContainer.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top; 
+        // Some small clamp logic
+        if (offsetY > 100 && offsetY < (rect.height - 100)) {
+          mapWrapper.style.height = offsetY + 'px';
+        }
+      }
+    });
+
+    // On mouseup => stop dragging
+    document.addEventListener('mouseup', function() {
+      isDraggingVertical = false;
+      isDraggingHorizontal = false;
+      document.body.style.cursor = 'default';
+    });
+  });
+
+  // ---------------------------------------------------------
+  //  REST OF YOUR QUIZ / TREE / PROFILE LOGIC
+  // ---------------------------------------------------------
+  let data;
   let collapseState = {};
-
-  // Global state for selections, current quiz question, and recently shown questions.
   let selections = {};
-  let currentQuizQuestion = null;  // holds current question data and answer state
-  let recentQuestions = [];        // array to store last 5 unique IDs
+  let currentQuizQuestion = null;
+  let recentQuestions = [];
 
-  // Initialize selections based on the data
   function initSelections() {
     selections = {};
     for (const continent in data) {
@@ -189,13 +300,15 @@
     }
   }
 
-  // Create a collapsible element; the title can be either a string or a DOM node.
-  // nodeId is used to save the collapse state.
+  // Create a collapsible element (no max-height approach; simple display toggling)
   function createCollapsible(title, children, nodeId) {
     const wrapper = document.createElement('div');
-    // Ensure node starts collapsed by default.
+
+    // Start collapsed by default, unless we’ve remembered otherwise
     if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
-    if (collapseState[nodeId]) wrapper.classList.add("expanded");
+    if (collapseState[nodeId]) {
+      wrapper.classList.add("expanded");
+    }
 
     const header = document.createElement('div');
     header.className = 'collapsible';
@@ -223,11 +336,9 @@
     return wrapper;
   }
 
-  // Render the selection tree using collapsible nodes.
-  // The tree hierarchy is: Continent -> Country -> Header (Steps) -> each Question.
   async function renderTree() {
     if (data == null) {
-      data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+      data = await loadAJson("plonkit.json");
       initSelections();
     }
     const container = document.getElementById('treeContainer');
@@ -235,7 +346,6 @@
 
     // Loop through each continent
     for (const continent in data) {
-      // Determine if all questions in the continent are selected.
       let continentAllSelected = true;
       for (const country in data[continent]) {
         for (const header in data[continent][country].header) {
@@ -267,7 +377,6 @@
       // Container for countries
       let countryNodes = [];
       for (const country in data[continent]) {
-        // Determine if all questions in this country are selected.
         let countryAllSelected = true;
         for (const header in data[continent][country].header) {
           if (selections[continent][country][header].some(v => !v)) {
@@ -292,7 +401,6 @@
         countryHeaderDiv.appendChild(countryCheckbox);
         countryHeaderDiv.appendChild(countryLabel);
 
-        // Container for headers (steps)
         let headerNodes = [];
         const headers = data[continent][country].header;
         for (const header in headers) {
@@ -311,7 +419,7 @@
           headerDiv.appendChild(headerCheckbox);
           headerDiv.appendChild(headerLabel);
 
-          // Container for individual questions.
+          // Container for individual questions
           let questionNodes = [];
           headers[header].forEach((step, index) => {
             const questionCheckbox = document.createElement('input');
@@ -328,30 +436,26 @@
             questionNodes.push(questionDiv);
           });
 
-          // Wrap individual questions inside a collapsible (for the header)
           const headerNodeId = "continent-" + continent + "-country-" + country + "-header-" + header;
           const headerCollapsible = createCollapsible(headerDiv, questionNodes, headerNodeId);
           headerNodes.push(headerCollapsible);
         }
-        // Wrap country header and all header nodes into a collapsible
         const countryNodeId = "continent-" + continent + "-country-" + country;
         const countryCollapsible = createCollapsible(countryHeaderDiv, headerNodes, countryNodeId);
         countryNodes.push(countryCollapsible);
       }
-      // Wrap continent header and all country nodes into a collapsible
       const continentNodeId = "continent-" + continent;
       const continentCollapsible = createCollapsible(continentHeaderDiv, countryNodes, continentNodeId);
       container.appendChild(continentCollapsible);
     }
-  }  // End of renderTree()
+  }
 
-  // Toggle a specific step.
   function toggleStep(continent, country, header, index, checked) {
     selections[continent][country][header][index] = checked;
     renderTree();
   }
 
-  // --- Profile Functions ---
+  // Profile Functions
   function saveProfile() {
     const name = document.getElementById('profileName').value.trim();
     if (!name) {
@@ -429,7 +533,7 @@
     }
   }
 
-  // --- Quiz Functions ---
+  // Quiz Functions
   function getAllSelectedQuestions() {
     let available = [];
     for (const continent in data) {
@@ -515,7 +619,7 @@
   }
 
   window.init = async function() {
-    window.data = await loadAJson("plonkit.json");
+    data = await loadAJson("plonkit.json");
     initSelections();
     await renderTree();
     renderProfileList();
