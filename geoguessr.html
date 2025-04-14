@@ -10,6 +10,8 @@
       height: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7fa;
+      /* Increase the base font size if needed */
+      font-size: 18px;
     }
 
     /* Container uses a flex layout with the sidebar, the vertical drag bar, and the main content */
@@ -42,36 +44,33 @@
       width: 5px;
       cursor: col-resize;
       background-color: #ccc;
-      /* let the user see it clearly when hovering */
       transition: background-color 0.2s ease;
     }
     #verticalDragBar:hover {
       background-color: #888;
     }
 
-    /* MAIN content area: itself contains (top) Map and (bottom) Quiz
-       with a horizontal bar in between for dragging heights */
+    /* MAIN content area: contains Map (top) and Quiz (bottom) with a horizontal drag bar */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      min-width: 0; /* prevents the main from over-expanding when sidebar grows */
+      min-width: 0;
     }
 
-    /* The map area and quiz area are separated by a horizontal bar for resizing */
+    /* Map and Quiz areas */
     #mapWrapper {
       position: relative;
       border-bottom: 1px solid #ccc;
-      /* let the user define how tall they want this portion to be */
       height: 50%; /* initial height; user can drag the horizontal bar */
-      min-height: 100px; /* so it never gets too tiny */
+      min-height: 100px;
     }
     #basicMap, iframe {
       width: 100%;
       height: 100%;
     }
 
-    /* The horizontal bar that lets you resize map vs quiz */
+    /* Horizontal drag bar for resizing */
     #horizontalDragBar {
       height: 5px;
       cursor: row-resize;
@@ -82,12 +81,17 @@
       background-color: #888;
     }
 
-    /* QUIZ area (below the map) */
+    /* QUIZ area */
     #quiz {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
       background-color: #fff;
+    }
+    /* Increase the answer text size for quiz answers */
+    .answer {
+      font-size: 1.4em;
+      margin-top: 10px;
     }
 
     /* Profile management styling */
@@ -126,7 +130,7 @@
       color: #fff;
     }
 
-    /* Collapsible tree nodes: we remove max-height approach and use display toggling */
+    /* Collapsible tree nodes: using display toggling */
     .collapsible {
       cursor: pointer;
       user-select: none;
@@ -151,7 +155,7 @@
       cursor: pointer;
     }
 
-    /* General button styling for the Show Question / Next Question, etc. */
+    /* General button styling */
     button {
       margin: 5px 0;
       cursor: pointer;
@@ -179,8 +183,9 @@
       <div id="profileSection">
         <h3>Profiles</h3>
         <input type="text" id="profileName" placeholder="Enter profile name"
-               style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"/>
-        <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;">
+               style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"
+               aria-label="Profile Name"/>
+        <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;" aria-label="Save Profile">
           Save Profile
         </button>
         <ul id="profileList"></ul>
@@ -190,440 +195,463 @@
     <!-- Vertical Drag Bar for resizing sidebar -->
     <div id="verticalDragBar"></div>
 
-    <!-- Main content: includes Map (top), horizontal drag bar, and Quiz (bottom) -->
+    <!-- Main content: Map (top), horizontal drag bar, and Quiz (bottom) -->
     <div id="main">
       <div id="mapWrapper">
         <iframe id="gmap_canvas" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
           src="https://maps.google.com/maps?width=800&amp;height=600&amp;hl=en&amp;q=%20+()&amp;t=&amp;z=12&amp;ie=UTF8&amp;iwloc=B&amp;output=embed">
         </iframe>
       </div>
-
-      <!-- Horizontal Drag Bar for resizing the map vs. quiz area -->
       <div id="horizontalDragBar"></div>
-
       <div id="quiz">
         <h2>Quiz</h2>
-        <button id="quizButton" onclick="quizButtonHandler()">Show Question</button>
+        <button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
         <div id="quizDisplay" style="margin-top:10px;"></div>
       </div>
     </div>
   </div>
 
   <script>
-  // ---------------------------------------------------------
-  //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
-  // ---------------------------------------------------------
-  let isDraggingVertical = false;
-  let isDraggingHorizontal = false;
-  
-  let sidebar = null;
-  let verticalDragBar = null;
-  let horizontalDragBar = null;
-  let mapWrapper = null;
-  let mainContainer = null;
-
-  window.addEventListener('DOMContentLoaded', () => {
-    sidebar = document.getElementById('sidebar');
-    verticalDragBar = document.getElementById('verticalDragBar');
-    horizontalDragBar = document.getElementById('horizontalDragBar');
-    mapWrapper = document.getElementById('mapWrapper');
-    mainContainer = document.getElementById('main');
-
-    // Vertical bar: on mousedown => start dragging
-    verticalDragBar.addEventListener('mousedown', function(e) {
-      isDraggingVertical = true;
-      document.body.style.cursor = 'col-resize';
-      e.preventDefault();
-    });
-
-    // Horizontal bar: on mousedown => start dragging
-    horizontalDragBar.addEventListener('mousedown', function(e) {
-      isDraggingHorizontal = true;
-      document.body.style.cursor = 'row-resize';
-      e.preventDefault();
-    });
-
-    // Listen for mousemove globally to handle drag
-    document.addEventListener('mousemove', function(e) {
-      // If dragging vertical bar
-      if (isDraggingVertical) {
-        // The new sidebar width is simply e.clientX
-        const newWidth = e.clientX;
-        // Some sanity checks
-        if (newWidth > 200 && newWidth < 800) {
-          sidebar.style.width = newWidth + 'px';
+    // ---------------------------------------------------------
+    //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
+    // ---------------------------------------------------------
+    let isDraggingVertical = false;
+    let isDraggingHorizontal = false;
+    
+    let sidebar = null;
+    let verticalDragBar = null;
+    let horizontalDragBar = null;
+    let mapWrapper = null;
+    let mainContainer = null;
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      sidebar = document.getElementById('sidebar');
+      verticalDragBar = document.getElementById('verticalDragBar');
+      horizontalDragBar = document.getElementById('horizontalDragBar');
+      mapWrapper = document.getElementById('mapWrapper');
+      mainContainer = document.getElementById('main');
+    
+      // Vertical bar: start dragging
+      verticalDragBar.addEventListener('mousedown', function(e) {
+        isDraggingVertical = true;
+        document.body.style.cursor = 'col-resize';
+        e.preventDefault();
+      });
+    
+      // Horizontal bar: start dragging
+      horizontalDragBar.addEventListener('mousedown', function(e) {
+        isDraggingHorizontal = true;
+        document.body.style.cursor = 'row-resize';
+        e.preventDefault();
+      });
+    
+      // Global mousemove to handle drag
+      document.addEventListener('mousemove', function(e) {
+        if (isDraggingVertical) {
+          const newWidth = e.clientX;
+          if (newWidth > 200 && newWidth < 800) {
+            sidebar.style.width = newWidth + 'px';
+          }
         }
-      }
-      // If dragging horizontal bar
-      if (isDraggingHorizontal) {
-        // The top of #mapWrapper is top of main container
-        // The user is effectively specifying how tall #mapWrapper should be within #main
-        // We can compute the offset from main's top, then clamp if needed
-        const rect = mainContainer.getBoundingClientRect();
-        const offsetY = e.clientY - rect.top; 
-        // Some small clamp logic
-        if (offsetY > 100 && offsetY < (rect.height - 100)) {
-          mapWrapper.style.height = offsetY + 'px';
+        if (isDraggingHorizontal) {
+          const rect = mainContainer.getBoundingClientRect();
+          const offsetY = e.clientY - rect.top; 
+          if (offsetY > 100 && offsetY < (rect.height - 100)) {
+            mapWrapper.style.height = offsetY + 'px';
+          }
         }
-      }
+      });
+    
+      // End dragging
+      document.addEventListener('mouseup', function() {
+        isDraggingVertical = false;
+        isDraggingHorizontal = false;
+        document.body.style.cursor = 'default';
+      });
     });
-
-    // On mouseup => stop dragging
-    document.addEventListener('mouseup', function() {
-      isDraggingVertical = false;
-      isDraggingHorizontal = false;
-      document.body.style.cursor = 'default';
-    });
-  });
-
-  // ---------------------------------------------------------
-  //  REST OF YOUR QUIZ / TREE / PROFILE LOGIC
-  // ---------------------------------------------------------
-  let data;
-  let collapseState = {};
-  let selections = {};
-  let currentQuizQuestion = null;
-  let recentQuestions = [];
-
-  function initSelections() {
-    selections = {};
-    for (const continent in data) {
-      selections[continent] = {};
-      for (const country in data[continent]) {
-        selections[continent][country] = {};
-        const headers = data[continent][country].header;
-        for (const header in headers) {
-          // Default: all entries selected.
-          selections[continent][country][header] = headers[header].map(() => true);
+    
+    // ---------------------------------------------------------
+    //  PERSISTING COLLAPSE STATE IN LOCALSTORAGE
+    // ---------------------------------------------------------
+    let collapseState = {};
+    
+    function saveCollapseState() {
+      localStorage.setItem("collapseState", JSON.stringify(collapseState));
+    }
+    
+    function loadCollapseState() {
+      const stored = localStorage.getItem("collapseState");
+      if (stored) {
+        try {
+          collapseState = JSON.parse(stored);
+        } catch (e) {
+          console.warn("Collapse state parse error", e);
         }
       }
     }
-  }
-
-  // Create a collapsible element (no max-height approach; simple display toggling)
-  function createCollapsible(title, children, nodeId) {
-    const wrapper = document.createElement('div');
-
-    // Start collapsed by default, unless we’ve remembered otherwise
-    if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
-    if (collapseState[nodeId]) {
-      wrapper.classList.add("expanded");
-    }
-
-    const header = document.createElement('div');
-    header.className = 'collapsible';
-    if (typeof title === 'string') {
-      header.textContent = title;
-    } else {
-      header.appendChild(title);
-    }
-    header.onclick = () => {
-      if (wrapper.classList.contains("expanded")) {
-        wrapper.classList.remove("expanded");
-        collapseState[nodeId] = false;
-      } else {
-        wrapper.classList.add("expanded");
-        collapseState[nodeId] = true;
-      }
-    };
-    wrapper.appendChild(header);
-
-    const content = document.createElement('div');
-    content.className = 'content';
-    children.forEach(child => content.appendChild(child));
-    wrapper.appendChild(content);
-
-    return wrapper;
-  }
-
-  async function renderTree() {
-    if (data == null) {
-      data = await loadAJson("plonkit.json");
-      initSelections();
-    }
-    const container = document.getElementById('treeContainer');
-    container.innerHTML = "";
-
-    // Loop through each continent
-    for (const continent in data) {
-      let continentAllSelected = true;
-      for (const country in data[continent]) {
-        for (const header in data[continent][country].header) {
-          if (selections[continent][country][header].some(v => !v)) {
-            continentAllSelected = false;
-            break;
+    
+    // ---------------------------------------------------------
+    //  QUIZ / TREE / PROFILE LOGIC
+    // ---------------------------------------------------------
+    let data;
+    let selections = {};
+    let currentQuizQuestion = null;
+    let recentQuestions = [];
+    
+    function initSelections() {
+      selections = {};
+      for (const continent in data) {
+        selections[continent] = {};
+        for (const country in data[continent]) {
+          selections[continent][country] = {};
+          const headers = data[continent][country].header;
+          for (const header in headers) {
+            selections[continent][country][header] = headers[header].map(() => true);
           }
         }
       }
-      const continentCheckbox = document.createElement('input');
-      continentCheckbox.type = "checkbox";
-      continentCheckbox.checked = continentAllSelected;
-      continentCheckbox.onchange = (e) => {
-        const newVal = e.target.checked;
+    }
+    
+    // Create a collapsible element with display toggle
+    function createCollapsible(title, children, nodeId) {
+      const wrapper = document.createElement('div');
+      if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
+      if (collapseState[nodeId]) {
+        wrapper.classList.add("expanded");
+      }
+    
+      const header = document.createElement('div');
+      header.className = 'collapsible';
+      if (typeof title === 'string') {
+        header.textContent = title;
+      } else {
+        header.appendChild(title);
+      }
+      header.onclick = () => {
+        if (wrapper.classList.contains("expanded")) {
+          wrapper.classList.remove("expanded");
+          collapseState[nodeId] = false;
+        } else {
+          wrapper.classList.add("expanded");
+          collapseState[nodeId] = true;
+        }
+        saveCollapseState();
+      };
+      wrapper.appendChild(header);
+    
+      const content = document.createElement('div');
+      content.className = 'content';
+      children.forEach(child => content.appendChild(child));
+      wrapper.appendChild(content);
+    
+      return wrapper;
+    }
+    
+    async function renderTree() {
+      loadCollapseState();
+      if (data == null) {
+        data = await loadAJson("plonkit.json");
+        initSelections();
+      }
+      const container = document.getElementById('treeContainer');
+      container.innerHTML = "";
+    
+      // Loop through continents
+      for (const continent in data) {
+        let continentAllSelected = true;
         for (const country in data[continent]) {
           for (const header in data[continent][country].header) {
-            selections[continent][country][header] =
-              selections[continent][country][header].map(() => newVal);
+            if (selections[continent][country][header].some(v => !v)) {
+              continentAllSelected = false;
+              break;
+            }
           }
         }
-        renderTree();
-      };
-      const continentLabel = document.createElement('span');
-      continentLabel.textContent = " " + continent;
-      const continentHeaderDiv = document.createElement('div');
-      continentHeaderDiv.appendChild(continentCheckbox);
-      continentHeaderDiv.appendChild(continentLabel);
-
-      // Container for countries
-      let countryNodes = [];
-      for (const country in data[continent]) {
-        let countryAllSelected = true;
-        for (const header in data[continent][country].header) {
-          if (selections[continent][country][header].some(v => !v)) {
-            countryAllSelected = false;
-            break;
-          }
-        }
-        const countryCheckbox = document.createElement('input');
-        countryCheckbox.type = "checkbox";
-        countryCheckbox.checked = countryAllSelected;
-        countryCheckbox.onchange = (e) => {
+    
+        const continentCheckbox = document.createElement('input');
+        continentCheckbox.type = "checkbox";
+        continentCheckbox.checked = continentAllSelected;
+        continentCheckbox.onchange = (e) => {
           const newVal = e.target.checked;
-          for (const header in data[continent][country].header) {
-            selections[continent][country][header] =
-              selections[continent][country][header].map(() => newVal);
+          for (const country in data[continent]) {
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
+            }
           }
           renderTree();
         };
-        const countryLabel = document.createElement('span');
-        countryLabel.textContent = " " + country;
-        const countryHeaderDiv = document.createElement('div');
-        countryHeaderDiv.appendChild(countryCheckbox);
-        countryHeaderDiv.appendChild(countryLabel);
-
-        let headerNodes = [];
-        const headers = data[continent][country].header;
-        for (const header in headers) {
-          const headerCheckbox = document.createElement('input');
-          headerCheckbox.type = "checkbox";
-          headerCheckbox.checked = selections[continent][country][header].every(v => v);
-          headerCheckbox.onchange = (e) => {
+        const continentLabel = document.createElement('span');
+        continentLabel.textContent = " " + continent;
+        const continentHeaderDiv = document.createElement('div');
+        continentHeaderDiv.appendChild(continentCheckbox);
+        continentHeaderDiv.appendChild(continentLabel);
+    
+        // Process countries
+        let countryNodes = [];
+        for (const country in data[continent]) {
+          let countryAllSelected = true;
+          for (const header in data[continent][country].header) {
+            if (selections[continent][country][header].some(v => !v)) {
+              countryAllSelected = false;
+              break;
+            }
+          }
+          const countryCheckbox = document.createElement('input');
+          countryCheckbox.type = "checkbox";
+          countryCheckbox.checked = countryAllSelected;
+          countryCheckbox.onchange = (e) => {
             const newVal = e.target.checked;
-            selections[continent][country][header] =
-              selections[continent][country][header].map(() => newVal);
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
+            }
             renderTree();
           };
-          const headerLabel = document.createElement('span');
-          headerLabel.textContent = " " + header;
-          const headerDiv = document.createElement('div');
-          headerDiv.appendChild(headerCheckbox);
-          headerDiv.appendChild(headerLabel);
-
-          // Container for individual questions
-          let questionNodes = [];
-          headers[header].forEach((step, index) => {
-            const questionCheckbox = document.createElement('input');
-            questionCheckbox.type = "checkbox";
-            questionCheckbox.checked = selections[continent][country][header][index];
-            questionCheckbox.onchange = (e) => {
-              toggleStep(continent, country, header, index, e.target.checked);
+          const countryLabel = document.createElement('span');
+          countryLabel.textContent = " " + country;
+          const countryHeaderDiv = document.createElement('div');
+          countryHeaderDiv.appendChild(countryCheckbox);
+          countryHeaderDiv.appendChild(countryLabel);
+    
+          let headerNodes = [];
+          const headers = data[continent][country].header;
+          for (const header in headers) {
+            const headerCheckbox = document.createElement('input');
+            headerCheckbox.type = "checkbox";
+            headerCheckbox.checked = selections[continent][country][header].every(v => v);
+            headerCheckbox.onchange = (e) => {
+              const newVal = e.target.checked;
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
+              renderTree();
             };
-            const questionLabel = document.createElement('span');
-            questionLabel.textContent = " Question " + (index + 1);
-            const questionDiv = document.createElement('div');
-            questionDiv.appendChild(questionCheckbox);
-            questionDiv.appendChild(questionLabel);
-            questionNodes.push(questionDiv);
-          });
-
-          const headerNodeId = "continent-" + continent + "-country-" + country + "-header-" + header;
-          const headerCollapsible = createCollapsible(headerDiv, questionNodes, headerNodeId);
-          headerNodes.push(headerCollapsible);
+            const headerLabel = document.createElement('span');
+            headerLabel.textContent = " " + header;
+            const headerDiv = document.createElement('div');
+            headerDiv.appendChild(headerCheckbox);
+            headerDiv.appendChild(headerLabel);
+    
+            let questionNodes = [];
+            headers[header].forEach((step, index) => {
+              const questionCheckbox = document.createElement('input');
+              questionCheckbox.type = "checkbox";
+              questionCheckbox.checked = selections[continent][country][header][index];
+              questionCheckbox.onchange = (e) => {
+                toggleStep(continent, country, header, index, e.target.checked);
+              };
+              const questionLabel = document.createElement('span');
+              questionLabel.textContent = " Question " + (index + 1);
+              const questionDiv = document.createElement('div');
+              questionDiv.appendChild(questionCheckbox);
+              questionDiv.appendChild(questionLabel);
+              questionNodes.push(questionDiv);
+            });
+    
+            const headerNodeId = "continent-" + continent + "-country-" + country + "-header-" + header;
+            const headerCollapsible = createCollapsible(headerDiv, questionNodes, headerNodeId);
+            headerNodes.push(headerCollapsible);
+          }
+          const countryNodeId = "continent-" + continent + "-country-" + country;
+          const countryCollapsible = createCollapsible(countryHeaderDiv, headerNodes, countryNodeId);
+          countryNodes.push(countryCollapsible);
         }
-        const countryNodeId = "continent-" + continent + "-country-" + country;
-        const countryCollapsible = createCollapsible(countryHeaderDiv, headerNodes, countryNodeId);
-        countryNodes.push(countryCollapsible);
+        const continentNodeId = "continent-" + continent;
+        const continentCollapsible = createCollapsible(continentHeaderDiv, countryNodes, continentNodeId);
+        container.appendChild(continentCollapsible);
       }
-      const continentNodeId = "continent-" + continent;
-      const continentCollapsible = createCollapsible(continentHeaderDiv, countryNodes, continentNodeId);
-      container.appendChild(continentCollapsible);
     }
-  }
-
-  function toggleStep(continent, country, header, index, checked) {
-    selections[continent][country][header][index] = checked;
-    renderTree();
-  }
-
-  // Profile Functions
-  function saveProfile() {
-    const name = document.getElementById('profileName').value.trim();
-    if (!name) {
-      alert("Please enter a profile name");
-      return;
-    }
-    let profiles = loadProfiles();
-    profiles[name] = JSON.parse(JSON.stringify(selections));
-    localStorage.setItem("profileSelections", JSON.stringify(profiles));
-    renderProfileList();
-  }
-
-  function updateProfile(name) {
-    let profiles = loadProfiles();
-    if (!profiles[name]) {
-      alert("Profile does not exist. Please save it first.");
-      return;
-    }
-    profiles[name] = JSON.parse(JSON.stringify(selections));
-    localStorage.setItem("profileSelections", JSON.stringify(profiles));
-    renderProfileList();
-  }
-
-  function loadProfiles() {
-    const profilesData = localStorage.getItem("profileSelections");
-    try {
-      return profilesData ? JSON.parse(profilesData) : {};
-    } catch(e) {
-      console.error("Error parsing localStorage profile data:", e);
-      return {};
-    }
-  }
-
-  function loadProfile(name) {
-    const profiles = loadProfiles();
-    if (profiles[name]) {
-      selections = profiles[name];
+    
+    function toggleStep(continent, country, header, index, checked) {
+      selections[continent][country][header][index] = checked;
       renderTree();
     }
-  }
-
-  function deleteProfile(name) {
-    let profiles = loadProfiles();
-    if (profiles[name]) {
-      delete profiles[name];
+    
+    // ---------------------------------------------------------
+    //  PROFILE FUNCTIONS
+    // ---------------------------------------------------------
+    function saveProfile() {
+      const name = document.getElementById('profileName').value.trim();
+      if (!name) {
+        alert("Please enter a profile name");
+        return;
+      }
+      let profiles = loadProfiles();
+      profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
       renderProfileList();
     }
-  }
-
-  function renderProfileList() {
-    const profileList = document.getElementById('profileList');
-    profileList.innerHTML = "";
-    const profiles = loadProfiles();
-    for (let name in profiles) {
-      const li = document.createElement('li');
-      li.textContent = name + " ";
-      
-      const loadBtn = document.createElement('button');
-      loadBtn.textContent = "Load";
-      loadBtn.addEventListener('click', () => loadProfile(name));
-      li.appendChild(loadBtn);
-      
-      const updateBtn = document.createElement('button');
-      updateBtn.textContent = "Update";
-      updateBtn.addEventListener('click', () => updateProfile(name));
-      li.appendChild(updateBtn);
-      
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener('click', () => deleteProfile(name));
-      li.appendChild(deleteBtn);
-      
-      profileList.appendChild(li);
-    }
-  }
-
-  // Quiz Functions
-  function getAllSelectedQuestions() {
-    let available = [];
-    for (const continent in data) {
-      for (const country in data[continent]) {
-        const headers = data[continent][country].header;
-        for (const header in headers) {
-          headers[header].forEach((step, index) => {
-            if (selections[continent][country][header][index]) {
-              available.push({
-                id: continent + "-" + country + "-" + header + "-" + index,
-                continent, country, header, index, data: step
-              });
-            }
-          });
-        }
-      }
-    }
-    return available;
-  }
-
-  function isImage(url) {
-    return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
-  }
-
-  function quizButtonHandler() {
-    if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-      const headerEl = document.getElementById('quizHeader');
-      if (headerEl) {
-        headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
-      }
-      const answerDiv = document.createElement('div');
-      answerDiv.className = 'answer';
-      answerDiv.innerHTML = currentQuizQuestion.data.html;
-      document.getElementById('quizDisplay').appendChild(answerDiv);
-      currentQuizQuestion.answerShown = true;
-      document.getElementById('quizButton').textContent = "Next Question";
-    } else {
-      const available = getAllSelectedQuestions();
-      if (available.length === 0) {
-        alert("No entries selected for the quiz. Please adjust your selections.");
+    
+    function updateProfile(name) {
+      let profiles = loadProfiles();
+      if (!profiles[name]) {
+        alert("Profile does not exist. Please save it first.");
         return;
       }
-      const filtered = available.filter(q => !recentQuestions.includes(q.id));
-      const candidates = filtered.length ? filtered : available;
-      const randomEntry = candidates[Math.floor(Math.random() * candidates.length)];
-      recentQuestions.push(randomEntry.id);
-      if (recentQuestions.length > 5) { recentQuestions.shift(); }
-      currentQuizQuestion = { ...randomEntry, answerShown: false };
-      currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
-
-      let questionContent = "";
-      if (isImage(randomEntry.data.url)) {
-        questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+      profiles[name] = JSON.parse(JSON.stringify(selections));
+      localStorage.setItem("profileSelections", JSON.stringify(profiles));
+      renderProfileList();
+    }
+    
+    function loadProfiles() {
+      const profilesData = localStorage.getItem("profileSelections");
+      try {
+        return profilesData ? JSON.parse(profilesData) : {};
+      } catch(e) {
+        console.error("Error parsing localStorage profile data:", e);
+        return {};
+      }
+    }
+    
+    function loadProfile(name) {
+      const profiles = loadProfiles();
+      if (profiles[name]) {
+        selections = profiles[name];
+        renderTree();
+      }
+    }
+    
+    function deleteProfile(name) {
+      let profiles = loadProfiles();
+      if (profiles[name]) {
+        delete profiles[name];
+        localStorage.setItem("profileSelections", JSON.stringify(profiles));
+        renderProfileList();
+      }
+    }
+    
+    function renderProfileList() {
+      const profileList = document.getElementById('profileList');
+      profileList.innerHTML = "";
+      const profiles = loadProfiles();
+      for (let name in profiles) {
+        const li = document.createElement('li');
+        li.textContent = name + " ";
+        
+        const loadBtn = document.createElement('button');
+        loadBtn.textContent = "Load";
+        loadBtn.setAttribute('aria-label', `Load profile ${name}`);
+        loadBtn.addEventListener('click', () => loadProfile(name));
+        li.appendChild(loadBtn);
+        
+        const updateBtn = document.createElement('button');
+        updateBtn.textContent = "Update";
+        updateBtn.setAttribute('aria-label', `Update profile ${name}`);
+        updateBtn.addEventListener('click', () => updateProfile(name));
+        li.appendChild(updateBtn);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "Delete";
+        deleteBtn.setAttribute('aria-label', `Delete profile ${name}`);
+        deleteBtn.addEventListener('click', () => deleteProfile(name));
+        li.appendChild(deleteBtn);
+        
+        profileList.appendChild(li);
+      }
+    }
+    
+    // ---------------------------------------------------------
+    //  QUIZ FUNCTIONS
+    // ---------------------------------------------------------
+    function getAllSelectedQuestions() {
+      let available = [];
+      for (const continent in data) {
+        for (const country in data[continent]) {
+          const headers = data[continent][country].header;
+          for (const header in headers) {
+            headers[header].forEach((step, index) => {
+              if (selections[continent][country][header][index]) {
+                available.push({
+                  id: continent + "-" + country + "-" + header + "-" + index,
+                  continent, country, header, index, data: step
+                });
+              }
+            });
+          }
+        }
+      }
+      return available;
+    }
+    
+    function isImage(url) {
+      return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
+    }
+    
+    function pickRandomQuestion() {
+      const all = getAllSelectedQuestions();
+      const available = all.filter(q => !recentQuestions.includes(q.id));
+      if (available.length === 0) {
+        recentQuestions = [];
+        return pickRandomQuestion();
+      }
+      const picked = available[Math.floor(Math.random() * available.length)];
+      recentQuestions.push(picked.id);
+      if (recentQuestions.length > 20) recentQuestions.shift();
+      return picked;
+    }
+    
+    function quizButtonHandler() {
+      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+        const headerEl = document.getElementById('quizHeader');
+        if (headerEl) {
+          headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+        }
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer';
+        answerDiv.innerHTML = currentQuizQuestion.data.html;
+        document.getElementById('quizDisplay').appendChild(answerDiv);
+        currentQuizQuestion.answerShown = true;
+        document.getElementById('quizButton').textContent = "Next Question";
       } else {
-        questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        const allAvailable = getAllSelectedQuestions();
+        if (allAvailable.length === 0) {
+          alert("No entries selected for the quiz. Please adjust your selections.");
+          return;
+        }
+        const randomEntry = pickRandomQuestion();
+        currentQuizQuestion = { ...randomEntry, answerShown: false };
+        currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
+    
+        let questionContent = "";
+        if (isImage(randomEntry.data.url)) {
+          questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+        } else {
+          questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        }
+        document.getElementById('quizDisplay').innerHTML =
+          `<h2 id="quizHeader">Question</h2>
+           <div>${questionContent}</div>`;
+        document.getElementById('quizButton').textContent = "Show Answer";
       }
-      document.getElementById('quizDisplay').innerHTML =
-        `<h3 id="quizHeader">Question</h3>
-         <div>${questionContent}</div>`;
-      document.getElementById('quizButton').textContent = "Show Answer";
     }
-  }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.code === "Space") {
-      e.preventDefault();
-      quizButtonHandler();
-    }
-  });
-
-  async function loadAJson(url) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Network response was not ok (status: ${response.status})`);
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        quizButtonHandler();
       }
-      const jsonData = await response.json();
-      return jsonData;
-    } catch (error) {
-      console.error("Failed to load JSON:", error);
-      throw error;
+    });
+    
+    async function loadAJson(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok (status: ${response.status})`);
+        }
+        const jsonData = await response.json();
+        return jsonData;
+      } catch (error) {
+        console.error("Failed to load JSON:", error);
+        throw error;
+      }
     }
-  }
-
-  window.init = async function() {
-    data = await loadAJson("plonkit.json");
-    initSelections();
-    await renderTree();
-    renderProfileList();
-  };
+    
+    window.init = async function() {
+      data = await loadAJson("plonkit.json");
+      initSelections();
+      await renderTree();
+      renderProfileList();
+    };
   </script>
 </body>
 </html>
