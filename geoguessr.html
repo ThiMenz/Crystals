@@ -170,6 +170,7 @@
 		if (data == null) {
 			console.log("?!")
 			data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+			console.log(data)
 		}
 	
 	  const container = document.getElementById('treeContainer');
@@ -455,7 +456,7 @@ async function loadAJson(url) {
 
 
 window.init = async function() {
-  console.log(await loadAJson("plonkit.json"));
+  //console.log(await loadAJson("plonkit.json"));
   window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
   initSelections();
   await renderTree();
