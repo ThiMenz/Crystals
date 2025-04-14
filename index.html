@@ -18,8 +18,10 @@
 		<h1>Möhrchens Website</h1>
 		<h3>{ Programming }</h3>
 		<h3>{ Pi Memorizing }</h3>
+		<h3>{ GeoGuessr }</h3>
 		<button onclick="LoadWoLiEngine()", type="submit">WoLiEngine v2</button> <br> <br>
-		<button onclick="GoToWoLiHistoryURL()", type="submit">WoLi History</button>
+		<button onclick="GoToWoLiHistoryURL()", type="submit">WoLi History</button> <br> <br>
+		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button>
 		
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
@@ -45,8 +47,13 @@
 		// URLs
 		const mainURL = "MyWebside.html"; //index.html
 		const errorURL = "Error.html"; //error.html
+		const geogessrURL = "geoguessr.html"; 
 		const woliengineURL = "woliengine.html"; 
 		const wolihistoryURL = "wolihistory.html"; //Error.html
+		
+		function GoToGeoguessrURL() {
+			window.location.replace(geogessrURL);
+		}
 		
 		function LoadWoLiEngine() {
 			window.location.replace(woliengineURL);
