@@ -165,7 +165,7 @@
 	}
 
     // Render the selection tree using collapsible nodes.
-    function renderTree() {
+    async function renderTree() {
 	
 		if (data == null) {
 			console.log("?!")
@@ -454,11 +454,11 @@ async function loadAJson(url) {
 }
 
 
-	window.init = async function() {
+window.init = async function() {
   console.log(await loadAJson("plonkit.json"));
   window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
   initSelections();
-  renderTree();
+  await renderTree();
   renderProfileList();
   // Additional map initialization if needed.
 };
