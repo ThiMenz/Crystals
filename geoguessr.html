@@ -173,110 +173,130 @@
 
     // Render the selection tree using collapsible nodes.
     async function renderTree() {
-	
-		if (data == null) {
-			data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
-			initSelections(); // <-- reinitialize selections
-		}
-	
-	  const container = document.getElementById('treeContainer');
-	  container.innerHTML = '';
-	  
-	  // Iterate continents
-	  // ... inside renderTree() after processing each continent's countries:
-	for (const continent in data) {
-	  let continentChildren = [];
+  if (data == null) {
+    data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+    initSelections();
+  }
+  const container = document.getElementById('treeContainer');
+  container.innerHTML = "";
 
-	  // Process countries and their steps
-	  for (const country in data[continent]) {
-		let countryChildren = [];
+  // Loop through each continent
+  for (const continent in data) {
+    // Determine if all questions in the continent are selected.
+    let continentAllSelected = true;
+    for (const country in data[continent]) {
+      for (const header in data[continent][country].header) {
+        if (selections[continent][country][header].some(v => !v)) {
+          continentAllSelected = false;
+          break;
+        }
+      }
+    }
+    const continentCheckbox = document.createElement('input');
+    continentCheckbox.type = "checkbox";
+    continentCheckbox.checked = continentAllSelected;
+    continentCheckbox.onchange = (e) => {
+      const newVal = e.target.checked;
+      for (const country in data[continent]) {
+        for (const header in data[continent][country].header) {
+          selections[continent][country][header] =
+            selections[continent][country][header].map(() => newVal);
+        }
+      }
+      renderTree();
+    };
+    const continentLabel = document.createElement('span');
+    continentLabel.textContent = " " + continent;
+    const continentHeaderDiv = document.createElement('div');
+    continentHeaderDiv.appendChild(continentCheckbox);
+    continentHeaderDiv.appendChild(continentLabel);
 
-		// Create country container with a checkbox for selecting/deselecting all its questions
-		const countryDiv = document.createElement('div');
-		const countryCheckbox = document.createElement('input');
-		countryCheckbox.type = "checkbox";
-		countryCheckbox.checked = isCountrySelected(continent, country);
-		countryCheckbox.onchange = (e) => { toggleCountry(continent, country, e.target.checked); };
-		const countryLabel = document.createElement('label');
-		countryLabel.appendChild(countryCheckbox);
-		countryLabel.appendChild(document.createTextNode(" " + country));
-		countryDiv.appendChild(countryLabel);
+    // Container for countries (indentation for clarity)
+    const countryContainer = document.createElement('div');
+    countryContainer.style.marginLeft = "20px";
 
-		const headers = data[continent][country].header;
-		for (const header in headers) {
-		  let stepChildren = [];
-		  // Header container with its own checkbox
-		  const headerContainer = document.createElement('div');
-		  headerContainer.style.marginLeft = "15px";
-		  const headerCheckbox = document.createElement('input');
-		  headerCheckbox.type = "checkbox";
-		  headerCheckbox.checked = selections[continent][country][header].every(v => v);
-		  headerCheckbox.onchange = (e) => {
-			const newValue = e.target.checked;
-			selections[continent][country][header] = selections[continent][country][header].map(() => newValue);
-			renderTree();
-		  };
-		  const headerTitle = document.createElement('span');
-		  headerTitle.textContent = " " + header;
-		  headerContainer.appendChild(headerCheckbox);
-		  headerContainer.appendChild(headerTitle);
-		  stepChildren.push(headerContainer);
-		  
-		  // Individual steps
-		  headers[header].forEach((step, index) => {
-			const stepDiv = document.createElement('div');
-			stepDiv.style.marginLeft = "30px";
-			const stepCheckbox = document.createElement('input');
-			stepCheckbox.type = "checkbox";
-			stepCheckbox.checked = selections[continent][country][header][index];
-			stepCheckbox.onchange = (e) => { toggleStep(continent, country, header, index, e.target.checked); };
-			const stepLabel = document.createElement('label');
-			stepLabel.appendChild(stepCheckbox);
-			stepLabel.appendChild(document.createTextNode(" Question " + (index + 1)));
-			stepDiv.appendChild(stepLabel);
-			stepChildren.push(stepDiv);
-		  });
-		  const nodeId = `${continent}-${country}-${header}`;
-		  countryChildren.push(createCollapsible(header, stepChildren, nodeId));
-		}
-		// Wrap the country’s steps in a collapsible container.
-		const countryNodeId = `${continent}-${country}-steps`;
-		countryDiv.appendChild(createCollapsible("Steps", countryChildren, countryNodeId));
-		continentChildren.push(countryDiv);
-	  }
+    for (const country in data[continent]) {
+      // Determine if all questions in a country are selected.
+      let countryAllSelected = true;
+      for (const header in data[continent][country].header) {
+        if (selections[continent][country][header].some(v => !v)) {
+          countryAllSelected = false;
+          break;
+        }
+      }
+      const countryCheckbox = document.createElement('input');
+      countryCheckbox.type = "checkbox";
+      countryCheckbox.checked = countryAllSelected;
+      countryCheckbox.onchange = (e) => {
+        const newVal = e.target.checked;
+        for (const header in data[continent][country].header) {
+          selections[continent][country][header] =
+            selections[continent][country][header].map(() => newVal);
+        }
+        renderTree();
+      };
+      const countryLabel = document.createElement('span');
+      countryLabel.textContent = " " + country;
+      const countryHeaderDiv = document.createElement('div');
+      countryHeaderDiv.appendChild(countryCheckbox);
+      countryHeaderDiv.appendChild(countryLabel);
 
-	  // Create continent-level checkbox for selecting/deselecting all questions in the continent
-	  const continentDiv = document.createElement('div');
-	  const continentCheckbox = document.createElement('input');
-	  continentCheckbox.type = "checkbox";
-	  let allContinentSelected = true;
-	  for (const country in data[continent]) {
-		for (const header in data[continent][country].header) {
-		  if (selections[continent][country][header].some(v => !v)) { allContinentSelected = false; break; }
-		}
-	  }
-	  continentCheckbox.checked = allContinentSelected;
-	  continentCheckbox.onchange = (e) => {
-		const newVal = e.target.checked;
-		for (const country in data[continent]) {
-		  for (const header in data[continent][country].header) {
-			selections[continent][country][header] = selections[continent][country][header].map(() => newVal);
-		  }
-		}
-		renderTree();
-	  };
-	  const continentLabel = document.createElement('span');
-	  continentLabel.appendChild(continentCheckbox);
-	  continentLabel.appendChild(document.createTextNode(" " + continent));
+      // Container for headers (steps)
+      const headerContainer = document.createElement('div');
+      headerContainer.style.marginLeft = "20px";
 
-	  // Build the continent node with the full label (checkbox included)
-	  let continentContent = document.createElement('div');
-	  continentChildren.forEach(child => continentContent.appendChild(child));
-	  const continentWrapper = document.createElement('div');
-	  // Pass the continentLabel (a DOM element) as the title for proper rendering.
-	  continentWrapper.appendChild(createCollapsible(continentLabel, [continentContent], continent));
-	  document.getElementById('treeContainer').appendChild(continentWrapper);
-	}
+      const headers = data[continent][country].header;
+      for (const header in headers) {
+        // Header-level checkbox: toggle all questions in this header.
+        const headerCheckbox = document.createElement('input');
+        headerCheckbox.type = "checkbox";
+        headerCheckbox.checked = selections[continent][country][header].every(v => v);
+        headerCheckbox.onchange = (e) => {
+          const newVal = e.target.checked;
+          selections[continent][country][header] =
+            selections[continent][country][header].map(() => newVal);
+          renderTree();
+        };
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = " " + header;
+        const headerDiv = document.createElement('div');
+        headerDiv.appendChild(headerCheckbox);
+        headerDiv.appendChild(headerLabel);
+
+        // Container for individual questions.
+        const questionContainer = document.createElement('div');
+        questionContainer.style.marginLeft = "20px";
+        headers[header].forEach((step, index) => {
+          const questionCheckbox = document.createElement('input');
+          questionCheckbox.type = "checkbox";
+          questionCheckbox.checked = selections[continent][country][header][index];
+          questionCheckbox.onchange = (e) => {
+            toggleStep(continent, country, header, index, e.target.checked);
+          };
+          const questionLabel = document.createElement('span');
+          questionLabel.textContent = " Question " + (index + 1);
+          const questionDiv = document.createElement('div');
+          questionDiv.appendChild(questionCheckbox);
+          questionDiv.appendChild(questionLabel);
+          questionContainer.appendChild(questionDiv);
+        });
+        headerContainer.appendChild(headerDiv);
+        headerContainer.appendChild(questionContainer);
+      }
+      // Wrap country header and its headers.
+      const countryWrapper = document.createElement('div');
+      countryWrapper.appendChild(countryHeaderDiv);
+      countryWrapper.appendChild(headerContainer);
+      countryContainer.appendChild(countryWrapper);
+    }
+    // Wrap continent header and its countries.
+    const continentWrapper = document.createElement('div');
+    continentWrapper.appendChild(continentHeaderDiv);
+    continentWrapper.appendChild(countryContainer);
+    container.appendChild(continentWrapper);
+  }
+}
+
 
 	}
 	
@@ -320,49 +340,73 @@
     }
 
     // Profile management functions – saving to and loading from a cookie
-    function saveProfile() {
-      const name = document.getElementById('profileName').value.trim();
-      if (!name) {
-        alert("Please enter a profile name");
-        return;
-      }
-      let profiles = loadProfiles();
-      profiles[name] = selections;
-      setCookie("profileSelections", JSON.stringify(profiles), 30);
-      renderProfileList();
-    }
-    function loadProfiles() {
-      const cookie = getCookie("profileSelections");
-      return cookie ? JSON.parse(cookie) : {};
-    }
-    function loadProfile(name) {
-      const profiles = loadProfiles();
-      if (profiles[name]) {
-        selections = profiles[name];
-        renderTree();
-      }
-    }
-    function deleteProfile(name) {
-      let profiles = loadProfiles();
-      if (profiles[name]) {
-        delete profiles[name];
-        setCookie("profileSelections", JSON.stringify(profiles), 30);
-        renderProfileList();
-      }
-    }
-    function renderProfileList() {
-      const profileList = document.getElementById('profileList');
-      profileList.innerHTML = '';
-      const profiles = loadProfiles();
-      for (let name in profiles) {
-        const li = document.createElement('li');
-        li.innerHTML = `${name} 
-          <button onclick="loadProfile('${name}')">Load</button> 
-		  <button onclick="updateProfile('${name}')">Update Profile</button>
-          <button onclick="deleteProfile('${name}')">Delete</button>`;
-        profileList.appendChild(li);
-      }
-    }
+    // Save profile: Saves a deep copy of the current selections under the given profile name.
+function saveProfile() {
+  const name = document.getElementById('profileName').value.trim();
+  if (!name) {
+    alert("Please enter a profile name");
+    return;
+  }
+  let profiles = loadProfiles();
+  profiles[name] = JSON.parse(JSON.stringify(selections));
+  setCookie("profileSelections", JSON.stringify(profiles), 30);
+  renderProfileList();
+}
+
+// Update profile: Overwrites an existing profile with the current selections.
+function updateProfile(name) {
+  let profiles = loadProfiles();
+  if (!profiles[name]) {
+    alert("Profile does not exist. Please save it first.");
+    return;
+  }
+  profiles[name] = JSON.parse(JSON.stringify(selections));
+  setCookie("profileSelections", JSON.stringify(profiles), 30);
+  renderProfileList();
+}
+
+// Load profiles from cookie
+function loadProfiles() {
+  const cookie = getCookie("profileSelections");
+  return cookie ? JSON.parse(cookie) : {};
+}
+
+// Loads a profile by name (replaces current selections)
+function loadProfile(name) {
+  const profiles = loadProfiles();
+  if (profiles[name]) {
+    selections = profiles[name];
+    renderTree();
+  }
+}
+
+// Delete a profile by name.
+function deleteProfile(name) {
+  let profiles = loadProfiles();
+  if (profiles[name]) {
+    delete profiles[name];
+    setCookie("profileSelections", JSON.stringify(profiles), 30);
+    renderProfileList();
+  }
+}
+
+// Render the list of profile names along with Load, Update, and Delete buttons.
+function renderProfileList() {
+  const profileList = document.getElementById('profileList');
+  profileList.innerHTML = "";
+  const profiles = loadProfiles();
+  for (let name in profiles) {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${name} 
+      <button onclick="loadProfile('${name}')">Load</button>
+      <button onclick="updateProfile('${name}')">Update</button>
+      <button onclick="deleteProfile('${name}')">Delete</button>
+    `;
+    profileList.appendChild(li);
+  }
+}
+
     // Cookie utility functions
     function setCookie(name, value, days) {
       const d = new Date();
@@ -413,12 +457,15 @@
     // Show a new quiz question (if answer not yet shown, then reveal answer)
     function quizButtonHandler() {
   if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-    // Append the answer content when requested
-    const quizDisplay = document.getElementById('quizDisplay');
+    // Reveal the answer and update the header to show full details.
+    const headerEl = document.getElementById('quizHeader');
+    if (headerEl) {
+      headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+    }
     const answerDiv = document.createElement('div');
     answerDiv.className = 'answer';
     answerDiv.innerHTML = currentQuizQuestion.data.html;
-    quizDisplay.appendChild(answerDiv);
+    document.getElementById('quizDisplay').appendChild(answerDiv);
     currentQuizQuestion.answerShown = true;
     document.getElementById('quizButton').textContent = "Next Question";
   } else {
@@ -433,22 +480,25 @@
     recentQuestions.push(randomEntry.id);
     if (recentQuestions.length > 5) { recentQuestions.shift(); }
     currentQuizQuestion = { ...randomEntry, answerShown: false };
+    // Save full header details for later.
+    currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
 
     let questionContent = "";
-    // Use fixed dimensions for images so that no scrollbars appear.
+    // Use fixed dimensions for images (object-fit to prevent scrollbars).
     if (isImage(randomEntry.data.url)) {
       questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="width:400px; height:300px; object-fit: cover;"/>`;
     } else {
-      // Embed non-image URLs as an iframe preview with a fixed height.
+      // Embed non-image URLs as an iframe preview with fixed height.
       questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
     }
-    // Display header with only basic question info.
-    document.getElementById('quizDisplay').innerHTML = 
-      `<h3>${randomEntry.country} - Question ${randomEntry.index+1}</h3>
+    // Initially display a generic header.
+    document.getElementById('quizDisplay').innerHTML =
+      `<h3 id="quizHeader">Question</h3>
        <div>${questionContent}</div>`;
     document.getElementById('quizButton').textContent = "Show Answer";
   }
 }
+
 
 
 
