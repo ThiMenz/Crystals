@@ -8,19 +8,27 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7fa;
     }
     #container {
       display: flex;
       height: 100vh;
     }
-    /* Sidebar with max height for tree selection */
+    /* Upgraded Sidebar (left section): Wider, with gradient background, shadows, and smooth transition for collapsibles */
     #sidebar {
-      width: 300px;
+      width: 350px; /* increased width for better button layout */
       overflow-y: auto;
       border-right: 1px solid #ccc;
-      padding: 10px;
+      padding: 20px;
       box-sizing: border-box;
+      background: linear-gradient(135deg, #ffffff, #e6f0f8);
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    }
+    #sidebar h2 {
+      margin-top: 0;
+      font-size: 1.6em;
+      color: #333;
     }
     /* Main content area: Map & Quiz sections */
     #main {
@@ -28,7 +36,6 @@
       display: flex;
       flex-direction: column;
     }
-    /* Adjusted Map area */
     #mapWrapper {
       flex: 1;
       position: relative;
@@ -41,8 +48,9 @@
     /* Quiz area */
     #quiz {
       flex: 1;
-      padding: 10px;
+      padding: 20px;
       overflow-y: auto;
+      background-color: #fff;
     }
     /* Profile management styling */
     #profileSection {
@@ -50,31 +58,74 @@
       padding-top: 10px;
       border-top: 1px solid #ddd;
     }
+    #profileSection h3 {
+      margin: 0 0 10px;
+      color: #555;
+    }
     #profileSection ul {
       list-style-type: none;
       padding: 0;
+      margin: 0;
     }
+    /* Each profile list item using flexbox to keep buttons in one row */
     #profileSection li {
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
-    /* Styling for collapsible tree nodes */
+    #profileSection li button {
+      padding: 3px 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+      border: 1px solid #007acc;
+      background-color: #fff;
+      color: #007acc;
+      border-radius: 3px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    #profileSection li button:hover {
+      background-color: #007acc;
+      color: #fff;
+    }
+    /* Styling for collapsible tree nodes with smooth animations */
     .collapsible {
       cursor: pointer;
       user-select: none;
       font-weight: bold;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+      margin: 3px 0;
+    }
+    .collapsible:hover {
+      background-color: rgba(0, 122, 204, 0.1);
     }
     .content {
       margin-left: 15px;
-      display: none;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.35s ease;
     }
+    /* When expanded, we set a max height high enough to display all items */
     .expanded > .content {
-      display: block;
+      max-height: 1000px;
     }
     label {
       cursor: pointer;
     }
     button {
       margin: 5px 0;
+      cursor: pointer;
+      border: none;
+      background-color: #007acc;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #005fa3;
     }
   </style>
   <!-- OpenLayers -->
@@ -89,8 +140,8 @@
       
       <div id="profileSection">
         <h3>Profiles</h3>
-        <input type="text" id="profileName" placeholder="Enter profile name" />
-        <button onclick="saveProfile()">Save Profile</button>
+        <input type="text" id="profileName" placeholder="Enter profile name" style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"/>
+        <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;">Save Profile</button>
         <ul id="profileList"></ul>
       </div>
     </div>
@@ -301,111 +352,84 @@
   }
 
   // --- Profile Functions ---
-  // Save profile: Saves a deep copy of the current selections under the given profile name.
   function saveProfile() {
-  const name = document.getElementById('profileName').value.trim();
-  if (!name) {
-    alert("Please enter a profile name");
-    return;
-  }
-  let profiles = loadProfiles();
-  profiles[name] = JSON.parse(JSON.stringify(selections));
-  localStorage.setItem("profileSelections", JSON.stringify(profiles));
-  renderProfileList();
-}
-
-// Update profile: Overwrites an existing profile with the current selections.
-function updateProfile(name) {
-  let profiles = loadProfiles();
-  if (!profiles[name]) {
-    alert("Profile does not exist. Please save it first.");
-    return;
-  }
-  profiles[name] = JSON.parse(JSON.stringify(selections));
-  localStorage.setItem("profileSelections", JSON.stringify(profiles));
-  renderProfileList();
-}
-
-// Load profiles from localStorage
-function loadProfiles() {
-  const profilesData = localStorage.getItem("profileSelections");
-  try {
-    return profilesData ? JSON.parse(profilesData) : {};
-  } catch(e) {
-    console.error("Error parsing localStorage profile data:", e);
-    return {};
-  }
-}
-
-// Loads a profile by name (replaces current selections)
-function loadProfile(name) {
-  const profiles = loadProfiles();
-  if (profiles[name]) {
-    selections = profiles[name];
-    renderTree();
-  }
-}
-
-// Delete a profile by name.
-function deleteProfile(name) {
-  let profiles = loadProfiles();
-  if (profiles[name]) {
-    delete profiles[name];
+    const name = document.getElementById('profileName').value.trim();
+    if (!name) {
+      alert("Please enter a profile name");
+      return;
+    }
+    let profiles = loadProfiles();
+    profiles[name] = JSON.parse(JSON.stringify(selections));
     localStorage.setItem("profileSelections", JSON.stringify(profiles));
     renderProfileList();
   }
-}
 
-// Render the list of profile names along with Load, Update, and Delete buttons.
-function renderProfileList() {
-  const profileList = document.getElementById('profileList');
-  profileList.innerHTML = "";
-  const profiles = loadProfiles();
-  for (let name in profiles) {
-    const li = document.createElement('li');
-    li.textContent = name + " ";
-    
-    const loadBtn = document.createElement('button');
-    loadBtn.textContent = "Load";
-    loadBtn.addEventListener('click', () => loadProfile(name));
-    li.appendChild(loadBtn);
-    
-    const updateBtn = document.createElement('button');
-    updateBtn.textContent = "Update";
-    updateBtn.addEventListener('click', () => updateProfile(name));
-    li.appendChild(updateBtn);
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = "Delete";
-    deleteBtn.addEventListener('click', () => deleteProfile(name));
-    li.appendChild(deleteBtn);
-    
-    profileList.appendChild(li);
-  }
-}
-
-  // Cookie utility functions
-  function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
-  }
-  function getCookie(name) {
-    const cname = name + "=";
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i].trim();
-      if (c.indexOf(cname) === 0) {
-        return c.substring(cname.length);
-      }
+  function updateProfile(name) {
+    let profiles = loadProfiles();
+    if (!profiles[name]) {
+      alert("Profile does not exist. Please save it first.");
+      return;
     }
-    return "";
+    profiles[name] = JSON.parse(JSON.stringify(selections));
+    localStorage.setItem("profileSelections", JSON.stringify(profiles));
+    renderProfileList();
+  }
+
+  function loadProfiles() {
+    const profilesData = localStorage.getItem("profileSelections");
+    try {
+      return profilesData ? JSON.parse(profilesData) : {};
+    } catch(e) {
+      console.error("Error parsing localStorage profile data:", e);
+      return {};
+    }
+  }
+
+  function loadProfile(name) {
+    const profiles = loadProfiles();
+    if (profiles[name]) {
+      selections = profiles[name];
+      renderTree();
+    }
+  }
+
+  function deleteProfile(name) {
+    let profiles = loadProfiles();
+    if (profiles[name]) {
+      delete profiles[name];
+      localStorage.setItem("profileSelections", JSON.stringify(profiles));
+      renderProfileList();
+    }
+  }
+
+  function renderProfileList() {
+    const profileList = document.getElementById('profileList');
+    profileList.innerHTML = "";
+    const profiles = loadProfiles();
+    for (let name in profiles) {
+      const li = document.createElement('li');
+      li.textContent = name + " ";
+      
+      const loadBtn = document.createElement('button');
+      loadBtn.textContent = "Load";
+      loadBtn.addEventListener('click', () => loadProfile(name));
+      li.appendChild(loadBtn);
+      
+      const updateBtn = document.createElement('button');
+      updateBtn.textContent = "Update";
+      updateBtn.addEventListener('click', () => updateProfile(name));
+      li.appendChild(updateBtn);
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener('click', () => deleteProfile(name));
+      li.appendChild(deleteBtn);
+      
+      profileList.appendChild(li);
+    }
   }
 
   // --- Quiz Functions ---
-  // Get all questions that are currently selected.
   function getAllSelectedQuestions() {
     let available = [];
     for (const continent in data) {
@@ -426,16 +450,12 @@ function renderProfileList() {
     return available;
   }
 
-  // Check if a URL likely points to an image (basic check)
   function isImage(url) {
     return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
   }
 
-  // Quiz button handler: On first click, shows a generic question.
-  // On subsequent click (if answer not yet revealed), it shows full header info and appends the answer.
   function quizButtonHandler() {
     if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-      // Reveal the answer and update the header to show full details.
       const headerEl = document.getElementById('quizHeader');
       if (headerEl) {
         headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
@@ -458,18 +478,14 @@ function renderProfileList() {
       recentQuestions.push(randomEntry.id);
       if (recentQuestions.length > 5) { recentQuestions.shift(); }
       currentQuizQuestion = { ...randomEntry, answerShown: false };
-      // Save full header details for later.
       currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
 
       let questionContent = "";
-      // Use fixed height and auto width for images (object-fit: contain to display the whole image)
       if (isImage(randomEntry.data.url)) {
         questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:300px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
       } else {
-        // Embed non-image URLs as an iframe preview with fixed height.
         questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
       }
-      // Initially display a generic header.
       document.getElementById('quizDisplay').innerHTML =
         `<h3 id="quizHeader">Question</h3>
          <div>${questionContent}</div>`;
@@ -477,7 +493,6 @@ function renderProfileList() {
     }
   }
 
-  // Trigger quiz button when spacebar is pressed.
   document.addEventListener('keydown', (e) => {
     if (e.code === "Space") {
       e.preventDefault();
@@ -485,11 +500,6 @@ function renderProfileList() {
     }
   });
 
-  /**
-   * Asynchronously fetches JSON data from a given URL.
-   * @param {string} url - The URL to fetch the JSON from.
-   * @returns {Promise<any>} - A promise that resolves to the parsed JSON data.
-   */
   async function loadAJson(url) {
     try {
       const response = await fetch(url);
@@ -504,16 +514,12 @@ function renderProfileList() {
     }
   }
 
-  // Define the init function in the global scope.
   window.init = async function() {
-    window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+    window.data = await loadAJson("plonkit.json");
     initSelections();
     await renderTree();
     renderProfileList();
-    // Additional map initialization if needed.
   };
   </script>
-
-
 </body>
 </html>
