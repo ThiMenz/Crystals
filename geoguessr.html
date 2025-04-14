@@ -167,10 +167,10 @@
     // Render the selection tree using collapsible nodes.
     function renderTree() {
 	
-		if (data == null) {
-		console.log("?!")
-			data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
-		}
+		//if (data == null) {
+		//console.log("?!")
+		//	data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+		//}
 	
 	  const container = document.getElementById('treeContainer');
 	  container.innerHTML = '';
@@ -454,14 +454,14 @@ async function loadAJson(url) {
 }
 
 
-	async function init() {
-	  console.log(loadAJson("plonkit.json"))
-	  window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
-	  initSelections();
-	  renderTree();
-	  renderProfileList();
-	  // Additional map initialization if needed.
-	}
+	window.init = async function() {
+  console.log(await loadAJson("plonkit.json"));
+  window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+  initSelections();
+  renderTree();
+  renderProfileList();
+  // Additional map initialization if needed.
+};
   </script>
 </body>
 </html>
