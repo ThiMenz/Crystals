@@ -171,10 +171,13 @@
 			console.log("?!")
 			data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
 			console.log(data)
+			initSelections(); // <-- reinitialize selections
 		}
 	
 	  const container = document.getElementById('treeContainer');
 	  container.innerHTML = '';
+	  
+	  console.log(data)
 	  
 	  // Iterate continents
 	  for (const continent in data) {
