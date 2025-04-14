@@ -112,7 +112,7 @@
 
   <script>
     // Sample JSON data
-    const data = await loadAJson("plonkit.json");
+    let data;
 	
 	// Global object to store collapse state for nodes (keys can be unique names per node)
 	let collapseState = {};
@@ -163,28 +163,6 @@
 	  wrapper.appendChild(content);
 	  return wrapper;
 	}
-
-    // Create an expandable/collapsible section
-    function createCollapsible(title, children) {
-      const wrapper = document.createElement('div');
-      const header = document.createElement('div');
-      header.className = 'collapsible';
-      header.textContent = title;
-      header.onclick = () => {
-        // toggle the parent class "expanded"
-        if (wrapper.classList.contains("expanded")) {
-          wrapper.classList.remove("expanded");
-        } else {
-          wrapper.classList.add("expanded");
-        }
-      };
-      wrapper.appendChild(header);
-      const content = document.createElement('div');
-      content.className = 'content';
-      children.forEach(child => content.appendChild(child));
-      wrapper.appendChild(content);
-      return wrapper;
-    }
 
     // Render the selection tree using collapsible nodes.
     function renderTree() {
@@ -472,7 +450,7 @@ async function loadAJson(url) {
 
 	async function init() {
 	  console.log(loadAJson("plonkit.json"))
-	  //window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
+	  window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
 	  initSelections();
 	  renderTree();
 	  renderProfileList();
