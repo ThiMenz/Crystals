@@ -180,6 +180,30 @@
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
       
+	  <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
+		  <h3>Global Step Selector</h3>
+		  <div>
+			 <span>Step 1:</span>
+			 <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
+			 <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 2:</span>
+			 <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
+			 <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 3:</span>
+			 <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
+			 <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 4:</span>
+			 <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
+			 <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
+		  </div>
+		</div>
+	  
       <div id="profileSection">
         <h3>Profiles</h3>
         <input type="text" id="profileName" placeholder="Enter profile name"
@@ -466,6 +490,24 @@
       selections[continent][country][header][index] = checked;
       renderTree();
     }
+	
+	function toggleStepForAllCountries(stepIndex, newVal) {
+  // Loop through each continent, country, and header.
+  for (let continent in data) {
+    for (let country in data[continent]) {
+      // For each header under the country:
+      for (let header in data[continent][country].header) {
+        // Check if that header has a step at this index.
+        if (selections[continent][country][header][stepIndex] !== undefined) {
+          selections[continent][country][header][stepIndex] = newVal;
+        }
+      }
+    }
+  }
+  // Re-render the tree so that checkboxes update
+  renderTree();
+}
+
     
     // ---------------------------------------------------------
     //  PROFILE FUNCTIONS
@@ -549,6 +591,22 @@
         profileList.appendChild(li);
       }
     }
+	
+	// Utility to increment and return the view count for a question in localStorage.
+	function incrementQuestionCount(questionId) {
+	  let countData = localStorage.getItem('questionDisplayCounts');
+	  let counts = countData ? JSON.parse(countData) : {};
+	  counts[questionId] = (counts[questionId] || 0) + 1;
+	  localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
+	  return counts[questionId];
+	}
+
+	// Utility to get the current count for a given question (if needed separately)
+	function getQuestionCount(questionId) {
+	  let countData = localStorage.getItem('questionDisplayCounts');
+	  let counts = countData ? JSON.parse(countData) : {};
+	  return counts[questionId] || 0;
+	}
     
     // ---------------------------------------------------------
     //  QUIZ FUNCTIONS
@@ -591,39 +649,52 @@
     }
     
     function quizButtonHandler() {
-      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-        const headerEl = document.getElementById('quizHeader');
-        if (headerEl) {
-          headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
-        }
-        const answerDiv = document.createElement('div');
-        answerDiv.className = 'answer';
-        answerDiv.innerHTML = currentQuizQuestion.data.html;
-        document.getElementById('quizDisplay').appendChild(answerDiv);
-        currentQuizQuestion.answerShown = true;
-        document.getElementById('quizButton').textContent = "Next Question";
-      } else {
-        const allAvailable = getAllSelectedQuestions();
-        if (allAvailable.length === 0) {
-          alert("No entries selected for the quiz. Please adjust your selections.");
-          return;
-        }
-        const randomEntry = pickRandomQuestion();
-        currentQuizQuestion = { ...randomEntry, answerShown: false };
-        currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
-    
-        let questionContent = "";
-        if (isImage(randomEntry.data.url)) {
-          questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
-        } else {
-          questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
-        }
-        document.getElementById('quizDisplay').innerHTML =
-          `<h2 id="quizHeader">Question</h2>
-           <div>${questionContent}</div>`;
-        document.getElementById('quizButton').textContent = "Show Answer";
-      }
-    }
+	  if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+		// (Optional) update header text with question info
+		const headerEl = document.getElementById('quizHeader');
+		if (headerEl) {
+		  headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+		}
+		// Create answer element
+		const answerDiv = document.createElement('div');
+		answerDiv.className = 'answer';
+		answerDiv.innerHTML = currentQuizQuestion.data.html;
+		// Increment counter for this question.
+		const count = incrementQuestionCount(currentQuizQuestion.id);
+		// Create a small note displaying the view count.
+		const countText = document.createElement('div');
+		countText.style.fontSize = "0.9em";
+		countText.style.marginTop = "5px";
+		countText.style.color = "#555";
+		countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
+		answerDiv.appendChild(countText);
+		
+		document.getElementById('quizDisplay').appendChild(answerDiv);
+		currentQuizQuestion.answerShown = true;
+		document.getElementById('quizButton').textContent = "Next Question";
+	  } else {
+		const allAvailable = getAllSelectedQuestions();
+		if (allAvailable.length === 0) {
+		  alert("No entries selected for the quiz. Please adjust your selections.");
+		  return;
+		}
+		const randomEntry = pickRandomQuestion();
+		currentQuizQuestion = { ...randomEntry, answerShown: false };
+		currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
+		
+		let questionContent = "";
+		if (isImage(randomEntry.data.url)) {
+		  questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+		} else {
+		  questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+		}
+		document.getElementById('quizDisplay').innerHTML =
+		  `<h2 id="quizHeader">Question</h2>
+		   <div>${questionContent}</div>`;
+		document.getElementById('quizButton').textContent = "Show Answer";
+	  }
+	}
+
     
     document.addEventListener('keydown', (e) => {
       if (e.code === "Space") {
