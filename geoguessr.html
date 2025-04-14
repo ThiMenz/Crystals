@@ -480,25 +480,28 @@
       }
     });
 
-    async function loadJson() {
-	  try {
-		//$.getJSON("plonkit.json", function(json) {
-		//	console.log(json); // this will show the info it in firebug console
-		//});
-		//var json = $.getJSON("test.json");
-		//var data = eval("(" +json.responseText + ")");
-		//return data
-		const response = await fetch('plonkit.json');
-		if (!response.ok) throw new Error("Could not load JSON file");
-		return await response.json();
-	  } catch (err) {
-		console.error(err);
-		return {};
-	  }
-	}
+    /**
+ * Asynchronously fetches JSON data from a given URL.
+ * @param {string} url - The URL to fetch the JSON from.
+ * @returns {Promise<any>} - A promise that resolves to the parsed JSON data.
+ */
+async function loadAJson(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Network response was not ok (status: ${response.status})`);
+    }
+    const jsonData = await response.json();
+    return jsonData;
+  } catch (error) {
+    console.error("Failed to load JSON:", error);
+    throw error; // re-throw to allow further handling if needed
+  }
+}
+
 
 	async function init() {
-	  window.data = await loadJson(); // load JSON from file and assign globally
+	  window.data = await loadAJson("plonkit.json"); // load JSON from file and assign globally
 	  initSelections();
 	  renderTree();
 	  renderProfileList();
