@@ -659,7 +659,10 @@
       showCurrentReplayQuestion();
     }
     
-    // Displays the current replay question depending on its state.
+    // Updated function: Displays the current replay question with replay progress.
+    // ---------------------------------------------------------
+    // CHANGED METHOD: showCurrentReplayQuestion
+    // ---------------------------------------------------------
     function showCurrentReplayQuestion() {
       if (!replayMode || replayQuestions.length === 0) {
         alert("No replay questions available.");
@@ -675,11 +678,20 @@
       }
       let html = `<div>${content}</div>`;
       if (q.answerShown) {
-        html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
+        html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2>
+                <div>${content}</div>
+                <div class="answer">${q.data.html}</div>`;
       }
       document.getElementById('quizDisplay').innerHTML = html;
       const btn = document.getElementById('quizButton');
       btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
+      
+      // NEW/UPDATED code: display replay progress as [current / total]
+      if (replayMode) {
+        document.getElementById('questionStats').textContent = `[${replayIndex + 1} / ${replayQuestions.length}]`;
+      } else {
+        updateQuestionStats();
+      }
     }
     
     // Replay quiz button handler which alternates state
