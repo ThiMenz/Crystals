@@ -636,7 +636,7 @@
       // If answer has been shown, include answer (assumed available in q.data.html).
       let html = `<div>${content}</div>`;
       if (q.answerShown) {
-        html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2>` + html + <div class="answer">${q.data.html}</div>`;
+        html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
       }
       document.getElementById('quizDisplay').innerHTML = html;
       // Update button text based on state.
