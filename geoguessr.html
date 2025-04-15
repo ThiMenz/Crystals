@@ -10,76 +10,105 @@
       height: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7fa;
+      /* Increase the base font size if needed */
       font-size: 18px;
     }
-    /* Container layout: Sidebar on left, Main (Map + Quiz) on right */
+
+    /* Container uses a flex layout with the sidebar, the vertical drag bar, and the main content */
     #container {
       display: flex;
       height: 100vh;
-      overflow: hidden;
+      overflow: hidden; /* so that horizontal scrollbars do not appear unexpectedly */
     }
-    /* Sidebar: contains Selection Tree and Profiles */
+
+    /* SIDEBAR (Left) */
     #sidebar {
-      width: 350px;
+      width: 350px; /* initial width; user can drag to resize */
       overflow-y: auto;
       border-right: 1px solid #ccc;
       padding: 20px;
       box-sizing: border-box;
       background: linear-gradient(135deg, #ffffff, #e6f0f8);
       box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-      min-width: 200px;
-      max-width: 800px;
+      min-width: 200px; /* so it doesn't become too narrow */
+      max-width: 800px; /* optional limit, so it doesn't grow unbounded */
     }
-    #sidebar h2 { margin-top: 0; font-size: 1.6em; color: #333; }
-    /* Vertical resize bar between sidebar and main */
+    #sidebar h2 {
+      margin-top: 0;
+      font-size: 1.6em;
+      color: #333;
+    }
+
+    /* The vertical bar for dragging sidebar width */
     #verticalDragBar {
       width: 5px;
       cursor: col-resize;
       background-color: #ccc;
       transition: background-color 0.2s ease;
     }
-    #verticalDragBar:hover { background-color: #888; }
-    /* Main content area: Map (top) & Quiz (bottom) */
+    #verticalDragBar:hover {
+      background-color: #888;
+    }
+
+    /* MAIN content area: contains Map (top) and Quiz (bottom) with a horizontal drag bar */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-width: 0;
     }
+
+    /* Map and Quiz areas */
     #mapWrapper {
       position: relative;
       border-bottom: 1px solid #ccc;
-      height: 50%;
+      height: 50%; /* initial height; user can drag the horizontal bar */
       min-height: 100px;
     }
     #basicMap, iframe {
       width: 100%;
       height: 100%;
     }
-    /* Horizontal resize bar between map & quiz */
+
+    /* Horizontal drag bar for resizing */
     #horizontalDragBar {
       height: 5px;
       cursor: row-resize;
       background-color: #ccc;
       transition: background-color 0.2s ease;
     }
-    #horizontalDragBar:hover { background-color: #888; }
-    /* Quiz area */
+    #horizontalDragBar:hover {
+      background-color: #888;
+    }
+
+    /* QUIZ area */
     #quiz {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
       background-color: #fff;
     }
-    .answer { font-size: 1.4em; margin-top: 10px; }
-    /* Profile management in sidebar */
+    /* Increase the answer text size for quiz answers */
+    .answer {
+      font-size: 1.4em;
+      margin-top: 10px;
+    }
+
+    /* Profile management styling */
     #profileSection {
       margin-top: 20px;
       padding-top: 10px;
       border-top: 1px solid #ddd;
     }
-    #profileSection h3 { margin: 0 0 10px; color: #555; }
-    #profileSection ul { list-style-type: none; padding: 0; margin: 0; }
+    #profileSection h3 {
+      margin: 0 0 10px;
+      color: #555;
+    }
+    #profileSection ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
     #profileSection li {
       margin-bottom: 8px;
       display: flex;
@@ -100,7 +129,8 @@
       background-color: #007acc;
       color: #fff;
     }
-    /* Collapsible tree nodes */
+
+    /* Collapsible tree nodes: using display toggling */
     .collapsible {
       cursor: pointer;
       user-select: none;
@@ -110,10 +140,22 @@
       transition: background-color 0.2s ease;
       margin: 3px 0;
     }
-    .collapsible:hover { background-color: rgba(0, 122, 204, 0.1); }
-    .content { margin-left: 15px; display: none; }
-    .expanded > .content { display: block; }
-    label { cursor: pointer; }
+    .collapsible:hover {
+      background-color: rgba(0, 122, 204, 0.1);
+    }
+    .content {
+      margin-left: 15px;
+      display: none;
+    }
+    .expanded > .content {
+      display: block;
+    }
+
+    label {
+      cursor: pointer;
+    }
+
+    /* General button styling */
     button {
       margin: 5px 0;
       cursor: pointer;
@@ -124,44 +166,61 @@
       border-radius: 4px;
       transition: background-color 0.2s ease;
     }
-    button:hover { background-color: #005fa3; }
-    /* History Review styling (in quiz area) */
-    #historyReview {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px dashed #888;
-      border-radius: 4px;
-      background: #f9f9f9;
-    }
-    #historyReview input {
-      width: 60px;
-      margin-right: 10px;
-      padding: 2px 4px;
-      font-size: 1em;
+    button:hover {
+      background-color: #005fa3;
     }
   </style>
+  <!-- OpenLayers (if needed) -->
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
 </head>
 <body onload="init();">
   <div id="container">
-    <!-- SIDEBAR: Selection Tree and Profiles -->
+    <!-- Sidebar for tree selection and profiles -->
     <div id="sidebar">
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
+	  
+	  <!--      
+	  <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
+		  <h3>Global Step Selector</h3>
+		  //<div>
+			 <span>Step 1:</span>
+			 <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
+			 <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 2:</span>
+			 <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
+			 <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 3:</span>
+			 <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
+			 <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
+		  </div>
+		  <div>
+			 <span>Step 4:</span>
+			 <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
+			 <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
+		  </div>
+		</div> -->
+	  
       <div id="profileSection">
         <h3>Profiles</h3>
         <input type="text" id="profileName" placeholder="Enter profile name"
-          style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"
-          aria-label="Profile Name"/>
+               style="width:100%; padding:5px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;"
+               aria-label="Profile Name"/>
         <button onclick="saveProfile()" style="width:100%; margin-bottom:10px;" aria-label="Save Profile">
           Save Profile
         </button>
         <ul id="profileList"></ul>
       </div>
     </div>
-    <!-- Vertical Drag Bar -->
+    
+    <!-- Vertical Drag Bar for resizing sidebar -->
     <div id="verticalDragBar"></div>
-    <!-- MAIN: Map and Quiz -->
+
+    <!-- Main content: Map (top), horizontal drag bar, and Quiz (bottom) -->
     <div id="main">
       <div id="mapWrapper">
         <iframe id="gmap_canvas" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
@@ -173,23 +232,23 @@
         <h2>Quiz</h2>
         <button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
         <div id="quizDisplay" style="margin-top:10px;"></div>
-        <!-- HISTORY REVIEW SECTION (Review mode will now question in quiz format) -->
-        <div id="historyReview">
-          <h3>Review Question History</h3>
-          <p>Enter number (max: <span id="maxHistory">200</span>) and click “Review History”.</p>
-          <input type="number" id="historyCountInput" min="1" value="5" />
-          <button onclick="startHistoryReview()" aria-label="Review History">Review History</button>
-        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // ---------------------------------
-    // DRAGGING / RESIZING LOGIC
-    // ---------------------------------
-    let isDraggingVertical = false, isDraggingHorizontal = false;
-    let sidebar, verticalDragBar, horizontalDragBar, mapWrapper, mainContainer;
+    // ---------------------------------------------------------
+    //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
+    // ---------------------------------------------------------
+    let isDraggingVertical = false;
+    let isDraggingHorizontal = false;
+    
+    let sidebar = null;
+    let verticalDragBar = null;
+    let horizontalDragBar = null;
+    let mapWrapper = null;
+    let mainContainer = null;
+    
     window.addEventListener('DOMContentLoaded', () => {
       sidebar = document.getElementById('sidebar');
       verticalDragBar = document.getElementById('verticalDragBar');
@@ -197,16 +256,21 @@
       mapWrapper = document.getElementById('mapWrapper');
       mainContainer = document.getElementById('main');
     
+      // Vertical bar: start dragging
       verticalDragBar.addEventListener('mousedown', function(e) {
         isDraggingVertical = true;
         document.body.style.cursor = 'col-resize';
         e.preventDefault();
       });
+    
+      // Horizontal bar: start dragging
       horizontalDragBar.addEventListener('mousedown', function(e) {
         isDraggingHorizontal = true;
         document.body.style.cursor = 'row-resize';
         e.preventDefault();
       });
+    
+      // Global mousemove to handle drag
       document.addEventListener('mousemove', function(e) {
         if (isDraggingVertical) {
           const newWidth = e.clientX;
@@ -222,67 +286,43 @@
           }
         }
       });
+    
+      // End dragging
       document.addEventListener('mouseup', function() {
         isDraggingVertical = false;
         isDraggingHorizontal = false;
         document.body.style.cursor = 'default';
       });
     });
-
-    // ---------------------------------
-    // PERSISTING COLLAPSE STATE
-    // ---------------------------------
+    
+    // ---------------------------------------------------------
+    //  PERSISTING COLLAPSE STATE IN LOCALSTORAGE
+    // ---------------------------------------------------------
     let collapseState = {};
-    function saveCollapseState() { localStorage.setItem("collapseState", JSON.stringify(collapseState)); }
+    
+    function saveCollapseState() {
+      localStorage.setItem("collapseState", JSON.stringify(collapseState));
+    }
+    
     function loadCollapseState() {
       const stored = localStorage.getItem("collapseState");
       if (stored) {
-        try { collapseState = JSON.parse(stored); }
-        catch(e) { console.warn("Collapse state parse error", e); }
-      }
-    }
-
-    // ---------------------------------
-    // TREE, PROFILE & QUIZ LOGIC
-    // ---------------------------------
-    let data;
-    let selections = {};
-    // Backup object for parent toggles (when user clicks a parent checkbox)
-    let selectionsBackup = {};
-    let currentQuizQuestion = null;
-    // Variables for history review mode:
-    let inHistoryReview = false, historyReviewQuestions = [];
-    // Global variable for active profile name (affects history storage)
-    let currentProfile = null;
-
-    // ----- Helpers to compute tri-state checkbox status -----
-    function computeHeaderState(headerSelection) {
-      const allTrue = headerSelection.every(v => v === true);
-      const allFalse = headerSelection.every(v => v === false);
-      return { checked: allTrue, indeterminate: (!allTrue && !allFalse) };
-    }
-    function computeCountryState(countrySelections) {
-      let flat = [];
-      for (let header in countrySelections) {
-        flat = flat.concat(countrySelections[header]);
-      }
-      const allTrue = flat.every(v => v === true);
-      const allFalse = flat.every(v => v === false);
-      return { checked: allTrue, indeterminate: (!allTrue && !allFalse) };
-    }
-    function computeContinentState(continentSelections) {
-      let flat = [];
-      for (let country in continentSelections) {
-        for (let header in continentSelections[country]) {
-          flat = flat.concat(continentSelections[country][header]);
+        try {
+          collapseState = JSON.parse(stored);
+        } catch (e) {
+          console.warn("Collapse state parse error", e);
         }
       }
-      const allTrue = flat.every(v => v === true);
-      const allFalse = flat.every(v => v === false);
-      return { checked: allTrue, indeterminate: (!allTrue && !allFalse) };
     }
-
-    // ----- Initialize selections from loaded JSON data -----
+    
+    // ---------------------------------------------------------
+    //  QUIZ / TREE / PROFILE LOGIC
+    // ---------------------------------------------------------
+    let data;
+    let selections = {};
+    let currentQuizQuestion = null;
+    let recentQuestions = [];
+    
     function initSelections() {
       selections = {};
       for (const continent in data) {
@@ -296,17 +336,22 @@
         }
       }
     }
-
-    // ----- Create a collapsible element for tree nodes -----
+    
+    // Create a collapsible element with display toggle
     function createCollapsible(title, children, nodeId) {
       const wrapper = document.createElement('div');
       if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
-      if (collapseState[nodeId]) wrapper.classList.add("expanded");
+      if (collapseState[nodeId]) {
+        wrapper.classList.add("expanded");
+      }
     
       const header = document.createElement('div');
       header.className = 'collapsible';
-      if (typeof title === 'string') header.textContent = title;
-      else header.appendChild(title);
+      if (typeof title === 'string') {
+        header.textContent = title;
+      } else {
+        header.appendChild(title);
+      }
       header.onclick = () => {
         if (wrapper.classList.contains("expanded")) {
           wrapper.classList.remove("expanded");
@@ -326,46 +371,37 @@
     
       return wrapper;
     }
-
-    // ----- Render the Tree with tri-state checkboxes -----
+    
     async function renderTree() {
       loadCollapseState();
-      if (!data) {
+      if (data == null) {
         data = await loadAJson("plonkit.json");
         initSelections();
       }
       const container = document.getElementById('treeContainer');
       container.innerHTML = "";
     
-      // Render each continent
+      // Loop through continents
       for (const continent in data) {
-        // Compute continent checkbox state based on children
-        const contState = computeContinentState(selections[continent]);
+        let continentAllSelected = true;
+        for (const country in data[continent]) {
+          for (const header in data[continent][country].header) {
+            if (selections[continent][country][header].some(v => !v)) {
+              continentAllSelected = false;
+              break;
+            }
+          }
+        }
+    
         const continentCheckbox = document.createElement('input');
         continentCheckbox.type = "checkbox";
-        continentCheckbox.checked = contState.checked;
-        continentCheckbox.indeterminate = contState.indeterminate;
+        continentCheckbox.checked = continentAllSelected;
         continentCheckbox.onchange = (e) => {
           const newVal = e.target.checked;
-          if (newVal) {
-            // Re-enable: restore backup if exists, else set all true
-            if (selectionsBackup[continent]) {
-              selections[continent] = JSON.parse(JSON.stringify(selectionsBackup[continent]));
-              delete selectionsBackup[continent];
-            } else {
-              for (const country in data[continent]) {
-                for (const header in data[continent][country].header) {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              }
-            }
-          } else {
-            // Backup then disable all children
-            selectionsBackup[continent] = JSON.parse(JSON.stringify(selections[continent]));
-            for (const country in data[continent]) {
-              for (const header in data[continent][country].header) {
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              }
+          for (const country in data[continent]) {
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
             }
           }
           renderTree();
@@ -379,28 +415,21 @@
         // Process countries
         let countryNodes = [];
         for (const country in data[continent]) {
-          const countryState = computeCountryState(selections[continent][country]);
+          let countryAllSelected = true;
+          for (const header in data[continent][country].header) {
+            if (selections[continent][country][header].some(v => !v)) {
+              countryAllSelected = false;
+              break;
+            }
+          }
           const countryCheckbox = document.createElement('input');
           countryCheckbox.type = "checkbox";
-          countryCheckbox.checked = countryState.checked;
-          countryCheckbox.indeterminate = countryState.indeterminate;
+          countryCheckbox.checked = countryAllSelected;
           countryCheckbox.onchange = (e) => {
             const newVal = e.target.checked;
-            if (newVal) {
-              if (selectionsBackup[continent] && selectionsBackup[continent][country]) {
-                selections[continent][country] = JSON.parse(JSON.stringify(selectionsBackup[continent][country]));
-                delete selectionsBackup[continent][country];
-              } else {
-                for (const header in data[continent][country].header) {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              }
-            } else {
-              if (!selectionsBackup[continent]) selectionsBackup[continent] = {};
-              selectionsBackup[continent][country] = JSON.parse(JSON.stringify(selections[continent][country]));
-              for (const header in data[continent][country].header) {
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              }
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
             }
             renderTree();
           };
@@ -413,26 +442,13 @@
           let headerNodes = [];
           const headers = data[continent][country].header;
           for (const header in headers) {
-            const headerState = computeHeaderState(selections[continent][country][header]);
             const headerCheckbox = document.createElement('input');
             headerCheckbox.type = "checkbox";
-            headerCheckbox.checked = headerState.checked;
-            headerCheckbox.indeterminate = headerState.indeterminate;
+            headerCheckbox.checked = selections[continent][country][header].every(v => v);
             headerCheckbox.onchange = (e) => {
               const newVal = e.target.checked;
-              if (newVal) {
-                if (selectionsBackup[continent] && selectionsBackup[continent][country] && selectionsBackup[continent][country][header]) {
-                  selections[continent][country][header] = JSON.parse(JSON.stringify(selectionsBackup[continent][country][header]));
-                  delete selectionsBackup[continent][country][header];
-                } else {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              } else {
-                if (!selectionsBackup[continent]) selectionsBackup[continent] = {};
-                if (!selectionsBackup[continent][country]) selectionsBackup[continent][country] = {};
-                selectionsBackup[continent][country][header] = JSON.parse(JSON.stringify(selections[continent][country][header]));
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              }
+              selections[continent][country][header] =
+                selections[continent][country][header].map(() => newVal);
               renderTree();
             };
             const headerLabel = document.createElement('span');
@@ -447,8 +463,7 @@
               questionCheckbox.type = "checkbox";
               questionCheckbox.checked = selections[continent][country][header][index];
               questionCheckbox.onchange = (e) => {
-                selections[continent][country][header][index] = e.target.checked;
-                renderTree();
+                toggleStep(continent, country, header, index, e.target.checked);
               };
               const questionLabel = document.createElement('span');
               questionLabel.textContent = " Question " + (index + 1);
@@ -471,39 +486,74 @@
         container.appendChild(continentCollapsible);
       }
     }
+    
+    function toggleStep(continent, country, header, index, checked) {
+      selections[continent][country][header][index] = checked;
+      renderTree();
+    }
+	
+	function toggleStepForAllCountries(stepIndex, newVal) {
+  // Loop through each continent, country, and header.
+  for (let continent in data) {
+    for (let country in data[continent]) {
+      // For each header under the country:
+      for (let header in data[continent][country].header) {
+        // Check if that header has a step at this index.
+        if (selections[continent][country][header][stepIndex] !== undefined) {
+          selections[continent][country][header][stepIndex] = newVal;
+        }
+      }
+    }
+  }
+  // Re-render the tree so that checkboxes update
+  renderTree();
+}
 
-    // ---------------------------------
-    // PROFILE FUNCTIONS (in Sidebar)
-    // ---------------------------------
+    
+    // ---------------------------------------------------------
+    //  PROFILE FUNCTIONS
+    // ---------------------------------------------------------
     function saveProfile() {
       const name = document.getElementById('profileName').value.trim();
-      if (!name) { alert("Please enter a profile name"); return; }
+      if (!name) {
+        alert("Please enter a profile name");
+        return;
+      }
       let profiles = loadProfiles();
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
       renderProfileList();
-      currentProfile = name;
     }
+    
     function updateProfile(name) {
       let profiles = loadProfiles();
-      if (!profiles[name]) { alert("Profile does not exist. Please save it first."); return; }
+      if (!profiles[name]) {
+        alert("Profile does not exist. Please save it first.");
+        return;
+      }
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
       renderProfileList();
     }
+    
     function loadProfiles() {
       const profilesData = localStorage.getItem("profileSelections");
-      try { return profilesData ? JSON.parse(profilesData) : {}; }
-      catch(e) { console.error("Error parsing localStorage profile data:", e); return {}; }
+      try {
+        return profilesData ? JSON.parse(profilesData) : {};
+      } catch(e) {
+        console.error("Error parsing localStorage profile data:", e);
+        return {};
+      }
     }
+    
     function loadProfile(name) {
       const profiles = loadProfiles();
       if (profiles[name]) {
         selections = profiles[name];
         renderTree();
-        currentProfile = name;
       }
     }
+    
     function deleteProfile(name) {
       let profiles = loadProfiles();
       if (profiles[name]) {
@@ -512,6 +562,7 @@
         renderProfileList();
       }
     }
+    
     function renderProfileList() {
       const profileList = document.getElementById('profileList');
       profileList.innerHTML = "";
@@ -519,29 +570,48 @@
       for (let name in profiles) {
         const li = document.createElement('li');
         li.textContent = name + " ";
+        
         const loadBtn = document.createElement('button');
         loadBtn.textContent = "Load";
         loadBtn.setAttribute('aria-label', `Load profile ${name}`);
         loadBtn.addEventListener('click', () => loadProfile(name));
         li.appendChild(loadBtn);
+        
         const updateBtn = document.createElement('button');
         updateBtn.textContent = "Update";
         updateBtn.setAttribute('aria-label', `Update profile ${name}`);
         updateBtn.addEventListener('click', () => updateProfile(name));
         li.appendChild(updateBtn);
+        
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = "Delete";
         deleteBtn.setAttribute('aria-label', `Delete profile ${name}`);
         deleteBtn.addEventListener('click', () => deleteProfile(name));
         li.appendChild(deleteBtn);
+        
         profileList.appendChild(li);
       }
     }
+	
+	// Utility to increment and return the view count for a question in localStorage.
+	function incrementQuestionCount(questionId) {
+	  let countData = localStorage.getItem('questionDisplayCounts');
+	  let counts = countData ? JSON.parse(countData) : {};
+	  counts[questionId] = (counts[questionId] || 0) + 1;
+	  localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
+	  return counts[questionId];
+	}
 
-    // ---------------------------------
-    // QUIZ & QUESTION HISTORY FUNCTIONS
-    // ---------------------------------
-    // Get all selected questions from the tree.
+	// Utility to get the current count for a given question (if needed separately)
+	function getQuestionCount(questionId) {
+	  let countData = localStorage.getItem('questionDisplayCounts');
+	  let counts = countData ? JSON.parse(countData) : {};
+	  return counts[questionId] || 0;
+	}
+    
+    // ---------------------------------------------------------
+    //  QUIZ FUNCTIONS
+    // ---------------------------------------------------------
     function getAllSelectedQuestions() {
       let available = [];
       for (const continent in data) {
@@ -561,145 +631,85 @@
       }
       return available;
     }
-    function isImage(url) { return (url.match(/\.(jpeg|jpg|gif|png)$/) != null); }
-
-    // ----- Standard quiz mode -----
+    
+    function isImage(url) {
+      return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
+    }
+    
     function pickRandomQuestion() {
       const all = getAllSelectedQuestions();
-      // Avoid immediate repeats if possible.
-      if (all.length === 0) return null;
-      return all[Math.floor(Math.random() * all.length)];
+      const available = all.filter(q => !recentQuestions.includes(q.id));
+      if (available.length === 0) {
+        recentQuestions = [];
+        return pickRandomQuestion();
+      }
+      const picked = available[Math.floor(Math.random() * available.length)];
+      recentQuestions.push(picked.id);
+      if (recentQuestions.length > 20) recentQuestions.shift();
+      return picked;
     }
-    // Display a question (without answer) in the quiz area.
-    function displayQuizQuestion(questionObj, fromHistory) {
-      let questionContent = "";
-      if (isImage(questionObj.data.url)) {
-        questionContent = `<img src="${questionObj.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
-      } else {
-        questionContent = `<iframe src="${questionObj.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
-      }
-      document.getElementById('quizDisplay').innerHTML =
-        `<h2 id="quizHeader">${fromHistory ? "History Question" : "Question"}</h2>
-         <div>${questionContent}</div>`;
-    }
-    // Show answer for current question.
-    function showAnswerForCurrentQuestion(isHistory) {
-      const headerEl = document.getElementById('quizHeader');
-      if (headerEl) {
-        headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
-      }
-      const answerDiv = document.createElement('div');
-      answerDiv.className = 'answer';
-      answerDiv.innerHTML = currentQuizQuestion.data.html;
-      // Increment view count (only in normal mode)
-      if (!isHistory) {
-        const count = incrementQuestionCount(currentQuizQuestion.id);
-        const countText = document.createElement('div');
-        countText.style.fontSize = "0.9em";
-        countText.style.marginTop = "5px";
-        countText.style.color = "#555";
-        countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
-        answerDiv.appendChild(countText);
-      }
-      document.getElementById('quizDisplay').appendChild(answerDiv);
-      currentQuizQuestion.answerShown = true;
-      // In normal mode, add to history after answer is revealed.
-      if (!isHistory) addToHistory(currentQuizQuestion);
-    }
-    // Increment view count in localStorage.
-    function incrementQuestionCount(questionId) {
-      let countData = localStorage.getItem('questionDisplayCounts');
-      let counts = countData ? JSON.parse(countData) : {};
-      counts[questionId] = (counts[questionId] || 0) + 1;
-      localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
-      return counts[questionId];
-    }
-    // Add question to history (only in normal mode).
-    function addToHistory(questionObj) {
-      if (!currentProfile) return; 
-      const historyKey = "questionHistory_" + currentProfile;
-      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-      history.push(questionObj);
-      if (history.length > 200) history = history.slice(history.length - 200);
-      localStorage.setItem(historyKey, JSON.stringify(history));
-    }
-
-    // ----- History Review Mode -----
-    // Start history review mode: load last n questions and shuffle them.
-    function startHistoryReview() {
-      if (!currentProfile) {
-        alert("Please load or save a profile to review question history.");
-        return;
-      }
-      const n = parseInt(document.getElementById('historyCountInput').value);
-      const historyKey = "questionHistory_" + currentProfile;
-      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-      if (history.length === 0) {
-        alert("No history available for the current profile.");
-        return;
-      }
-      if (n > history.length) {
-        alert(`Only ${history.length} questions stored in history.`);
-        return;
-      }
-      // Get the last n questions and shuffle them.
-      historyReviewQuestions = history.slice(history.length - n);
-      for (let i = historyReviewQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [historyReviewQuestions[i], historyReviewQuestions[j]] = [historyReviewQuestions[j], historyReviewQuestions[i]];
-      }
-      inHistoryReview = true;
-      currentQuizQuestion = null;
-      document.getElementById('quizDisplay').innerHTML = "";
-      document.getElementById('quizButton').textContent = "Show History Question";
-    }
-
-    // ----- Main quiz button handler -----
+    
     function quizButtonHandler() {
-      // If in history review mode:
-      if (inHistoryReview) {
-        if (!currentQuizQuestion || currentQuizQuestion.answerShown) {
-          if (historyReviewQuestions.length === 0) {
-            alert("History review finished.");
-            inHistoryReview = false;
-            currentQuizQuestion = null;
-            document.getElementById('quizDisplay').innerHTML = "";
-            document.getElementById('quizButton').textContent = "Show Question";
-            return;
-          }
-          // Get next history question (do not re-add it into history)
-          const nextQuestion = historyReviewQuestions.shift();
-          currentQuizQuestion = { ...nextQuestion, answerShown: false, isHistory: true };
-          displayQuizQuestion(currentQuizQuestion, true);
-          document.getElementById('quizButton').textContent = "Show Answer";
-        } else {
-          showAnswerForCurrentQuestion(true);
-          document.getElementById('quizButton').textContent = "Next History Question";
-        }
-        return;
-      }
+	  if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+		// (Optional) update header text with question info
+		const headerEl = document.getElementById('quizHeader');
+		if (headerEl) {
+		  headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+		}
+		// Create answer element
+		const answerDiv = document.createElement('div');
+		answerDiv.className = 'answer';
+		answerDiv.innerHTML = currentQuizQuestion.data.html;
+		// Increment counter for this question.
+		const count = incrementQuestionCount(currentQuizQuestion.id);
+		// Create a small note displaying the view count.
+		const countText = document.createElement('div');
+		countText.style.fontSize = "0.9em";
+		countText.style.marginTop = "5px";
+		countText.style.color = "#555";
+		countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
+		answerDiv.appendChild(countText);
+		
+		document.getElementById('quizDisplay').appendChild(answerDiv);
+		currentQuizQuestion.answerShown = true;
+		document.getElementById('quizButton').textContent = "Next Question";
+	  } else {
+		const allAvailable = getAllSelectedQuestions();
+		if (allAvailable.length === 0) {
+		  alert("No entries selected for the quiz. Please adjust your selections.");
+		  return;
+		}
+		const randomEntry = pickRandomQuestion();
+		currentQuizQuestion = { ...randomEntry, answerShown: false };
+		currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
+		
+		let questionContent = "";
+		if (isImage(randomEntry.data.url)) {
+		  questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+		} else {
+		  questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+		}
+		document.getElementById('quizDisplay').innerHTML =
+		  `<h2 id="quizHeader">Question</h2>
+		   <div>${questionContent}</div>`;
+		document.getElementById('quizButton').textContent = "Show Answer";
+	  }
+	}
+
     
-      // Normal quiz mode
-      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-        showAnswerForCurrentQuestion(false);
-        document.getElementById('quizButton').textContent = "Next Question";
-      } else {
-        const randomEntry = pickRandomQuestion();
-        if (!randomEntry) {
-          alert("No entries selected for the quiz. Please adjust your selections.");
-          return;
-        }
-        currentQuizQuestion = { ...randomEntry, answerShown: false };
-        displayQuizQuestion(currentQuizQuestion, false);
-        document.getElementById('quizButton').textContent = "Show Answer";
+    document.addEventListener('keydown', (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        quizButtonHandler();
       }
-    }
+    });
     
-    // Utility: load JSON data.
     async function loadAJson(url) {
       try {
         const response = await fetch(url);
-        if (!response.ok) { throw new Error(`Network response was not ok (status: ${response.status})`); }
+        if (!response.ok) {
+          throw new Error(`Network response was not ok (status: ${response.status})`);
+        }
         const jsonData = await response.json();
         return jsonData;
       } catch (error) {
@@ -708,18 +718,12 @@
       }
     }
     
-    // Initialize after page loads.
     window.init = async function() {
       data = await loadAJson("plonkit.json");
       initSelections();
       await renderTree();
       renderProfileList();
     };
-
-    // Optional: trigger quiz button with spacebar.
-    document.addEventListener('keydown', (e) => {
-      if (e.code === "Space") { e.preventDefault(); quizButtonHandler(); }
-    });
   </script>
 </body>
 </html>
