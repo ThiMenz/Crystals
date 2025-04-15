@@ -166,7 +166,7 @@
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
       
-      <!-- Global Step Selector (uncommented now) -->
+      <!-- Global Step Selector -->
       <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
         <h3>Global Step Selector</h3>
         <div>
@@ -278,30 +278,13 @@
     });
     
     // ---------------------------------------------------------
-    //  PERSISTING COLLAPSE STATE
+    //  COLLAPSIBLE TREE & SELECTIONS
     // ---------------------------------------------------------
     let collapseState = {};
-    
-    function saveCollapseState() {
-      localStorage.setItem("collapseState", JSON.stringify(collapseState));
-    }
-    
-    function loadCollapseState() {
-      const stored = localStorage.getItem("collapseState");
-      if (stored) {
-        try { collapseState = JSON.parse(stored); } 
-        catch (e) { console.warn("Collapse state parse error", e); }
-      }
-    }
-    
-    // ---------------------------------------------------------
-    //  SELECTION TREE LOGIC & BACKUP
-    // ---------------------------------------------------------
     let data;
     let selections = {};
-    // Backup object to save children states when a parent is toggled off
-    let selectionBackup = {};
     
+    // Initialize selections to "true" for all steps.
     function initSelections() {
       selections = {};
       for (const continent in data) {
@@ -316,7 +299,7 @@
       }
     }
     
-    // Utility to create collapsible node
+    // Create a collapsible element (same as original)
     function createCollapsible(title, children, nodeId) {
       const wrapper = document.createElement('div');
       if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
@@ -334,7 +317,7 @@
           wrapper.classList.add("expanded");
           collapseState[nodeId] = true;
         }
-        saveCollapseState();
+        localStorage.setItem("collapseState", JSON.stringify(collapseState));
       };
       wrapper.appendChild(header);
     
@@ -347,7 +330,10 @@
     }
     
     async function renderTree() {
-      loadCollapseState();
+      const stored = localStorage.getItem("collapseState");
+      if (stored) {
+        try { collapseState = JSON.parse(stored); } catch(e) { console.warn(e); }
+      }
       if (data == null) {
         data = await loadAJson("plonkit.json");
         initSelections();
@@ -355,7 +341,7 @@
       const container = document.getElementById('treeContainer');
       container.innerHTML = "";
     
-      // Loop through continents
+      // Build tree: continents -> countries -> headers -> questions
       for (const continent in data) {
         let continentAllSelected = true;
         for (const country in data[continent]) {
@@ -372,24 +358,9 @@
         continentCheckbox.checked = continentAllSelected;
         continentCheckbox.onchange = (e) => {
           const newVal = e.target.checked;
-          if (!newVal) {
-            // Save states for this continent
-            selectionBackup[continent] = JSON.parse(JSON.stringify(selections[continent]));
-            for (const country in data[continent]) {
-              for (const header in data[continent][country].header) {
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              }
-            }
-          } else {
-            if (selectionBackup[continent]) {
-              selections[continent] = selectionBackup[continent];
-              delete selectionBackup[continent];
-            } else {
-              for (const country in data[continent]) {
-                for (const header in data[continent][country].header) {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              }
+          for (const country in data[continent]) {
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] = selections[continent][country][header].map(() => newVal);
             }
           }
           renderTree();
@@ -414,21 +385,8 @@
           countryCheckbox.checked = countryAllSelected;
           countryCheckbox.onchange = (e) => {
             const newVal = e.target.checked;
-            if (!selectionBackup[continent]) selectionBackup[continent] = {};
-            if (!newVal) {
-              selectionBackup[continent][country] = JSON.parse(JSON.stringify(selections[continent][country]));
-              for (const header in data[continent][country].header) {
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              }
-            } else {
-              if (selectionBackup[continent][country]) {
-                selections[continent][country] = selectionBackup[continent][country];
-                delete selectionBackup[continent][country];
-              } else {
-                for (const header in data[continent][country].header) {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              }
+            for (const header in data[continent][country].header) {
+              selections[continent][country][header] = selections[continent][country][header].map(() => newVal);
             }
             renderTree();
           };
@@ -446,19 +404,7 @@
             headerCheckbox.checked = selections[continent][country][header].every(v => v);
             headerCheckbox.onchange = (e) => {
               const newVal = e.target.checked;
-              if (!selectionBackup[continent]) selectionBackup[continent] = {};
-              if (!selectionBackup[continent][country]) selectionBackup[continent][country] = {};
-              if (!newVal) {
-                selectionBackup[continent][country][header] = JSON.parse(JSON.stringify(selections[continent][country][header]));
-                selections[continent][country][header] = selections[continent][country][header].map(() => false);
-              } else {
-                if (selectionBackup[continent][country][header]) {
-                  selections[continent][country][header] = selectionBackup[continent][country][header];
-                  delete selectionBackup[continent][country][header];
-                } else {
-                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
-                }
-              }
+              selections[continent][country][header] = selections[continent][country][header].map(() => newVal);
               renderTree();
             };
             const headerLabel = document.createElement('span');
@@ -527,7 +473,6 @@
       let profiles = loadProfiles();
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
-      // Set current profile as active
       window.currentProfile = name;
       renderProfileList();
     }
@@ -548,7 +493,7 @@
       try {
         return profilesData ? JSON.parse(profilesData) : {};
       } catch(e) {
-        console.error("Error parsing localStorage profile data:", e);
+        console.error("Error parsing profile data:", e);
         return {};
       }
     }
@@ -607,7 +552,7 @@
     let currentQuizQuestion = null;
     let recentQuestions = [];
     
-    // Store question history per profile; hard cap of 200 entries
+    // Store question history per profile with cap of 200 entries
     function addQuestionToHistory(question) {
       const profileName = window.currentProfile || "default";
       const historyKey = "questionHistory_" + profileName;
@@ -641,21 +586,7 @@
       return available;
     }
     
-    // We'll use our existing "recentQuestions" array in the random picker.
-    function pickRandomQuestion() {
-      const all = getAllSelectedQuestions();
-      const available = all.filter(q => !recentQuestions.includes(q.id));
-      if (available.length === 0) {
-        recentQuestions = [];
-        return pickRandomQuestion();
-      }
-      const picked = available[Math.floor(Math.random() * available.length)];
-      recentQuestions.push(picked.id);
-      if (recentQuestions.length > 20) recentQuestions.shift();
-      return picked;
-    }
-    
-    // Replay mode variables
+    // Replay mode variables and new alternating logic
     let replayMode = false;
     let replayQuestions = [];
     let replayIndex = 0;
@@ -675,61 +606,76 @@
         alert("No questions in history to replay.");
         return;
       }
+      // Use the last n questions from history
       replayQuestions = history.slice(-n);
-      // Shuffle the array using the Fisher-Yates algorithm
+      // Shuffle the replay questions
       for (let i = replayQuestions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [replayQuestions[i], replayQuestions[j]] = [replayQuestions[j], replayQuestions[i]];
       }
       replayMode = true;
       replayIndex = 0;
-      showReplayQuestion();
+      // Set the replay question to start in "question-only" mode.
+      currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
+      showCurrentReplayQuestion();
     }
     
-    function showReplayQuestion() {
+    // Displays the current replay question depending on its state.
+    function showCurrentReplayQuestion() {
       if (!replayMode || replayQuestions.length === 0) {
         alert("No replay questions available.");
         return;
       }
-      const question = replayQuestions[replayIndex];
-      currentQuizQuestion = question;
-      let questionContent = "";
-      if (isImage(question.data.url)) {
-        questionContent = `<img src="${question.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+      const q = currentQuizQuestion;
+      let content = "";
+      if (isImage(q.data.url)) {
+        content = `<img src="${q.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
       } else {
-        questionContent = `<iframe src="${question.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        content = `<iframe src="${q.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
       }
-      document.getElementById('quizDisplay').innerHTML =
-        `<h2 id="quizHeader">${question.country} - ${question.header} (Question ${question.index + 1})</h2>
-         <div>${questionContent}</div>`;
+      // If answer has been shown, include answer (assumed available in q.data.html).
+      let html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2>
+                  <div>${content}</div>`;
+      if (q.answerShown) {
+        html += `<div class="answer">${q.data.html}</div>`;
+      }
+      document.getElementById('quizDisplay').innerHTML = html;
+      // Update button text based on state.
       const btn = document.getElementById('quizButton');
-      if (replayIndex < replayQuestions.length - 1) {
-        btn.textContent = "Next Question (Replay Mode)";
-      } else {
-        btn.textContent = "End Replay";
-      }
+      btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
     }
     
+    // Replay quiz button handler which alternates state
     function replayQuizButtonHandler() {
-      replayIndex++;
-      if (replayIndex >= replayQuestions.length) {
-        replayMode = false;
-        replayQuestions = [];
-        replayIndex = 0;
-        document.getElementById('quizButton').textContent = "Show Question";
+      if (!currentQuizQuestion.answerShown) {
+        // Show answer
+        currentQuizQuestion.answerShown = true;
+        showCurrentReplayQuestion();
       } else {
-        showReplayQuestion();
+        // Advance to the next replay question
+        replayIndex++;
+        if (replayIndex >= replayQuestions.length) {
+          replayMode = false;
+          replayQuestions = [];
+          replayIndex = 0;
+          document.getElementById('quizButton').textContent = "Show Question";
+          document.getElementById('quizDisplay').innerHTML = "";
+        } else {
+          currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
+          showCurrentReplayQuestion();
+        }
       }
     }
     
-    // Quiz button handler: show answer or pick a new question
+    // Main quiz button handler handles both normal and replay modes.
     function quizButtonHandler() {
       if (replayMode) {
         replayQuizButtonHandler();
         return;
       }
+      // Normal mode: alternate between showing answer and new question.
       if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-        // Show answer for the current quiz question
+        // Show answer
         const headerEl = document.getElementById('quizHeader');
         if (headerEl) {
           headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
@@ -748,15 +694,15 @@
         currentQuizQuestion.answerShown = true;
         document.getElementById('quizButton').textContent = "Next Question";
       } else {
+        // Fetch a new random question
         const allAvailable = getAllSelectedQuestions();
         if (allAvailable.length === 0) {
           alert("No entries selected for the quiz. Please adjust your selections.");
           return;
         }
         const randomEntry = pickRandomQuestion();
-        currentQuizQuestion = { ...randomEntry, answerShown: false };
+        currentQuizQuestion = Object.assign({}, randomEntry, { answerShown: false });
         currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
-        // Record the question to history (only in normal mode)
         addQuestionToHistory(currentQuizQuestion);
         let questionContent = "";
         if (isImage(randomEntry.data.url)) {
@@ -771,6 +717,20 @@
       }
     }
     
+    // Randomly pick a question (while avoiding immediate repeats)
+    function pickRandomQuestion() {
+      const all = getAllSelectedQuestions();
+      const available = all.filter(q => !recentQuestions.includes(q.id));
+      if (available.length === 0) {
+        recentQuestions = [];
+        return pickRandomQuestion();
+      }
+      const picked = available[Math.floor(Math.random() * available.length)];
+      recentQuestions.push(picked.id);
+      if (recentQuestions.length > 20) recentQuestions.shift();
+      return picked;
+    }
+    
     // Utility: Increment view count for a question
     function incrementQuestionCount(questionId) {
       let countData = localStorage.getItem('questionDisplayCounts');
@@ -778,12 +738,6 @@
       counts[questionId] = (counts[questionId] || 0) + 1;
       localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
       return counts[questionId];
-    }
-    
-    function getQuestionCount(questionId) {
-      let countData = localStorage.getItem('questionDisplayCounts');
-      let counts = countData ? JSON.parse(countData) : {};
-      return counts[questionId] || 0;
     }
     
     // ---------------------------------------------------------
