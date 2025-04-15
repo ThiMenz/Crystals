@@ -681,36 +681,29 @@
     
     // Display the current replay question and include replay progress.
     function showCurrentReplayQuestion() {
-	  if (!replayMode || replayQuestions.length === 0) {
-		alert("No replay questions available.");
-		return;
-	  }
-	  const q = currentQuizQuestion;
-	  let content = "";
-	  const imageHeight = getImageHeight();
-	  if (isImage(q.data.url)) {
-		content = `<img src="${q.data.url}" alt="Quiz Image" style="height:${imageHeight}px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
-	  } else {
-		content = `<iframe src="${q.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
-	  }
-	  let html = `<div>${content}</div>`;
-	  if (q.answerShown) {
-		html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
-	  }
-
-	  // 🔁 Update x/y counter for replay mode vs normal mode
-	  const progressDone = q.answerShown ? replayIndex + 1 : replayIndex;
-	  if (replayMode) {
-		document.getElementById('questionStats').textContent = `[${progressDone} / ${replayQuestions.length}]`;
-	  } else {
-		updateQuestionStats();
-	  }
-
-	  document.getElementById('quizDisplay').innerHTML = html;
-	  const btn = document.getElementById('quizButton');
-	  btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
-	}
-
+      if (!replayMode || replayQuestions.length === 0) {
+        alert("No replay questions available.");
+        return;
+      }
+      const q = currentQuizQuestion;
+      let content = "";
+      const imageHeight = getImageHeight();
+      if (isImage(q.data.url)) {
+        content = `<img src="${q.data.url}" alt="Quiz Image" style="height:${imageHeight}px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+      } else {
+        content = `<iframe src="${q.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+      }
+      let html = `<div>${content}</div>`;
+      if (q.answerShown) {
+        html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
+      }
+      // Determine the "done" count: if answer is not yet shown, count remains the same.
+      const progressDone = q.answerShown ? replayIndex + 1 : replayIndex;
+      const progress = `<div style="text-align:right; font-size:0.9em; color:#777;">Replay: ${progressDone} / ${replayQuestions.length}</div>`;
+      document.getElementById('quizDisplay').innerHTML = progress + html;
+      const btn = document.getElementById('quizButton');
+      btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
+    }
     
     // Replay quiz button handler.
     function replayQuizButtonHandler() {
