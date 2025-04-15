@@ -10,36 +10,32 @@
       height: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7fa;
-      /* Increase the base font size if needed */
       font-size: 18px;
     }
-
-    /* Container uses a flex layout with the sidebar, the vertical drag bar, and the main content */
+    /* Container uses a flex layout with sidebar, vertical drag bar, and main content */
     #container {
       display: flex;
       height: 100vh;
-      overflow: hidden; /* so that horizontal scrollbars do not appear unexpectedly */
+      overflow: hidden;
     }
-
-    /* SIDEBAR (Left) */
+    /* SIDEBAR */
     #sidebar {
-      width: 350px; /* initial width; user can drag to resize */
+      width: 350px;
       overflow-y: auto;
       border-right: 1px solid #ccc;
       padding: 20px;
       box-sizing: border-box;
       background: linear-gradient(135deg, #ffffff, #e6f0f8);
-      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-      min-width: 200px; /* so it doesn't become too narrow */
-      max-width: 800px; /* optional limit, so it doesn't grow unbounded */
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      min-width: 200px;
+      max-width: 800px;
     }
     #sidebar h2 {
       margin-top: 0;
       font-size: 1.6em;
       color: #333;
     }
-
-    /* The vertical bar for dragging sidebar width */
+    /* Vertical drag bar */
     #verticalDragBar {
       width: 5px;
       cursor: col-resize;
@@ -49,28 +45,25 @@
     #verticalDragBar:hover {
       background-color: #888;
     }
-
-    /* MAIN content area: contains Map (top) and Quiz (bottom) with a horizontal drag bar */
+    /* MAIN content: Map on top, Quiz below */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-width: 0;
     }
-
-    /* Map and Quiz areas */
+    /* Map area */
     #mapWrapper {
       position: relative;
       border-bottom: 1px solid #ccc;
-      height: 50%; /* initial height; user can drag the horizontal bar */
+      height: 50%;
       min-height: 100px;
     }
     #basicMap, iframe {
       width: 100%;
       height: 100%;
     }
-
-    /* Horizontal drag bar for resizing */
+    /* Horizontal drag bar */
     #horizontalDragBar {
       height: 5px;
       cursor: row-resize;
@@ -80,7 +73,6 @@
     #horizontalDragBar:hover {
       background-color: #888;
     }
-
     /* QUIZ area */
     #quiz {
       flex: 1;
@@ -88,13 +80,11 @@
       overflow-y: auto;
       background-color: #fff;
     }
-    /* Increase the answer text size for quiz answers */
     .answer {
       font-size: 1.4em;
       margin-top: 10px;
     }
-
-    /* Profile management styling */
+    /* Profile section */
     #profileSection {
       margin-top: 20px;
       padding-top: 10px;
@@ -129,8 +119,7 @@
       background-color: #007acc;
       color: #fff;
     }
-
-    /* Collapsible tree nodes: using display toggling */
+    /* Collapsible tree nodes */
     .collapsible {
       cursor: pointer;
       user-select: none;
@@ -150,11 +139,9 @@
     .expanded > .content {
       display: block;
     }
-
     label {
       cursor: pointer;
     }
-
     /* General button styling */
     button {
       margin: 5px 0;
@@ -170,41 +157,40 @@
       background-color: #005fa3;
     }
   </style>
-  <!-- OpenLayers (if needed) -->
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
 </head>
 <body onload="init();">
   <div id="container">
-    <!-- Sidebar for tree selection and profiles -->
+    <!-- Sidebar: tree selection, global step selector, and profiles -->
     <div id="sidebar">
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
-	  
-	  <!--      
-	  <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
-		  <h3>Global Step Selector</h3>
-		  //<div>
-			 <span>Step 1:</span>
-			 <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
-			 <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 2:</span>
-			 <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
-			 <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 3:</span>
-			 <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
-			 <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 4:</span>
-			 <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
-			 <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
-		  </div>
-		</div> -->
-	  
+      
+      <!-- Global Step Selector (uncommented now) -->
+      <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
+        <h3>Global Step Selector</h3>
+        <div>
+          <span>Step 1:</span>
+          <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
+          <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
+        </div>
+        <div>
+          <span>Step 2:</span>
+          <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
+          <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
+        </div>
+        <div>
+          <span>Step 3:</span>
+          <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
+          <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
+        </div>
+        <div>
+          <span>Step 4:</span>
+          <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
+          <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
+        </div>
+      </div>
+      
       <div id="profileSection">
         <h3>Profiles</h3>
         <input type="text" id="profileName" placeholder="Enter profile name"
@@ -217,10 +203,10 @@
       </div>
     </div>
     
-    <!-- Vertical Drag Bar for resizing sidebar -->
+    <!-- Vertical drag bar -->
     <div id="verticalDragBar"></div>
-
-    <!-- Main content: Map (top), horizontal drag bar, and Quiz (bottom) -->
+    
+    <!-- Main content: Map and Quiz -->
     <div id="main">
       <div id="mapWrapper">
         <iframe id="gmap_canvas" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" 
@@ -231,23 +217,23 @@
       <div id="quiz">
         <h2>Quiz</h2>
         <button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
+        <!-- Replay Section for question history replay -->
+        <div id="replaySection" style="margin-top:20px; padding:10px; background:#eef9ff; border-radius:4px;">
+          <input type="number" id="replayCount" placeholder="Enter n (max 200)" min="1" max="200" style="width:60px;"/>
+          <button onclick="startReplay()" aria-label="Start Replay">Start Replay</button>
+        </div>
         <div id="quizDisplay" style="margin-top:10px;"></div>
       </div>
     </div>
   </div>
-
+  
   <script>
     // ---------------------------------------------------------
-    //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
+    //  RESIZING / DRAGGING LOGIC
     // ---------------------------------------------------------
     let isDraggingVertical = false;
     let isDraggingHorizontal = false;
-    
-    let sidebar = null;
-    let verticalDragBar = null;
-    let horizontalDragBar = null;
-    let mapWrapper = null;
-    let mainContainer = null;
+    let sidebar = null, verticalDragBar = null, horizontalDragBar = null, mapWrapper = null, mainContainer = null;
     
     window.addEventListener('DOMContentLoaded', () => {
       sidebar = document.getElementById('sidebar');
@@ -256,21 +242,18 @@
       mapWrapper = document.getElementById('mapWrapper');
       mainContainer = document.getElementById('main');
     
-      // Vertical bar: start dragging
       verticalDragBar.addEventListener('mousedown', function(e) {
         isDraggingVertical = true;
         document.body.style.cursor = 'col-resize';
         e.preventDefault();
       });
     
-      // Horizontal bar: start dragging
       horizontalDragBar.addEventListener('mousedown', function(e) {
         isDraggingHorizontal = true;
         document.body.style.cursor = 'row-resize';
         e.preventDefault();
       });
     
-      // Global mousemove to handle drag
       document.addEventListener('mousemove', function(e) {
         if (isDraggingVertical) {
           const newWidth = e.clientX;
@@ -280,14 +263,13 @@
         }
         if (isDraggingHorizontal) {
           const rect = mainContainer.getBoundingClientRect();
-          const offsetY = e.clientY - rect.top; 
+          const offsetY = e.clientY - rect.top;
           if (offsetY > 100 && offsetY < (rect.height - 100)) {
             mapWrapper.style.height = offsetY + 'px';
           }
         }
       });
     
-      // End dragging
       document.addEventListener('mouseup', function() {
         isDraggingVertical = false;
         isDraggingHorizontal = false;
@@ -296,7 +278,7 @@
     });
     
     // ---------------------------------------------------------
-    //  PERSISTING COLLAPSE STATE IN LOCALSTORAGE
+    //  PERSISTING COLLAPSE STATE
     // ---------------------------------------------------------
     let collapseState = {};
     
@@ -307,21 +289,18 @@
     function loadCollapseState() {
       const stored = localStorage.getItem("collapseState");
       if (stored) {
-        try {
-          collapseState = JSON.parse(stored);
-        } catch (e) {
-          console.warn("Collapse state parse error", e);
-        }
+        try { collapseState = JSON.parse(stored); } 
+        catch (e) { console.warn("Collapse state parse error", e); }
       }
     }
     
     // ---------------------------------------------------------
-    //  QUIZ / TREE / PROFILE LOGIC
+    //  SELECTION TREE LOGIC & BACKUP
     // ---------------------------------------------------------
     let data;
     let selections = {};
-    let currentQuizQuestion = null;
-    let recentQuestions = [];
+    // Backup object to save children states when a parent is toggled off
+    let selectionBackup = {};
     
     function initSelections() {
       selections = {};
@@ -337,21 +316,16 @@
       }
     }
     
-    // Create a collapsible element with display toggle
+    // Utility to create collapsible node
     function createCollapsible(title, children, nodeId) {
       const wrapper = document.createElement('div');
       if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
-      if (collapseState[nodeId]) {
-        wrapper.classList.add("expanded");
-      }
+      if (collapseState[nodeId]) wrapper.classList.add("expanded");
     
       const header = document.createElement('div');
       header.className = 'collapsible';
-      if (typeof title === 'string') {
-        header.textContent = title;
-      } else {
-        header.appendChild(title);
-      }
+      if (typeof title === 'string') header.textContent = title;
+      else header.appendChild(title);
       header.onclick = () => {
         if (wrapper.classList.contains("expanded")) {
           wrapper.classList.remove("expanded");
@@ -398,10 +372,24 @@
         continentCheckbox.checked = continentAllSelected;
         continentCheckbox.onchange = (e) => {
           const newVal = e.target.checked;
-          for (const country in data[continent]) {
-            for (const header in data[continent][country].header) {
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+          if (!newVal) {
+            // Save states for this continent
+            selectionBackup[continent] = JSON.parse(JSON.stringify(selections[continent]));
+            for (const country in data[continent]) {
+              for (const header in data[continent][country].header) {
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              }
+            }
+          } else {
+            if (selectionBackup[continent]) {
+              selections[continent] = selectionBackup[continent];
+              delete selectionBackup[continent];
+            } else {
+              for (const country in data[continent]) {
+                for (const header in data[continent][country].header) {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              }
             }
           }
           renderTree();
@@ -412,7 +400,6 @@
         continentHeaderDiv.appendChild(continentCheckbox);
         continentHeaderDiv.appendChild(continentLabel);
     
-        // Process countries
         let countryNodes = [];
         for (const country in data[continent]) {
           let countryAllSelected = true;
@@ -427,9 +414,21 @@
           countryCheckbox.checked = countryAllSelected;
           countryCheckbox.onchange = (e) => {
             const newVal = e.target.checked;
-            for (const header in data[continent][country].header) {
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+            if (!selectionBackup[continent]) selectionBackup[continent] = {};
+            if (!newVal) {
+              selectionBackup[continent][country] = JSON.parse(JSON.stringify(selections[continent][country]));
+              for (const header in data[continent][country].header) {
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              }
+            } else {
+              if (selectionBackup[continent][country]) {
+                selections[continent][country] = selectionBackup[continent][country];
+                delete selectionBackup[continent][country];
+              } else {
+                for (const header in data[continent][country].header) {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              }
             }
             renderTree();
           };
@@ -447,8 +446,19 @@
             headerCheckbox.checked = selections[continent][country][header].every(v => v);
             headerCheckbox.onchange = (e) => {
               const newVal = e.target.checked;
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+              if (!selectionBackup[continent]) selectionBackup[continent] = {};
+              if (!selectionBackup[continent][country]) selectionBackup[continent][country] = {};
+              if (!newVal) {
+                selectionBackup[continent][country][header] = JSON.parse(JSON.stringify(selections[continent][country][header]));
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              } else {
+                if (selectionBackup[continent][country][header]) {
+                  selections[continent][country][header] = selectionBackup[continent][country][header];
+                  delete selectionBackup[continent][country][header];
+                } else {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              }
               renderTree();
             };
             const headerLabel = document.createElement('span');
@@ -491,24 +501,19 @@
       selections[continent][country][header][index] = checked;
       renderTree();
     }
-	
-	function toggleStepForAllCountries(stepIndex, newVal) {
-  // Loop through each continent, country, and header.
-  for (let continent in data) {
-    for (let country in data[continent]) {
-      // For each header under the country:
-      for (let header in data[continent][country].header) {
-        // Check if that header has a step at this index.
-        if (selections[continent][country][header][stepIndex] !== undefined) {
-          selections[continent][country][header][stepIndex] = newVal;
+    
+    function toggleStepForAllCountries(stepIndex, newVal) {
+      for (let continent in data) {
+        for (let country in data[continent]) {
+          for (let header in data[continent][country].header) {
+            if (selections[continent][country][header][stepIndex] !== undefined) {
+              selections[continent][country][header][stepIndex] = newVal;
+            }
+          }
         }
       }
+      renderTree();
     }
-  }
-  // Re-render the tree so that checkboxes update
-  renderTree();
-}
-
     
     // ---------------------------------------------------------
     //  PROFILE FUNCTIONS
@@ -522,6 +527,8 @@
       let profiles = loadProfiles();
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
+      // Set current profile as active
+      window.currentProfile = name;
       renderProfileList();
     }
     
@@ -550,6 +557,7 @@
       const profiles = loadProfiles();
       if (profiles[name]) {
         selections = profiles[name];
+        window.currentProfile = name;
         renderTree();
       }
     }
@@ -592,26 +600,27 @@
         profileList.appendChild(li);
       }
     }
-	
-	// Utility to increment and return the view count for a question in localStorage.
-	function incrementQuestionCount(questionId) {
-	  let countData = localStorage.getItem('questionDisplayCounts');
-	  let counts = countData ? JSON.parse(countData) : {};
-	  counts[questionId] = (counts[questionId] || 0) + 1;
-	  localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
-	  return counts[questionId];
-	}
-
-	// Utility to get the current count for a given question (if needed separately)
-	function getQuestionCount(questionId) {
-	  let countData = localStorage.getItem('questionDisplayCounts');
-	  let counts = countData ? JSON.parse(countData) : {};
-	  return counts[questionId] || 0;
-	}
     
     // ---------------------------------------------------------
-    //  QUIZ FUNCTIONS
+    //  QUIZ & HISTORY REPLAY FUNCTIONS
     // ---------------------------------------------------------
+    let currentQuizQuestion = null;
+    let recentQuestions = [];
+    
+    // Store question history per profile; hard cap of 200 entries
+    function addQuestionToHistory(question) {
+      const profileName = window.currentProfile || "default";
+      const historyKey = "questionHistory_" + profileName;
+      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+      history.push(question);
+      if (history.length > 200) history = history.slice(history.length - 200);
+      localStorage.setItem(historyKey, JSON.stringify(history));
+    }
+    
+    function isImage(url) {
+      return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
+    }
+    
     function getAllSelectedQuestions() {
       let available = [];
       for (const continent in data) {
@@ -632,10 +641,7 @@
       return available;
     }
     
-    function isImage(url) {
-      return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
-    }
-    
+    // We'll use our existing "recentQuestions" array in the random picker.
     function pickRandomQuestion() {
       const all = getAllSelectedQuestions();
       const available = all.filter(q => !recentQuestions.includes(q.id));
@@ -649,61 +655,140 @@
       return picked;
     }
     
-    function quizButtonHandler() {
-	  if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-		// (Optional) update header text with question info
-		const headerEl = document.getElementById('quizHeader');
-		if (headerEl) {
-		  headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
-		}
-		// Create answer element
-		const answerDiv = document.createElement('div');
-		answerDiv.className = 'answer';
-		answerDiv.innerHTML = currentQuizQuestion.data.html;
-		// Increment counter for this question.
-		const count = incrementQuestionCount(currentQuizQuestion.id);
-		// Create a small note displaying the view count.
-		const countText = document.createElement('div');
-		countText.style.fontSize = "0.9em";
-		countText.style.marginTop = "5px";
-		countText.style.color = "#555";
-		countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
-		answerDiv.appendChild(countText);
-		
-		document.getElementById('quizDisplay').appendChild(answerDiv);
-		currentQuizQuestion.answerShown = true;
-		document.getElementById('quizButton').textContent = "Next Question";
-	  } else {
-		const allAvailable = getAllSelectedQuestions();
-		if (allAvailable.length === 0) {
-		  alert("No entries selected for the quiz. Please adjust your selections.");
-		  return;
-		}
-		const randomEntry = pickRandomQuestion();
-		currentQuizQuestion = { ...randomEntry, answerShown: false };
-		currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
-		
-		let questionContent = "";
-		if (isImage(randomEntry.data.url)) {
-		  questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
-		} else {
-		  questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
-		}
-		document.getElementById('quizDisplay').innerHTML =
-		  `<h2 id="quizHeader">Question</h2>
-		   <div>${questionContent}</div>`;
-		document.getElementById('quizButton').textContent = "Show Answer";
-	  }
-	}
-
+    // Replay mode variables
+    let replayMode = false;
+    let replayQuestions = [];
+    let replayIndex = 0;
     
-    document.addEventListener('keydown', (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        quizButtonHandler();
+    function startReplay() {
+      const profileName = window.currentProfile || "default";
+      const historyKey = "questionHistory_" + profileName;
+      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+      const countInput = document.getElementById('replayCount').value;
+      let n = parseInt(countInput);
+      if (isNaN(n) || n < 1) {
+        alert("Please enter a valid number.");
+        return;
       }
-    });
+      n = Math.min(n, history.length, 200);
+      if (n === 0) {
+        alert("No questions in history to replay.");
+        return;
+      }
+      replayQuestions = history.slice(-n);
+      // Shuffle the array using the Fisher-Yates algorithm
+      for (let i = replayQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [replayQuestions[i], replayQuestions[j]] = [replayQuestions[j], replayQuestions[i]];
+      }
+      replayMode = true;
+      replayIndex = 0;
+      showReplayQuestion();
+    }
     
+    function showReplayQuestion() {
+      if (!replayMode || replayQuestions.length === 0) {
+        alert("No replay questions available.");
+        return;
+      }
+      const question = replayQuestions[replayIndex];
+      currentQuizQuestion = question;
+      let questionContent = "";
+      if (isImage(question.data.url)) {
+        questionContent = `<img src="${question.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+      } else {
+        questionContent = `<iframe src="${question.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+      }
+      document.getElementById('quizDisplay').innerHTML =
+        `<h2 id="quizHeader">${question.country} - ${question.header} (Question ${question.index + 1})</h2>
+         <div>${questionContent}</div>`;
+      const btn = document.getElementById('quizButton');
+      if (replayIndex < replayQuestions.length - 1) {
+        btn.textContent = "Next Question (Replay Mode)";
+      } else {
+        btn.textContent = "End Replay";
+      }
+    }
+    
+    function replayQuizButtonHandler() {
+      replayIndex++;
+      if (replayIndex >= replayQuestions.length) {
+        replayMode = false;
+        replayQuestions = [];
+        replayIndex = 0;
+        document.getElementById('quizButton').textContent = "Show Question";
+      } else {
+        showReplayQuestion();
+      }
+    }
+    
+    // Quiz button handler: show answer or pick a new question
+    function quizButtonHandler() {
+      if (replayMode) {
+        replayQuizButtonHandler();
+        return;
+      }
+      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+        // Show answer for the current quiz question
+        const headerEl = document.getElementById('quizHeader');
+        if (headerEl) {
+          headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+        }
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer';
+        answerDiv.innerHTML = currentQuizQuestion.data.html;
+        const count = incrementQuestionCount(currentQuizQuestion.id);
+        const countText = document.createElement('div');
+        countText.style.fontSize = "0.9em";
+        countText.style.marginTop = "5px";
+        countText.style.color = "#555";
+        countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
+        answerDiv.appendChild(countText);
+        document.getElementById('quizDisplay').appendChild(answerDiv);
+        currentQuizQuestion.answerShown = true;
+        document.getElementById('quizButton').textContent = "Next Question";
+      } else {
+        const allAvailable = getAllSelectedQuestions();
+        if (allAvailable.length === 0) {
+          alert("No entries selected for the quiz. Please adjust your selections.");
+          return;
+        }
+        const randomEntry = pickRandomQuestion();
+        currentQuizQuestion = { ...randomEntry, answerShown: false };
+        currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
+        // Record the question to history (only in normal mode)
+        addQuestionToHistory(currentQuizQuestion);
+        let questionContent = "";
+        if (isImage(randomEntry.data.url)) {
+          questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+        } else {
+          questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        }
+        document.getElementById('quizDisplay').innerHTML =
+          `<h2 id="quizHeader">Question</h2>
+           <div>${questionContent}</div>`;
+        document.getElementById('quizButton').textContent = "Show Answer";
+      }
+    }
+    
+    // Utility: Increment view count for a question
+    function incrementQuestionCount(questionId) {
+      let countData = localStorage.getItem('questionDisplayCounts');
+      let counts = countData ? JSON.parse(countData) : {};
+      counts[questionId] = (counts[questionId] || 0) + 1;
+      localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
+      return counts[questionId];
+    }
+    
+    function getQuestionCount(questionId) {
+      let countData = localStorage.getItem('questionDisplayCounts');
+      let counts = countData ? JSON.parse(countData) : {};
+      return counts[questionId] || 0;
+    }
+    
+    // ---------------------------------------------------------
+    //  UTILITY FUNCTION: load JSON data
+    // ---------------------------------------------------------
     async function loadAJson(url) {
       try {
         const response = await fetch(url);
@@ -718,12 +803,23 @@
       }
     }
     
+    // ---------------------------------------------------------
+    //  INITIALIZATION
+    // ---------------------------------------------------------
     window.init = async function() {
       data = await loadAJson("plonkit.json");
       initSelections();
       await renderTree();
       renderProfileList();
     };
+    
+    // Allow Space bar to trigger quiz button
+    document.addEventListener('keydown', (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        quizButtonHandler();
+      }
+    });
   </script>
 </body>
 </html>
