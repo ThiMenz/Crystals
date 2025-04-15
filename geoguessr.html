@@ -80,7 +80,7 @@
       overflow-y: auto;
       background-color: #fff;
     }
-    /* New styling for stats and setting panels */
+    /* Panels for stats, replay range, and image height settings */
     #questionStats, #replayRangeSection, #imageHeightSetting {
       margin-top: 20px;
       padding: 10px;
@@ -168,7 +168,7 @@
 </head>
 <body onload="init();">
   <div id="container">
-    <!-- Sidebar: tree selection, global step selector, and profiles -->
+    <!-- Sidebar: tree selection, profiles, etc. -->
     <div id="sidebar">
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
@@ -197,21 +197,21 @@
       <div id="horizontalDragBar"></div>
       <div id="quiz">
         <h2>Quiz</h2>
-        <!-- Added statistics display for question view counts -->
+        <!-- Profile-specific question view stats (viewed / total among selected) -->
         <div id="questionStats">[0 / 0]</div>
         <button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
-        <!-- Replay Section for question history replay (by count) -->
+        <!-- Replay Section (last n questions) -->
         <div id="replaySection" style="margin-top:20px; padding:10px; background:#eef9ff; border-radius:4px;">
           <input type="number" id="replayCount" placeholder="Enter n (max 200)" min="1" max="200" style="width:60px;"/>
           <button onclick="startReplay()" aria-label="Start Replay">Start Replay (last n)</button>
         </div>
-        <!-- New Replay Range Section (by view count range) -->
+        <!-- Replay Range Section (by view count range) -->
         <div id="replayRangeSection">
           <input type="number" id="replayMin" placeholder="Min view count" style="width:80px;"/>
           <input type="number" id="replayMax" placeholder="Max view count" style="width:80px;"/>
           <button onclick="startReplayRange()" aria-label="Start Replay Range">Start Replay (Range)</button>
         </div>
-        <!-- New Image Height Setting Section -->
+        <!-- Image Height Setting Section -->
         <div id="imageHeightSetting">
           <input type="number" id="imageHeightInput" placeholder="Image Height (px)" style="width:100px;" />
           <button onclick="updateImageHeight()" aria-label="Set Image Height">Set Image Height</button>
@@ -228,6 +228,8 @@
     let isDraggingVertical = false;
     let isDraggingHorizontal = false;
     let sidebar = null, verticalDragBar = null, horizontalDragBar = null, mapWrapper = null, mainContainer = null;
+    // Variable to store original map height for toggle shortcut.
+    let originalMapHeight = null;
     
     window.addEventListener('DOMContentLoaded', () => {
       sidebar = document.getElementById('sidebar');
@@ -235,7 +237,7 @@
       horizontalDragBar = document.getElementById('horizontalDragBar');
       mapWrapper = document.getElementById('mapWrapper');
       mainContainer = document.getElementById('main');
-    
+      
       verticalDragBar.addEventListener('mousedown', function(e) {
         isDraggingVertical = true;
         document.body.style.cursor = 'col-resize';
@@ -269,7 +271,25 @@
         isDraggingHorizontal = false;
         document.body.style.cursor = 'default';
       });
+    
+      // Keyboard shortcut: Press "T" to toggle the horizontal map divider to bottom and back.
+      document.addEventListener('keydown', (e) => {
+        if (e.code === "KeyT") {
+          toggleMapDivider();
+        }
+      });
     });
+    
+    // Toggle the map divider: if not toggled, store current height and set minimal height; else restore original height.
+    function toggleMapDivider() {
+      if (originalMapHeight === null) {
+        originalMapHeight = mapWrapper.style.height || (mapWrapper.offsetHeight + "px");
+        mapWrapper.style.height = "100px";  // minimal height (as defined by drag constraints)
+      } else {
+        mapWrapper.style.height = originalMapHeight;
+        originalMapHeight = null;
+      }
+    }
     
     // ---------------------------------------------------------
     //  COLLAPSIBLE TREE & SELECTIONS
@@ -293,7 +313,7 @@
       }
     }
     
-    // Create a collapsible element (same as original)
+    // Create a collapsible element.
     function createCollapsible(title, children, nodeId) {
       const wrapper = document.createElement('div');
       if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
@@ -435,7 +455,7 @@
         const continentCollapsible = createCollapsible(continentHeaderDiv, countryNodes, continentNodeId);
         container.appendChild(continentCollapsible);
       }
-      // Update stats now that data is loaded
+      // Update stats once the tree is rendered.
       updateQuestionStats();
     }
     
@@ -548,7 +568,7 @@
     let currentQuizQuestion = null;
     let recentQuestions = [];
     
-    // Store question history per profile with cap of 200 entries
+    // Store question history per profile (cap of 200 entries)
     function addQuestionToHistory(question) {
       const profileName = window.currentProfile || "default";
       const historyKey = "questionHistory_" + profileName;
@@ -562,6 +582,7 @@
       return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
     }
     
+    // Return only those questions that are selected in the current profile.
     function getAllSelectedQuestions() {
       let available = [];
       for (const continent in data) {
@@ -582,12 +603,12 @@
       return available;
     }
     
-    // Replay mode variables and new alternating logic
+    // Replay mode variables and alternating logic.
     let replayMode = false;
     let replayQuestions = [];
     let replayIndex = 0;
     
-    // Replay last n questions (existing functionality)
+    // Replay last n questions.
     function startReplay() {
       const profileName = window.currentProfile || "default";
       const historyKey = "questionHistory_" + profileName;
@@ -604,7 +625,7 @@
         return;
       }
       replayQuestions = history.slice(-n);
-      // Shuffle the replay questions
+      // Shuffle the replay questions.
       for (let i = replayQuestions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [replayQuestions[i], replayQuestions[j]] = [replayQuestions[j], replayQuestions[i]];
@@ -615,17 +636,15 @@
       showCurrentReplayQuestion();
     }
     
-    // New function: Replay questions based on view count range
+    // Replay questions by view count range.
     function startReplayRange() {
       const minCount = parseInt(document.getElementById('replayMin').value);
       const maxCount = parseInt(document.getElementById('replayMax').value);
       if (isNaN(minCount) || isNaN(maxCount) || minCount < 0 || maxCount < minCount) {
-        alert("Please enter a valid range (min should be >= 0 and max >= min).");
+        alert("Please enter a valid range (min >= 0 and max >= min).");
         return;
       }
-      // Get counts from localStorage
       const counts = JSON.parse(localStorage.getItem('questionDisplayCounts')) || {};
-      // Traverse all questions from data
       let allQuestions = [];
       for (const continent in data) {
         for (const country in data[continent]) {
@@ -647,7 +666,7 @@
         alert("No questions found in the specified view count range.");
         return;
       }
-      // Shuffle the filtered questions
+      // Shuffle the filtered questions.
       for (let i = allQuestions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
@@ -659,7 +678,7 @@
       showCurrentReplayQuestion();
     }
     
-    // Displays the current replay question depending on its state.
+    // Display the current replay question and include replay progress.
     function showCurrentReplayQuestion() {
       if (!replayMode || replayQuestions.length === 0) {
         alert("No replay questions available.");
@@ -677,12 +696,14 @@
       if (q.answerShown) {
         html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
       }
-      document.getElementById('quizDisplay').innerHTML = html;
+      // Append replay progress info.
+      const progress = `<div style="text-align:right; font-size:0.9em; color:#777;">Replay: ${replayIndex + 1} / ${replayQuestions.length}</div>`;
+      document.getElementById('quizDisplay').innerHTML = progress + html;
       const btn = document.getElementById('quizButton');
       btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
     }
     
-    // Replay quiz button handler which alternates state
+    // Replay quiz button handler.
     function replayQuizButtonHandler() {
       if (!currentQuizQuestion.answerShown) {
         currentQuizQuestion.answerShown = true;
@@ -702,13 +723,13 @@
       }
     }
     
-    // Main quiz button handler handles both normal and replay modes.
+    // Main quiz button handler for both normal and replay modes.
     function quizButtonHandler() {
       if (replayMode) {
         replayQuizButtonHandler();
         return;
       }
-      // Normal mode: alternate between showing answer and new question.
+      // Normal mode: alternate between showing answer and a new question.
       if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
         const headerEl = document.getElementById('quizHeader');
         if (headerEl) {
@@ -752,7 +773,7 @@
       }
     }
     
-    // Randomly pick a question (while avoiding immediate repeats)
+    // Randomly pick a question while avoiding immediate repeats.
     function pickRandomQuestion() {
       const all = getAllSelectedQuestions();
       const available = all.filter(q => !recentQuestions.includes(q.id));
@@ -766,7 +787,7 @@
       return picked;
     }
     
-    // Utility: Increment view count for a question and update stats
+    // Increment view count for a question and update stats.
     function incrementQuestionCount(questionId) {
       let countData = localStorage.getItem('questionDisplayCounts');
       let counts = countData ? JSON.parse(countData) : {};
@@ -775,34 +796,25 @@
       return counts[questionId];
     }
     
-    // Utility: Update the statistics display for questions viewed at least once.
+    // Update statistics for questions from only the currently selected questions.
     function updateQuestionStats() {
-      if (!data) return;
+      const selected = getAllSelectedQuestions();
       const counts = JSON.parse(localStorage.getItem('questionDisplayCounts')) || {};
       let viewed = 0;
-      let total = 0;
-      for (const continent in data) {
-        for (const country in data[continent]) {
-          for (const header in data[continent][country].header) {
-            const questions = data[continent][country].header[header];
-            total += questions.length;
-            for (let i = 0; i < questions.length; i++) {
-              const qid = continent + "-" + country + "-" + header + "-" + i;
-              if (counts[qid] && counts[qid] > 0) viewed++;
-            }
-          }
-        }
+      for (let i = 0; i < selected.length; i++) {
+        const qid = selected[i].id;
+        if (counts[qid] && counts[qid] > 0) viewed++;
       }
-      document.getElementById('questionStats').textContent = `[${viewed} / ${total}]`;
+      document.getElementById('questionStats').textContent = `[${viewed} / ${selected.length}]`;
     }
     
-    // Utility: Get the stored image height (default to 500px)
+    // Utility: Get the stored image height (default 500px).
     function getImageHeight() {
       const height = localStorage.getItem("quizImageHeight");
       return height ? parseInt(height) : 500;
     }
     
-    // Called by the image height setting button – saves new height to localStorage.
+    // Update image height setting and store it.
     function updateImageHeight() {
       const heightInput = document.getElementById("imageHeightInput").value;
       const newHeight = parseInt(heightInput);
@@ -815,7 +827,7 @@
     }
     
     // ---------------------------------------------------------
-    //  UTILITY FUNCTION: load JSON data
+    //  Utility function: load JSON data
     // ---------------------------------------------------------
     async function loadAJson(url) {
       try {
@@ -841,7 +853,7 @@
       renderProfileList();
     };
     
-    // Allow Space bar to trigger quiz button
+    // Allow Space bar to trigger quiz button.
     document.addEventListener('keydown', (e) => {
       if (e.code === "Space") {
         e.preventDefault();
