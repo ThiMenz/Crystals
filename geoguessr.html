@@ -10,36 +10,29 @@
       height: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f7fa;
-      /* Increase the base font size if needed */
       font-size: 18px;
     }
-
-    /* Container uses a flex layout with the sidebar, the vertical drag bar, and the main content */
     #container {
       display: flex;
       height: 100vh;
-      overflow: hidden; /* so that horizontal scrollbars do not appear unexpectedly */
+      overflow: hidden;
     }
-
-    /* SIDEBAR (Left) */
     #sidebar {
-      width: 350px; /* initial width; user can drag to resize */
+      width: 350px;
       overflow-y: auto;
       border-right: 1px solid #ccc;
       padding: 20px;
       box-sizing: border-box;
       background: linear-gradient(135deg, #ffffff, #e6f0f8);
       box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-      min-width: 200px; /* so it doesn't become too narrow */
-      max-width: 800px; /* optional limit, so it doesn't grow unbounded */
+      min-width: 200px;
+      max-width: 800px;
     }
     #sidebar h2 {
       margin-top: 0;
       font-size: 1.6em;
       color: #333;
     }
-
-    /* The vertical bar for dragging sidebar width */
     #verticalDragBar {
       width: 5px;
       cursor: col-resize;
@@ -49,28 +42,22 @@
     #verticalDragBar:hover {
       background-color: #888;
     }
-
-    /* MAIN content area: contains Map (top) and Quiz (bottom) with a horizontal drag bar */
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-width: 0;
     }
-
-    /* Map and Quiz areas */
     #mapWrapper {
       position: relative;
       border-bottom: 1px solid #ccc;
-      height: 50%; /* initial height; user can drag the horizontal bar */
+      height: 50%;
       min-height: 100px;
     }
     #basicMap, iframe {
       width: 100%;
       height: 100%;
     }
-
-    /* Horizontal drag bar for resizing */
     #horizontalDragBar {
       height: 5px;
       cursor: row-resize;
@@ -80,21 +67,16 @@
     #horizontalDragBar:hover {
       background-color: #888;
     }
-
-    /* QUIZ area */
     #quiz {
       flex: 1;
       padding: 20px;
       overflow-y: auto;
       background-color: #fff;
     }
-    /* Increase the answer text size for quiz answers */
     .answer {
       font-size: 1.4em;
       margin-top: 10px;
     }
-
-    /* Profile management styling */
     #profileSection {
       margin-top: 20px;
       padding-top: 10px;
@@ -129,8 +111,6 @@
       background-color: #007acc;
       color: #fff;
     }
-
-    /* Collapsible tree nodes: using display toggling */
     .collapsible {
       cursor: pointer;
       user-select: none;
@@ -150,12 +130,9 @@
     .expanded > .content {
       display: block;
     }
-
     label {
       cursor: pointer;
     }
-
-    /* General button styling */
     button {
       margin: 5px 0;
       cursor: pointer;
@@ -169,8 +146,21 @@
     button:hover {
       background-color: #005fa3;
     }
+    /* Style for History Review section */
+    #historyReview {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #888;
+      border-radius: 4px;
+      background: #f9f9f9;
+    }
+    #historyReview input {
+      width: 60px;
+      margin-right: 10px;
+      padding: 2px 4px;
+      font-size: 1em;
+    }
   </style>
-  <!-- OpenLayers (if needed) -->
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
 </head>
 <body onload="init();">
@@ -179,32 +169,33 @@
     <div id="sidebar">
       <h2>Selection Tree</h2>
       <div id="treeContainer"></div>
-	  
-	  <!--      
-	  <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
-		  <h3>Global Step Selector</h3>
-		  //<div>
-			 <span>Step 1:</span>
-			 <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
-			 <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 2:</span>
-			 <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
-			 <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 3:</span>
-			 <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
-			 <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
-		  </div>
-		  <div>
-			 <span>Step 4:</span>
-			 <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
-			 <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
-		  </div>
-		</div> -->
-	  
+      
+      <!-- Optional: Global Step Selector (uncomment if desired) 
+      <div id="globalStepSelector" style="margin: 20px 0; padding: 10px; background: #e0f7ff; border-radius: 4px;">
+        <h3>Global Step Selector</h3>
+        <div>
+          <span>Step 1:</span>
+          <button onclick="toggleStepForAllCountries(0, true)" aria-label="Select all Step 1">Select</button>
+          <button onclick="toggleStepForAllCountries(0, false)" aria-label="Deselect all Step 1">Deselect</button>
+        </div>
+        <div>
+          <span>Step 2:</span>
+          <button onclick="toggleStepForAllCountries(1, true)" aria-label="Select all Step 2">Select</button>
+          <button onclick="toggleStepForAllCountries(1, false)" aria-label="Deselect all Step 2">Deselect</button>
+        </div>
+        <div>
+          <span>Step 3:</span>
+          <button onclick="toggleStepForAllCountries(2, true)" aria-label="Select all Step 3">Select</button>
+          <button onclick="toggleStepForAllCountries(2, false)" aria-label="Deselect all Step 3">Deselect</button>
+        </div>
+        <div>
+          <span>Step 4:</span>
+          <button onclick="toggleStepForAllCountries(3, true)" aria-label="Select all Step 4">Select</button>
+          <button onclick="toggleStepForAllCountries(3, false)" aria-label="Deselect all Step 4">Deselect</button>
+        </div>
+      </div>
+      -->
+      
       <div id="profileSection">
         <h3>Profiles</h3>
         <input type="text" id="profileName" placeholder="Enter profile name"
@@ -232,22 +223,29 @@
         <h2>Quiz</h2>
         <button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
         <div id="quizDisplay" style="margin-top:10px;"></div>
+        
+        <!-- HISTORY REVIEW SECTION -->
+        <div id="historyReview">
+          <h3>Review Question History</h3>
+          <p>
+            Enter number (max: <span id="maxHistory">200</span>) and click “Review History”.
+          </p>
+          <input type="number" id="historyCountInput" min="1" value="5" />
+          <button onclick="reviewHistory()" aria-label="Review History">Review History</button>
+          <div id="historyDisplay" style="margin-top:10px;"></div>
+        </div>
+        
       </div>
     </div>
   </div>
 
   <script>
-    // ---------------------------------------------------------
-    //  DRAGGING / RESIZING LOGIC FOR THE VERTICAL AND HORIZONTAL BARS
-    // ---------------------------------------------------------
+    // ---------------------------
+    // DRAGGING / RESIZING LOGIC
+    // ---------------------------
     let isDraggingVertical = false;
     let isDraggingHorizontal = false;
-    
-    let sidebar = null;
-    let verticalDragBar = null;
-    let horizontalDragBar = null;
-    let mapWrapper = null;
-    let mainContainer = null;
+    let sidebar = null, verticalDragBar = null, horizontalDragBar = null, mapWrapper = null, mainContainer = null;
     
     window.addEventListener('DOMContentLoaded', () => {
       sidebar = document.getElementById('sidebar');
@@ -256,21 +254,16 @@
       mapWrapper = document.getElementById('mapWrapper');
       mainContainer = document.getElementById('main');
     
-      // Vertical bar: start dragging
       verticalDragBar.addEventListener('mousedown', function(e) {
         isDraggingVertical = true;
         document.body.style.cursor = 'col-resize';
         e.preventDefault();
       });
-    
-      // Horizontal bar: start dragging
       horizontalDragBar.addEventListener('mousedown', function(e) {
         isDraggingHorizontal = true;
         document.body.style.cursor = 'row-resize';
         e.preventDefault();
       });
-    
-      // Global mousemove to handle drag
       document.addEventListener('mousemove', function(e) {
         if (isDraggingVertical) {
           const newWidth = e.clientX;
@@ -286,43 +279,42 @@
           }
         }
       });
-    
-      // End dragging
       document.addEventListener('mouseup', function() {
         isDraggingVertical = false;
         isDraggingHorizontal = false;
         document.body.style.cursor = 'default';
       });
     });
-    
-    // ---------------------------------------------------------
-    //  PERSISTING COLLAPSE STATE IN LOCALSTORAGE
-    // ---------------------------------------------------------
+
+    // ---------------------------
+    // PERSISTING COLLAPSE STATE
+    // ---------------------------
     let collapseState = {};
-    
     function saveCollapseState() {
       localStorage.setItem("collapseState", JSON.stringify(collapseState));
     }
-    
     function loadCollapseState() {
       const stored = localStorage.getItem("collapseState");
       if (stored) {
-        try {
-          collapseState = JSON.parse(stored);
-        } catch (e) {
-          console.warn("Collapse state parse error", e);
-        }
+        try { collapseState = JSON.parse(stored); } 
+        catch (e) { console.warn("Collapse state parse error", e); }
       }
     }
-    
-    // ---------------------------------------------------------
-    //  QUIZ / TREE / PROFILE LOGIC
-    // ---------------------------------------------------------
+
+    // ---------------------------
+    // QUIZ / TREE / PROFILE LOGIC
+    // ---------------------------
     let data;
     let selections = {};
+    // selectionsBackup stores individual branch state when parent is toggled off:
+    let selectionsBackup = {};
     let currentQuizQuestion = null;
+    // recentQuestions array is still used for no-repeat quiz logic:
     let recentQuestions = [];
+    // Global variable to track current active profile name for history storage.
+    let currentProfile = null;
     
+    // Build initial selections from loaded data.
     function initSelections() {
       selections = {};
       for (const continent in data) {
@@ -331,27 +323,23 @@
           selections[continent][country] = {};
           const headers = data[continent][country].header;
           for (const header in headers) {
+            // Initially all steps are set to true.
             selections[continent][country][header] = headers[header].map(() => true);
           }
         }
       }
     }
     
-    // Create a collapsible element with display toggle
+    // Create a collapsible element.
     function createCollapsible(title, children, nodeId) {
       const wrapper = document.createElement('div');
       if (collapseState[nodeId] === undefined) collapseState[nodeId] = false;
-      if (collapseState[nodeId]) {
-        wrapper.classList.add("expanded");
-      }
+      if (collapseState[nodeId]) wrapper.classList.add("expanded");
     
       const header = document.createElement('div');
       header.className = 'collapsible';
-      if (typeof title === 'string') {
-        header.textContent = title;
-      } else {
-        header.appendChild(title);
-      }
+      if (typeof title === 'string') header.textContent = title;
+      else header.appendChild(title);
       header.onclick = () => {
         if (wrapper.classList.contains("expanded")) {
           wrapper.classList.remove("expanded");
@@ -374,7 +362,7 @@
     
     async function renderTree() {
       loadCollapseState();
-      if (data == null) {
+      if (!data) {
         data = await loadAJson("plonkit.json");
         initSelections();
       }
@@ -386,22 +374,33 @@
         let continentAllSelected = true;
         for (const country in data[continent]) {
           for (const header in data[continent][country].header) {
-            if (selections[continent][country][header].some(v => !v)) {
-              continentAllSelected = false;
-              break;
-            }
+            if (selections[continent][country][header].some(v => !v)) { continentAllSelected = false; break; }
           }
         }
     
+        // CONTINENT checkbox: use backup if available.
         const continentCheckbox = document.createElement('input');
         continentCheckbox.type = "checkbox";
         continentCheckbox.checked = continentAllSelected;
         continentCheckbox.onchange = (e) => {
           const newVal = e.target.checked;
-          for (const country in data[continent]) {
-            for (const header in data[continent][country].header) {
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+          if (newVal) { // Re-enabling: restore backup if exists
+            if (selectionsBackup[continent]) {
+              selections[continent] = JSON.parse(JSON.stringify(selectionsBackup[continent]));
+              delete selectionsBackup[continent];
+            } else {
+              for (const country in data[continent]) {
+                for (const header in data[continent][country].header) {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              }
+            }
+          } else { // Disabling: backup current state then disable children
+            selectionsBackup[continent] = JSON.parse(JSON.stringify(selections[continent]));
+            for (const country in data[continent]) {
+              for (const header in data[continent][country].header) {
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              }
             }
           }
           renderTree();
@@ -417,19 +416,29 @@
         for (const country in data[continent]) {
           let countryAllSelected = true;
           for (const header in data[continent][country].header) {
-            if (selections[continent][country][header].some(v => !v)) {
-              countryAllSelected = false;
-              break;
-            }
+            if (selections[continent][country][header].some(v => !v)) { countryAllSelected = false; break; }
           }
           const countryCheckbox = document.createElement('input');
           countryCheckbox.type = "checkbox";
           countryCheckbox.checked = countryAllSelected;
           countryCheckbox.onchange = (e) => {
             const newVal = e.target.checked;
-            for (const header in data[continent][country].header) {
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+            if (newVal) {
+              if (selectionsBackup[continent] && selectionsBackup[continent][country]) {
+                selections[continent][country] = JSON.parse(JSON.stringify(selectionsBackup[continent][country]));
+                // Remove backup for this branch
+                delete selectionsBackup[continent][country];
+              } else {
+                for (const header in data[continent][country].header) {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              }
+            } else {
+              if (!selectionsBackup[continent]) selectionsBackup[continent] = {};
+              selectionsBackup[continent][country] = JSON.parse(JSON.stringify(selections[continent][country]));
+              for (const header in data[continent][country].header) {
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              }
             }
             renderTree();
           };
@@ -447,8 +456,21 @@
             headerCheckbox.checked = selections[continent][country][header].every(v => v);
             headerCheckbox.onchange = (e) => {
               const newVal = e.target.checked;
-              selections[continent][country][header] =
-                selections[continent][country][header].map(() => newVal);
+              // Backup and restore for header level:
+              if (newVal) {
+                if (selectionsBackup[continent] && selectionsBackup[continent][country] &&
+                    selectionsBackup[continent][country][header]) {
+                  selections[continent][country][header] = JSON.parse(JSON.stringify(selectionsBackup[continent][country][header]));
+                  delete selectionsBackup[continent][country][header];
+                } else {
+                  selections[continent][country][header] = selections[continent][country][header].map(() => true);
+                }
+              } else {
+                if (!selectionsBackup[continent]) selectionsBackup[continent] = {};
+                if (!selectionsBackup[continent][country]) selectionsBackup[continent][country] = {};
+                selectionsBackup[continent][country][header] = JSON.parse(JSON.stringify(selections[continent][country][header]));
+                selections[continent][country][header] = selections[continent][country][header].map(() => false);
+              }
               renderTree();
             };
             const headerLabel = document.createElement('span');
@@ -487,73 +509,59 @@
       }
     }
     
+    // Toggle an individual step (question) without affecting backups.
     function toggleStep(continent, country, header, index, checked) {
       selections[continent][country][header][index] = checked;
       renderTree();
     }
 	
+    // Global toggle for a particular step in all headers (used by the Global Step Selector UI).
 	function toggleStepForAllCountries(stepIndex, newVal) {
-  // Loop through each continent, country, and header.
-  for (let continent in data) {
-    for (let country in data[continent]) {
-      // For each header under the country:
-      for (let header in data[continent][country].header) {
-        // Check if that header has a step at this index.
-        if (selections[continent][country][header][stepIndex] !== undefined) {
-          selections[continent][country][header][stepIndex] = newVal;
-        }
-      }
-    }
-  }
-  // Re-render the tree so that checkboxes update
-  renderTree();
-}
+	  for (let continent in data) {
+	    for (let country in data[continent]) {
+	      for (let header in data[continent][country].header) {
+	        if (selections[continent][country][header][stepIndex] !== undefined) {
+	          selections[continent][country][header][stepIndex] = newVal;
+	        }
+	      }
+	    }
+	  }
+	  renderTree();
+	}
 
-    
-    // ---------------------------------------------------------
-    //  PROFILE FUNCTIONS
-    // ---------------------------------------------------------
+    // ---------------------------
+    // PROFILE FUNCTIONS
+    // ---------------------------
     function saveProfile() {
       const name = document.getElementById('profileName').value.trim();
-      if (!name) {
-        alert("Please enter a profile name");
-        return;
-      }
+      if (!name) { alert("Please enter a profile name"); return; }
       let profiles = loadProfiles();
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
       renderProfileList();
+      // Set the current active profile for history storage:
+      currentProfile = name;
     }
-    
     function updateProfile(name) {
       let profiles = loadProfiles();
-      if (!profiles[name]) {
-        alert("Profile does not exist. Please save it first.");
-        return;
-      }
+      if (!profiles[name]) { alert("Profile does not exist. Please save it first."); return; }
       profiles[name] = JSON.parse(JSON.stringify(selections));
       localStorage.setItem("profileSelections", JSON.stringify(profiles));
       renderProfileList();
     }
-    
     function loadProfiles() {
       const profilesData = localStorage.getItem("profileSelections");
-      try {
-        return profilesData ? JSON.parse(profilesData) : {};
-      } catch(e) {
-        console.error("Error parsing localStorage profile data:", e);
-        return {};
-      }
+      try { return profilesData ? JSON.parse(profilesData) : {}; }
+      catch(e) { console.error("Error parsing localStorage profile data:", e); return {}; }
     }
-    
     function loadProfile(name) {
       const profiles = loadProfiles();
       if (profiles[name]) {
         selections = profiles[name];
         renderTree();
+        currentProfile = name; // set current profile when loaded
       }
     }
-    
     function deleteProfile(name) {
       let profiles = loadProfiles();
       if (profiles[name]) {
@@ -562,7 +570,6 @@
         renderProfileList();
       }
     }
-    
     function renderProfileList() {
       const profileList = document.getElementById('profileList');
       profileList.innerHTML = "";
@@ -570,48 +577,29 @@
       for (let name in profiles) {
         const li = document.createElement('li');
         li.textContent = name + " ";
-        
         const loadBtn = document.createElement('button');
         loadBtn.textContent = "Load";
         loadBtn.setAttribute('aria-label', `Load profile ${name}`);
         loadBtn.addEventListener('click', () => loadProfile(name));
         li.appendChild(loadBtn);
-        
         const updateBtn = document.createElement('button');
         updateBtn.textContent = "Update";
         updateBtn.setAttribute('aria-label', `Update profile ${name}`);
         updateBtn.addEventListener('click', () => updateProfile(name));
         li.appendChild(updateBtn);
-        
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = "Delete";
         deleteBtn.setAttribute('aria-label', `Delete profile ${name}`);
         deleteBtn.addEventListener('click', () => deleteProfile(name));
         li.appendChild(deleteBtn);
-        
         profileList.appendChild(li);
       }
     }
 	
-	// Utility to increment and return the view count for a question in localStorage.
-	function incrementQuestionCount(questionId) {
-	  let countData = localStorage.getItem('questionDisplayCounts');
-	  let counts = countData ? JSON.parse(countData) : {};
-	  counts[questionId] = (counts[questionId] || 0) + 1;
-	  localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
-	  return counts[questionId];
-	}
-
-	// Utility to get the current count for a given question (if needed separately)
-	function getQuestionCount(questionId) {
-	  let countData = localStorage.getItem('questionDisplayCounts');
-	  let counts = countData ? JSON.parse(countData) : {};
-	  return counts[questionId] || 0;
-	}
-    
-    // ---------------------------------------------------------
-    //  QUIZ FUNCTIONS
-    // ---------------------------------------------------------
+    // ---------------------------
+    // QUIZ FUNCTIONS & QUESTION HISTORY
+    // ---------------------------
+    // Get all selected question objects.
     function getAllSelectedQuestions() {
       let available = [];
       for (const continent in data) {
@@ -632,10 +620,9 @@
       return available;
     }
     
-    function isImage(url) {
-      return (url.match(/\.(jpeg|jpg|gif|png)$/) != null);
-    }
+    function isImage(url) { return (url.match(/\.(jpeg|jpg|gif|png)$/) != null); }
     
+    // Pick a random question ensuring no immediate repeats.
     function pickRandomQuestion() {
       const all = getAllSelectedQuestions();
       const available = all.filter(q => !recentQuestions.includes(q.id));
@@ -649,67 +636,120 @@
       return picked;
     }
     
-    function quizButtonHandler() {
-	  if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
-		// (Optional) update header text with question info
-		const headerEl = document.getElementById('quizHeader');
-		if (headerEl) {
-		  headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
-		}
-		// Create answer element
-		const answerDiv = document.createElement('div');
-		answerDiv.className = 'answer';
-		answerDiv.innerHTML = currentQuizQuestion.data.html;
-		// Increment counter for this question.
-		const count = incrementQuestionCount(currentQuizQuestion.id);
-		// Create a small note displaying the view count.
-		const countText = document.createElement('div');
-		countText.style.fontSize = "0.9em";
-		countText.style.marginTop = "5px";
-		countText.style.color = "#555";
-		countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
-		answerDiv.appendChild(countText);
-		
-		document.getElementById('quizDisplay').appendChild(answerDiv);
-		currentQuizQuestion.answerShown = true;
-		document.getElementById('quizButton').textContent = "Next Question";
-	  } else {
-		const allAvailable = getAllSelectedQuestions();
-		if (allAvailable.length === 0) {
-		  alert("No entries selected for the quiz. Please adjust your selections.");
-		  return;
-		}
-		const randomEntry = pickRandomQuestion();
-		currentQuizQuestion = { ...randomEntry, answerShown: false };
-		currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
-		
-		let questionContent = "";
-		if (isImage(randomEntry.data.url)) {
-		  questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
-		} else {
-		  questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
-		}
-		document.getElementById('quizDisplay').innerHTML =
-		  `<h2 id="quizHeader">Question</h2>
-		   <div>${questionContent}</div>`;
-		document.getElementById('quizButton').textContent = "Show Answer";
-	  }
-	}
-
+    // Add the question to history (stored per profile).
+    function addToHistory(questionObj) {
+      if (!currentProfile) return; // no profile active
+      const historyKey = "questionHistory_" + currentProfile;
+      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+      // Append the current question object (could include timestamp if desired)
+      history.push(questionObj);
+      // Cap the history length at 200
+      if (history.length > 200) history = history.slice(history.length - 200);
+      localStorage.setItem(historyKey, JSON.stringify(history));
+    }
     
-    document.addEventListener('keydown', (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        quizButtonHandler();
+    // Main quiz button handler.
+    function quizButtonHandler() {
+      if (currentQuizQuestion && !currentQuizQuestion.answerShown) {
+        // Show answer
+        const headerEl = document.getElementById('quizHeader');
+        if (headerEl) {
+          headerEl.innerHTML = `${currentQuizQuestion.country} - ${currentQuizQuestion.header} (Question ${currentQuizQuestion.index + 1})`;
+        }
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'answer';
+        answerDiv.innerHTML = currentQuizQuestion.data.html;
+        const count = incrementQuestionCount(currentQuizQuestion.id);
+        const countText = document.createElement('div');
+        countText.style.fontSize = "0.9em";
+        countText.style.marginTop = "5px";
+        countText.style.color = "#555";
+        countText.textContent = `This question has been viewed ${count} time${count === 1 ? '' : 's'}.`;
+        answerDiv.appendChild(countText);
+        document.getElementById('quizDisplay').appendChild(answerDiv);
+        currentQuizQuestion.answerShown = true;
+        // Add to history when answer is shown
+        addToHistory(currentQuizQuestion);
+        document.getElementById('quizButton').textContent = "Next Question";
+      } else {
+        const allAvailable = getAllSelectedQuestions();
+        if (allAvailable.length === 0) {
+          alert("No entries selected for the quiz. Please adjust your selections.");
+          return;
+        }
+        const randomEntry = pickRandomQuestion();
+        currentQuizQuestion = { ...randomEntry, answerShown: false };
+        currentQuizQuestion.fullHeader = `${randomEntry.country} - ${randomEntry.header} (Question ${randomEntry.index + 1})`;
+        let questionContent = "";
+        if (isImage(randomEntry.data.url)) {
+          questionContent = `<img src="${randomEntry.data.url}" alt="Quiz Image" style="height:500px; width:auto; display:block; margin:0 auto; object-fit: contain;"/>`;
+        } else {
+          questionContent = `<iframe src="${randomEntry.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
+        }
+        document.getElementById('quizDisplay').innerHTML =
+          `<h2 id="quizHeader">Question</h2>
+           <div>${questionContent}</div>`;
+        document.getElementById('quizButton').textContent = "Show Answer";
       }
-    });
+    }
+    
+    // Increment view count for a given question.
+    function incrementQuestionCount(questionId) {
+      let countData = localStorage.getItem('questionDisplayCounts');
+      let counts = countData ? JSON.parse(countData) : {};
+      counts[questionId] = (counts[questionId] || 0) + 1;
+      localStorage.setItem('questionDisplayCounts', JSON.stringify(counts));
+      return counts[questionId];
+    }
+    function getQuestionCount(questionId) {
+      let countData = localStorage.getItem('questionDisplayCounts');
+      let counts = countData ? JSON.parse(countData) : {};
+      return counts[questionId] || 0;
+    }
+    
+    // History review: display last n seen questions in randomized order.
+    function reviewHistory() {
+      if (!currentProfile) {
+        alert("Please load or save a profile to review question history.");
+        return;
+      }
+      const n = parseInt(document.getElementById('historyCountInput').value);
+      const historyKey = "questionHistory_" + currentProfile;
+      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+      if (history.length === 0) {
+        alert("No history available for the current profile.");
+        return;
+      }
+      // Enforce maximum cap (200)
+      const maxCap = 200;
+      document.getElementById('maxHistory').textContent = maxCap;
+      if (n > history.length) {
+        alert(`Only ${history.length} questions stored in history.`);
+        return;
+      }
+      // Get the last n questions (preserving order) then shuffle.
+      let lastN = history.slice(history.length - n);
+      // Shuffle lastN using Fisher-Yates algorithm.
+      for (let i = lastN.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [lastN[i], lastN[j]] = [lastN[j], lastN[i]];
+      }
+      // Display the shuffled history in the historyDisplay div.
+      const displayDiv = document.getElementById('historyDisplay');
+      displayDiv.innerHTML = "<h4>Randomized History:</h4>";
+      lastN.forEach((q, idx) => {
+        const qDiv = document.createElement('div');
+        qDiv.style.borderBottom = "1px dotted #ccc";
+        qDiv.style.padding = "5px 0";
+        qDiv.innerHTML = `<strong>${q.country} - ${q.header} (Question ${q.index + 1})</strong>: ${q.data.url}`;
+        displayDiv.appendChild(qDiv);
+      });
+    }
     
     async function loadAJson(url) {
       try {
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Network response was not ok (status: ${response.status})`);
-        }
+        if (!response.ok) { throw new Error(`Network response was not ok (status: ${response.status})`); }
         const jsonData = await response.json();
         return jsonData;
       } catch (error) {
@@ -724,6 +764,14 @@
       await renderTree();
       renderProfileList();
     };
+
+    // Optional: Use space bar to trigger quiz button.
+    document.addEventListener('keydown', (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        quizButtonHandler();
+      }
+    });
   </script>
 </body>
 </html>
