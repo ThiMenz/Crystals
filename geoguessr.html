@@ -197,6 +197,12 @@
       <div id="horizontalDragBar"></div>
       <div id="quiz">
         <h2>Quiz</h2>
+		<button id="exitReplayButton"
+          onclick="exitReplay()"
+          style="display: none; margin-right: 10px;"
+          aria-label="Exit Replay">
+    Exit Replay
+  </button>
 		<button id="quizButton" onclick="quizButtonHandler()" aria-label="Show Question">Show Question</button>
         <!-- Profile-specific question view stats (viewed / total among selected) -->
         <div id="questionStats">[0 / 0]</div>
@@ -292,6 +298,18 @@
         originalMapHeight = null;
       }
     }
+	
+	function exitReplay() {
+	  replayMode = false;
+	  rangeReplayMode = false;
+	  replayQuestions = [];
+	  replayIndex = 0;
+	  // reset buttons & display
+	  document.getElementById('quizButton').textContent = "Show Question";
+	  document.getElementById('quizDisplay').innerHTML = "";
+	  updateQuestionStats();
+	  document.getElementById('exitReplayButton').style.display = 'none';
+	}
     
     // ---------------------------------------------------------
     //  COLLAPSIBLE TREE & SELECTIONS
@@ -609,77 +627,83 @@
     let replayMode = false;
     let replayQuestions = [];
     let replayIndex = 0;
-    
+    let rangeReplayMode = false;  // <-- new: distinguishes “range” replay from “last‑n” replay
+	
     // Replay last n questions.
     function startReplay() {
-      const profileName = window.currentProfile || "default";
-      const historyKey = "questionHistory_" + profileName;
-      let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-      const countInput = document.getElementById('replayCount').value;
-      let n = parseInt(countInput);
-      if (isNaN(n) || n < 1) {
-        alert("Please enter a valid number.");
-        return;
-      }
-      n = Math.min(n, history.length, 200);
-      if (n === 0) {
-        alert("No questions in history to replay.");
-        return;
-      }
-      replayQuestions = history.slice(-n);
-      // Shuffle replay questions.
-      for (let i = replayQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [replayQuestions[i], replayQuestions[j]] = [replayQuestions[j], replayQuestions[i]];
-      }
-      replayMode = true;
-      replayIndex = 0;
-      // Start with the first replay question (answer not yet shown).
-      currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
-      showCurrentReplayQuestion();
-    }
+	  const profileName = window.currentProfile || "default";
+	  const historyKey = "questionHistory_" + profileName;
+	  let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+	  const countInput = document.getElementById('replayCount').value;
+	  let n = parseInt(countInput, 10);
+	  if (isNaN(n) || n < 1) {
+		alert("Please enter a valid number.");
+		return;
+	  }
+	  n = Math.min(n, history.length, 200);
+	  if (n === 0) {
+		alert("No questions in history to replay.");
+		return;
+	  }
+
+	  // grab last‑n from profile’s history, shuffle, enter replay mode
+	  replayQuestions = history.slice(-n);
+	  for (let i = replayQuestions.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[replayQuestions[i], replayQuestions[j]] = [replayQuestions[j], replayQuestions[i]];
+	  }
+	  replayMode = true;
+	  rangeReplayMode = false;    // <-- ensure flag is off
+	  replayIndex = 0;
+
+	  currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
+	  showCurrentReplayQuestion();
+
+	  // reveal “Exit Replay” button
+	  document.getElementById('exitReplayButton').style.display = 'inline-block';
+	}
+
     
     // Replay questions by view count range.
     function startReplayRange() {
-      const minCount = parseInt(document.getElementById('replayMin').value);
-      const maxCount = parseInt(document.getElementById('replayMax').value);
-      if (isNaN(minCount) || isNaN(maxCount) || minCount < 0 || maxCount < minCount) {
-        alert("Please enter a valid range (min >= 0 and max >= min).");
-        return;
-      }
-      const counts = JSON.parse(localStorage.getItem('questionDisplayCounts')) || {};
-      let allQuestions = [];
-      for (const continent in data) {
-        for (const country in data[continent]) {
-          const headers = data[continent][country].header;
-          for (const header in headers) {
-            headers[header].forEach((step, index) => {
-              const id = continent + "-" + country + "-" + header + "-" + index;
-              const viewCount = counts[id] || 0;
-              if (viewCount >= minCount && viewCount <= maxCount) {
-                allQuestions.push({
-                  id, continent, country, header, index, data: step, answerShown: false
-                });
-              }
-            });
-          }
-        }
-      }
-      if (allQuestions.length === 0) {
-        alert("No questions found in the specified view count range.");
-        return;
-      }
-      // Shuffle the filtered questions.
-      for (let i = allQuestions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
-      }
-      replayQuestions = allQuestions;
-      replayMode = true;
-      replayIndex = 0;
-      currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
-      showCurrentReplayQuestion();
-    }
+	  const minCount = parseInt(document.getElementById('replayMin').value, 10);
+	  const maxCount = parseInt(document.getElementById('replayMax').value, 10);
+	  if (isNaN(minCount) || isNaN(maxCount) || minCount < 0 || maxCount < minCount) {
+		alert("Please enter a valid range (min >= 0 and max >= min).");
+		return;
+	  }
+
+	  const counts = JSON.parse(localStorage.getItem('questionDisplayCounts')) || {};
+	  // only look at questions currently selected in the profile
+	  const selected = getAllSelectedQuestions();
+	  const filtered = selected.filter(q => {
+		const c = counts[q.id] || 0;
+		return c >= minCount && c <= maxCount;
+	  });
+
+	  if (filtered.length === 0) {
+		alert("No questions found in the specified view count range.");
+		return;
+	  }
+
+	  // shuffle
+	  for (let i = filtered.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+	  }
+
+	  replayQuestions = filtered.map(q => Object.assign({}, q, { answerShown: false }));
+	  replayMode = true;
+	  rangeReplayMode = true;     // <-- new: mark this as a range replay
+	  replayIndex = 0;
+
+	  currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
+	  showCurrentReplayQuestion();
+
+	  // reveal “Exit Replay” button
+	  document.getElementById('exitReplayButton').style.display = 'inline-block';
+	}
     
     // Display the current replay question and include replay progress.
     function showCurrentReplayQuestion() {
@@ -716,23 +740,26 @@
     
     // Replay quiz button handler.
     function replayQuizButtonHandler() {
-      if (!currentQuizQuestion.answerShown) {
-        currentQuizQuestion.answerShown = true;
-        showCurrentReplayQuestion();
-      } else {
-        replayIndex++;
-        if (replayIndex >= replayQuestions.length) {
-          replayMode = false;
-          replayQuestions = [];
-          replayIndex = 0;
-          document.getElementById('quizButton').textContent = "Show Question";
-          document.getElementById('quizDisplay').innerHTML = "";
-        } else {
-          currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
-          showCurrentReplayQuestion();
-        }
-      }
-    }
+	  if (!currentQuizQuestion.answerShown) {
+		// first click: show the answer
+		currentQuizQuestion.answerShown = true;
+		// if this is a range replay, record it into history
+		if (rangeReplayMode) {
+		  addQuestionToHistory(currentQuizQuestion);
+		}
+		showCurrentReplayQuestion();
+	  } else {
+		// second click: move to next, or end
+		replayIndex++;
+		if (replayIndex >= replayQuestions.length) {
+		  // finished
+		  exitReplay();   // reuse our exit logic (hides button, resets)
+		} else {
+		  currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
+		  showCurrentReplayQuestion();
+		}
+	  }
+	}
     
     // Main quiz button handler for both normal and replay modes.
     function quizButtonHandler() {
@@ -816,7 +843,7 @@
         const qid = selected[i].id;
         if (counts[qid] && counts[qid] > 0) viewed++;
       }
-      document.getElementById('questionStats').textContent = `[${viewed} / ${selected.length}]`;
+      document.getElementById('questionStats').textContent = `Knowledge: ${viewed} / ${selected.length}`;
     }
     
     // Utility: Get stored image height (default 500px).
