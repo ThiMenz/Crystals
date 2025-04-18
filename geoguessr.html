@@ -741,26 +741,30 @@
     // Replay quiz button handler.
     function replayQuizButtonHandler() {
 	  if (!currentQuizQuestion.answerShown) {
-		// first click: show the answer
+		// reveal answer
 		currentQuizQuestion.answerShown = true;
-		// if this is a range replay, record it into history
+
 		if (rangeReplayMode) {
+		  // add to history (as before)
 		  addQuestionToHistory(currentQuizQuestion);
+		  // *** new: bump the view count so it shows up in Knowledge ***
+		  incrementQuestionCount(currentQuizQuestion.id);
+		  updateQuestionStats();
 		}
+
 		showCurrentReplayQuestion();
 	  } else {
-		// second click: move to next, or end
+		// move to next or exit
 		replayIndex++;
 		if (replayIndex >= replayQuestions.length) {
-		  // finished
-		  exitReplay();   // reuse our exit logic (hides button, resets)
+		  exitReplay();
 		} else {
 		  currentQuizQuestion = Object.assign({}, replayQuestions[replayIndex], { answerShown: false });
 		  showCurrentReplayQuestion();
 		}
 	  }
 	}
-    
+
     // Main quiz button handler for both normal and replay modes.
     function quizButtonHandler() {
       if (replayMode) {
