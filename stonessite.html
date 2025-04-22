@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Button/Key Press Tracker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 2rem;
+      width: 320px;
+      animation: fadeIn 0.8s ease-out;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      text-align: center;
+      color: #333;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .controls input {
+      flex: 1 1 45%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    #trackButton {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      color: white;
+      background: #4CAF50;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      outline: none;
+      transform: scale(1);
+      transition: transform 0.1s ease;
+      margin-bottom: 0.5rem;
+    }
+    #trackButton:active {
+      transform: scale(0.95);
+      background: #45A049;
+    }
+    .feedback {
+      text-align: center;
+      font-weight: bold;
+      min-height: 1.2rem;
+      color: #4CAF50;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      margin-bottom: 0.5rem;
+    }
+    .feedback.show {
+      opacity: 1;
+    }
+    #streak {
+      text-align: center;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      color: #333;
+    }
+    #logList {
+      list-style: none;
+      padding: 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #logList li {
+      background: #f0f0f0;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      opacity: 0;
+      animation: fadeInItem 0.4s forwards;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px);} to { opacity: 1; transform: translateY(0);} }
+    @keyframes fadeInItem { from { opacity: 0; transform: translateX(-10px);} to { opacity: 1; transform: translateX(0);} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Press Tracker</h1>
+    <div class="controls">
+      <input type="number" id="minRange" placeholder="Min ms" />
+      <input type="number" id="maxRange" placeholder="Max ms" />
+      <input type="text" id="keyInput" placeholder="Key (e.g. a, Enter)" />
+    </div>
+    <button id="trackButton">Press & Hold</button>
+    <div id="instruction" class="feedback" style="color:#333;transition:none;opacity:1;">Press Button or Key</div>
+    <div class="feedback" id="feedback">Good job!</div>
+    <div id="streak">Streak: 0</div>
+    <ul id="logList"></ul>
+  </div>
+
+  <script>
+    const btn = document.getElementById('trackButton');
+    const logList = document.getElementById('logList');
+    const feedback = document.getElementById('feedback');
+    const minInput = document.getElementById('minRange');
+    const maxInput = document.getElementById('maxRange');
+    const keyInput = document.getElementById('keyInput');
+    const instruction = document.getElementById('instruction');
+    const streakEl = document.getElementById('streak');
+
+    let pressStart = 0;
+    let selectedKey = '';
+    let streak = 0;
+    let keyIsDown = false;
+
+    function updateMode() {
+      selectedKey = keyInput.value.trim();
+      if (selectedKey) {
+        btn.style.display = 'none';
+        instruction.textContent = `Hold '${selectedKey}'`;
+      } else {
+        btn.style.display = 'block';
+        instruction.textContent = 'Press Button';
+      }
+    }
+
+    keyInput.addEventListener('input', updateMode);
+
+    // Mouse events
+    btn.addEventListener('mousedown', () => {
+      if (!selectedKey) startPress();
+    });
+    btn.addEventListener('mouseup', () => {
+      if (!selectedKey) endPress();
+    });
+    btn.addEventListener('mouseleave', () => {
+      if (!selectedKey && pressStart) endPress();
+    });
+
+    // Key events
+    document.addEventListener('keydown', (e) => {
+      if (selectedKey && !keyIsDown && e.key === selectedKey) {
+        keyIsDown = true;
+        startPress();
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (selectedKey && keyIsDown && e.key === selectedKey) {
+        keyIsDown = false;
+        endPress();
+      }
+    });
+
+    function startPress() {
+      pressStart = Date.now();
+      feedback.classList.remove('show');
+    }
+
+    function endPress() {
+      const duration = Date.now() - pressStart;
+      pressStart = 0;
+      record(duration);
+    }
+
+    function record(duration) {
+      const li = document.createElement('li');
+      li.textContent = `${new Date().toLocaleTimeString()} - ${duration} ms`;
+      logList.prepend(li);
+
+      const min = parseInt(minInput.value, 10);
+      const max = parseInt(maxInput.value, 10);
+      const success = !isNaN(min) && !isNaN(max) && duration >= min && duration <= max;
+
+      if (success) {
+        feedback.classList.add('show');
+        streak++;
+        setTimeout(() => feedback.classList.remove('show'), 2000);
+      } else {
+        streak = 0;
+      }
+
+      streakEl.textContent = `Streak: ${streak}`;
+    }
+  </script>
+</body>
+</html>
