@@ -173,10 +173,17 @@
 	  padding: 5px; border-radius: 4px;
 	  display: flex; gap: 5px; z-index: 20;
 	}
-	#drawingToolbar button,
-	#drawingToolbar input[type=range] {
-	  font-size: 0.9em; padding: 3px;
-	}
+	 #drawingToolbar button,
+-#drawingToolbar input[type=range] {
+-  font-size: 0.9em; padding: 3px;
+-}
++#drawingToolbar input[type=range] {
++  font-size: 0.9em;
++  padding: 3px;
++  width: 80px;
++}
+ #drawingToolbar button { /* stays the same */ }
+
 	/* --- end drawing CSS --- */
   </style>
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
@@ -927,6 +934,7 @@ function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
   const img = disp.querySelector('img');
   if (!img || disp.querySelector('.drawingContainer')) return;
+
   // wrap image in container + toolbar + canvas
   const container = document.createElement('div');
   container.className = 'drawingContainer';
@@ -949,20 +957,31 @@ function setupDrawing(questionId) {
     btn.onclick = () => setTool(tool);
     toolbar.appendChild(btn);
   });
+  // ← NEW “Clear” button
+  const clearBtn = document.createElement('button');
+  clearBtn.textContent = 'Clear';
+  clearBtn.onclick = () => {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    localStorage.removeItem('drawing_'+questionId);
+  };
+  toolbar.appendChild(clearBtn);
+
+  // ← Slider with fixed width
   const range = document.createElement('input');
   range.type = 'range'; range.min = 1; range.max = 50;
   range.value = currentThickness;
   range.oninput = () => setThickness(range.value);
+  range.style.width = '80px';
   toolbar.appendChild(range);
-  container.appendChild(toolbar);
 
+  container.appendChild(toolbar);
   initCanvas(canvas, img, questionId);
 }
 
 function initCanvas(canvas, img, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
-  // restore existing drawing
   const saved = localStorage.getItem('drawing_'+qid);
   if (saved) {
     const imgData = new Image();
@@ -996,26 +1015,28 @@ function initCanvas(canvas, img, qid) {
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillRect(sx,sy,ex-sx,ey-sy);
     }
-    // save on lift
     localStorage.setItem('drawing_'+qid, canvas.toDataURL());
   };
   canvas.style.touchAction = 'none';
 }
-// ---------- End Drawing Tool Implementation ----------
 
-// Hook it into your quiz flow:
+// Hook into quiz flow so every image gets the canvas+toolbar
 const _origQuizBtn = quizButtonHandler;
 quizButtonHandler = function() {
   _origQuizBtn();
-  if (currentQuizQuestion?.data?.url && isImage(currentQuizQuestion.data.url))
-    setupDrawing(currentQuizQuestion.id);
+  const disp = document.getElementById('quizDisplay');
+  const img = disp.querySelector('img');
+  if (img && currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
 const _origShowReplay = showCurrentReplayQuestion;
 showCurrentReplayQuestion = function() {
   _origShowReplay();
-  if (currentQuizQuestion?.data?.url && isImage(currentQuizQuestion.data.url))
-    setupDrawing(currentQuizQuestion.id);
+  const disp = document.getElementById('quizDisplay');
+  const img = disp.querySelector('img');
+  if (img && currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
+// ---------- End Drawing Tool Implementation ----------
+
 
   </script>
 </body>
