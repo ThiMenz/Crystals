@@ -960,6 +960,7 @@
       }
     });
 	// ---------- Drawing Tool Implementation ----------
+// ---------- Drawing Tool Implementation ----------
 let currentTool = 'pencil';
 let currentThickness = 5;
 function setTool(tool) { currentTool = tool; }
@@ -967,48 +968,50 @@ function setThickness(value) { currentThickness = parseInt(value, 10); }
 
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
-  const img = disp.querySelector('img');
+  const img  = disp.querySelector('img');
   if (!img || disp.querySelector('.drawingContainer')) return;
 
-  // wrap image in container + toolbar + canvas
+  // wrap the image
   const container = document.createElement('div');
   container.className = 'drawingContainer';
-  container.style.width = img.clientWidth + 'px';
+  container.style.width  = img.clientWidth + 'px';
   container.style.height = img.clientHeight + 'px';
   img.parentNode.insertBefore(container, img);
   container.appendChild(img);
 
+  // the drawing canvas
   const canvas = document.createElement('canvas');
-  canvas.id = 'drawingCanvas';
-  canvas.width = img.clientWidth;
+  canvas.id     = 'drawingCanvas';
+  canvas.width  = img.clientWidth;
   canvas.height = img.clientHeight;
   container.appendChild(canvas);
 
+  // toolbar: pencil, rect, eraser, clear, thickness
   const toolbar = document.createElement('div');
   toolbar.id = 'drawingToolbar';
-  ['pencil','rect','eraser'].forEach(tool => {
+  ['pencil','rect','eraser'].forEach(mode => {
     const btn = document.createElement('button');
-    btn.textContent = tool.charAt(0).toUpperCase()+tool.slice(1);
-    btn.onclick = () => setTool(tool);
+    btn.textContent = mode[0].toUpperCase() + mode.slice(1);
+    btn.onclick    = () => setTool(mode);
     toolbar.appendChild(btn);
   });
-  // ← NEW “Clear” button
   const clearBtn = document.createElement('button');
   clearBtn.textContent = 'Clear';
   clearBtn.onclick = () => {
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     localStorage.removeItem('drawing_'+questionId);
   };
   toolbar.appendChild(clearBtn);
 
-  // ← Slider with fixed width
-  const range = document.createElement('input');
-  range.type = 'range'; range.min = 1; range.max = 50;
-  range.value = currentThickness;
-  range.oninput = () => setThickness(range.value);
-  range.style.width = '80px';
-  toolbar.appendChild(range);
+  const slider = document.createElement('input');
+  slider.type    = 'range';
+  slider.min     = 1;
+  slider.max     = 50;
+  slider.value   = currentThickness;
+  slider.oninput = () => setThickness(slider.value);
+  slider.style.width = '80px';
+  toolbar.appendChild(slider);
 
   container.appendChild(toolbar);
   initCanvas(canvas, img, questionId);
@@ -1020,26 +1023,33 @@ function initCanvas(canvas, img, qid) {
   const saved = localStorage.getItem('drawing_'+qid);
   if (saved) {
     const imgData = new Image();
-    imgData.onload = () => ctx.drawImage(imgData,0,0,canvas.width,canvas.height);
+    imgData.onload = () =>
+      ctx.drawImage(imgData, 0, 0, canvas.width, canvas.height);
     imgData.src = saved;
   }
-  let drawing=false, sx=0, sy=0;
+  let drawing = false, sx = 0, sy = 0;
+
   canvas.onpointerdown = e => {
     drawing = true;
     const r = canvas.getBoundingClientRect();
-    sx = e.clientX - r.left; sy = e.clientY - r.top;
-    if (currentTool==='pencil'||currentTool==='eraser') {
+    sx = e.clientX - r.left;
+    sy = e.clientY - r.top;
+    if (currentTool==='pencil' || currentTool==='eraser') {
       ctx.beginPath();
       ctx.lineWidth = currentThickness;
-      ctx.globalCompositeOperation = currentTool==='eraser'?'destination-out':'source-over';
-      ctx.moveTo(sx,sy);
+      ctx.globalCompositeOperation =
+        currentTool==='eraser' ? 'destination-out' : 'source-over';
+      ctx.moveTo(sx, sy);
     }
   };
   canvas.onpointermove = e => {
     if (!drawing) return;
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
-    if (currentTool==='pencil'||currentTool==='eraser') { ctx.lineTo(x,y); ctx.stroke(); }
+    if (currentTool==='pencil' || currentTool==='eraser') {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
   };
   canvas.onpointerup = e => {
     if (!drawing) return;
@@ -1048,30 +1058,29 @@ function initCanvas(canvas, img, qid) {
     const ex = e.clientX - r.left, ey = e.clientY - r.top;
     if (currentTool==='rect') {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillRect(sx,sy,ex-sx,ey-sy);
+      ctx.fillRect(sx, sy, ex-sx, ey-sy);
     }
     localStorage.setItem('drawing_'+qid, canvas.toDataURL());
   };
   canvas.style.touchAction = 'none';
 }
 
-// Hook into quiz flow so every image gets the canvas+toolbar
+// Hook into your quiz code so every image question gets a canvas+toolbar:
 const _origQuizBtn = quizButtonHandler;
 quizButtonHandler = function() {
   _origQuizBtn();
   const disp = document.getElementById('quizDisplay');
-  const img = disp.querySelector('img');
+  const img  = disp.querySelector('img');
   if (img && currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
 const _origShowReplay = showCurrentReplayQuestion;
 showCurrentReplayQuestion = function() {
   _origShowReplay();
   const disp = document.getElementById('quizDisplay');
-  const img = disp.querySelector('img');
+  const img  = disp.querySelector('img');
   if (img && currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
 // ---------- End Drawing Tool Implementation ----------
-
 
   </script>
 </body>
