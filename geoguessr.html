@@ -986,7 +986,7 @@ function setThickness(val) {
 // called whenever a new question image appears
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
-  const img  = disp.querySelector('img');
+  const img = disp.querySelector('img');
   if (!img) return;
   if (!img.complete) {
     img.onload = () => setupDrawing(questionId);
@@ -1000,67 +1000,87 @@ function setupDrawing(questionId) {
   img.parentNode.insertBefore(container, img);
   container.appendChild(img);
 
-  // measure display size
-  const w = img.clientWidth;
-  const h = img.clientHeight;
+  // Wait for next frame to ensure image is fully rendered
+  requestAnimationFrame(() => {
+    // Get the ACTUAL displayed dimensions of the image
+    const rect = img.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
 
-  // drawing canvas (pixel buffer = display size)
-  const drawC = document.createElement('canvas');
-  drawC.id     = 'drawingCanvas';
-  drawC.width  = w;
-  drawC.height = h;
-  container.appendChild(drawC);
+    // drawing canvas - set BOTH CSS and canvas dimensions to match displayed image size
+    const drawC = document.createElement('canvas');
+    drawC.id = 'drawingCanvas';
+    drawC.width = w;
+    drawC.height = h;
+    drawC.style.width = w + 'px';
+    drawC.style.height = h + 'px';
+    container.appendChild(drawC);
 
-  // cursor canvas (for hover-circle; same size)
-  const cursorC = document.createElement('canvas');
-  cursorC.id     = 'cursorCanvas';
-  cursorC.width  = w;
-  cursorC.height = h;
-  container.appendChild(cursorC);
+    // cursor canvas - same exact dimensions
+    const cursorC = document.createElement('canvas');
+    cursorC.id = 'cursorCanvas';
+    cursorC.width = w;
+    cursorC.height = h;
+    cursorC.style.width = w + 'px';
+    cursorC.style.height = h + 'px';
+    container.appendChild(cursorC);
 
-  // toolbar (hidden until hover)
-  const toolbar = document.createElement('div');
-  toolbar.id = 'drawingToolbar';
-  ['pencil','rect','eraser'].forEach(mode => {
-    const btn = document.createElement('button');
-    btn.textContent = mode[0].toUpperCase() + mode.slice(1);
-    btn.onclick = () => setTool(mode, btn);
-    toolbar.appendChild(btn);
+    // toolbar (hidden until hover)
+    const toolbar = document.createElement('div');
+    toolbar.id = 'drawingToolbar';
+    ['pencil','rect','eraser'].forEach(mode => {
+      const btn = document.createElement('button');
+      btn.textContent = mode[0].toUpperCase() + mode.slice(1);
+      btn.onclick = () => setTool(mode, btn);
+      toolbar.appendChild(btn);
+    });
+    // Clear button
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear';
+    clearBtn.onclick = () => {
+      const ctx = drawC.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+      localStorage.removeItem('drawing_' + questionId);
+    };
+    toolbar.appendChild(clearBtn);
+    // thickness slider
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = 1;
+    slider.max = 20;
+    slider.value = currentThickness;
+    slider.oninput = () => setThickness(slider.value);
+    toolbar.appendChild(slider);
+
+    container.appendChild(toolbar);
+
+    initCanvas(drawC, questionId);
+    initCursor(drawC, cursorC);
   });
-  // Clear button
-  const clearBtn = document.createElement('button');
-  clearBtn.textContent = 'Clear';
-  clearBtn.onclick = () => {
-    const ctx = drawC.getContext('2d');
-    ctx.clearRect(0, 0, w, h);
-    localStorage.removeItem('drawing_' + questionId);
-  };
-  toolbar.appendChild(clearBtn);
-  // thickness slider
-  const slider = document.createElement('input');
-  slider.type    = 'range';
-  slider.min     = 1;
-  slider.max     = 200;                // up to 200px
-  slider.value   = currentThickness;
-  slider.oninput = () => setThickness(slider.value);
-  toolbar.appendChild(slider);
-
-  container.appendChild(toolbar);
-
-  initCanvas(drawC, questionId);
-  initCursor(drawC, cursorC);
 }
 
 function initCanvas(canvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   // draw back any saved strokes
   const saved = localStorage.getItem('drawing_' + qid);
   if (saved) {
     const imgData = new Image();
-    imgData.onload = () =>
-      ctx.drawImage(imgData, 0, 0, canvas.width, canvas.height);
+    imgData.onload = () => {
+      // Create a temporary canvas with the saved dimensions
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Draw the saved image scaled to fit current canvas
+      tempCtx.drawImage(imgData, 0, 0, canvas.width, canvas.height);
+      
+      // Transfer to the main canvas
+      ctx.drawImage(tempCanvas, 0, 0);
+    };
     imgData.src = saved;
   }
 
@@ -1069,7 +1089,6 @@ function initCanvas(canvas, qid) {
   canvas.onpointerdown = e => {
     drawing = true;
     const r = canvas.getBoundingClientRect();
-    // map pointer to canvas pixels (display coords)
     sx = e.clientX - r.left;
     sy = e.clientY - r.top;
 
@@ -1077,8 +1096,8 @@ function initCanvas(canvas, qid) {
 
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.beginPath();
-      ctx.lineWidth               = currentThickness;
-      ctx.globalCompositeOperation =
+      ctx.lineWidth = currentThickness;
+      ctx.globalCompositeOperation = 
         currentTool === 'eraser' ? 'destination-out' : 'source-over';
       ctx.moveTo(sx, sy);
     }
@@ -1103,10 +1122,11 @@ function initCanvas(canvas, qid) {
     const ey = e.clientY - r.top;
     if (currentTool === 'rect') {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillRect(sx, sy, ex - sx, ey - sy);
+      ctx.lineWidth = currentThickness;
+      ctx.strokeRect(sx, sy, ex - sx, ey - sy);
     }
     canvas.releasePointerCapture(e.pointerId);
-    // save the PNG of the display-sized canvas
+    // Save with the current dimensions
     localStorage.setItem('drawing_' + qid, canvas.toDataURL());
   };
 
@@ -1115,20 +1135,45 @@ function initCanvas(canvas, qid) {
 
 function initCursor(drawC, cursorC) {
   const ctx = cursorC.getContext('2d');
-  drawC.addEventListener('pointermove', e => {
+  
+  // Function to update cursor
+  function updateCursor(e) {
     const r = drawC.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    
     ctx.clearRect(0, 0, cursorC.width, cursorC.height);
-    ctx.beginPath();
-    ctx.lineWidth   = 1;
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-    ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
-    ctx.stroke();
+    
+    // Only draw if within bounds
+    if (x >= 0 && x <= cursorC.width && y >= 0 && y <= cursorC.height) {
+      ctx.beginPath();
+      ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  drawC.addEventListener('pointermove', updateCursor);
+  
+  drawC.addEventListener('pointerleave', () => {
+    ctx.clearRect(0, 0, cursorC.width, cursorC.height);
   });
-  drawC.addEventListener('pointerleave', () =>
-    cursorC.getContext('2d').clearRect(0, 0, cursorC.width, cursorC.height)
-  );
 }
+
+window.addEventListener('resize', () => {
+  if (currentQuizQuestion?.id) {
+    // Remove existing drawing container to force recreation
+    const container = document.querySelector('.drawingContainer');
+    if (container) {
+      const img = container.querySelector('img');
+      container.parentNode.insertBefore(img, container);
+      container.remove();
+      // Recreate the drawing setup
+      setupDrawing(currentQuizQuestion.id);
+    }
+  }
+});
 
 // hook into quiz flow
 const _origQuizBtn = quizButtonHandler;
