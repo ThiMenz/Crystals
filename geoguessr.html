@@ -1023,7 +1023,7 @@ function setupDrawing(questionId) {
   const slider = document.createElement('input');
   slider.type    = 'range';
   slider.min     = 1;
-  slider.max     = 50;
+  slider.max     = 200;
   slider.value   = currentThickness;
   slider.oninput = () => setThickness(slider.value);
   toolbar.appendChild(slider);
@@ -1050,11 +1050,15 @@ function initCanvas(canvas, qid) {
 
   let drawing = false, sx = 0, sy = 0;
   
-  canvas.onpointerdown = e => {
-    drawing = true;
-    const r = canvas.getBoundingClientRect();
-    sx = e.clientX - r.left; sy = e.clientY - r.top;
-    
+canvas.onpointerdown = e => {
+	  drawing = true;
+	  const r = canvas.getBoundingClientRect();
+	  sx = e.clientX - r.left; 
+	  sy = e.clientY - r.top;
+
+	+ // lock pointer to this canvas so pointerup fires even outside
+	+ canvas.setPointerCapture(e.pointerId);
+
     // configure for pencil or eraser
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.beginPath();
@@ -1077,14 +1081,16 @@ function initCanvas(canvas, qid) {
   };
 
   canvas.onpointerup = e => {
-    if (!drawing) return;
-    drawing = false;
-    const r = canvas.getBoundingClientRect();
+  if (!drawing) return;
+  drawing = false;
+  const r = canvas.getBoundingClientRect();
     const ex = e.clientX - r.left, ey = e.clientY - r.top;
     if (currentTool === 'rect') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillRect(sx, sy, ex - sx, ey - sy);
     }
+	+ // release pointer
+	+ canvas.releasePointerCapture(e.pointerId);
     // save on pointer-up
     localStorage.setItem('drawing_'+qid, canvas.toDataURL());
   };
@@ -1124,6 +1130,14 @@ showCurrentReplayQuestion = function() {
   _origReplay();
   if (currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
+
+const quizDisp = document.getElementById('quizDisplay');
+new MutationObserver(() => {
+  if (currentQuizQuestion?.id) {
+    setupDrawing(currentQuizQuestion.id);
+  }
+}).observe(quizDisp, { childList: true, subtree: true });
+
 // ---------- End Drawing Tool Implementation ----------
 
 
