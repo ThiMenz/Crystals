@@ -992,9 +992,23 @@ function setupDrawing(questionId) {
     img.onload = () => setupDrawing(questionId);
     return;
   }
-  if (disp.querySelector('.drawingContainer')) return;
+  
+  // Cleanup existing drawing container if present
+  const existingContainer = disp.querySelector('.drawingContainer');
+  if (existingContainer) {
+    const existingCanvas = existingContainer.querySelector('#drawingCanvas');
+    if (existingCanvas && existingCanvas.cleanup) {
+      existingCanvas.cleanup();
+    }
+    // Keep the img but remove container and its other children
+    const existingImg = existingContainer.querySelector('img');
+    if (existingImg) {
+      existingContainer.parentNode.insertBefore(existingImg, existingContainer);
+    }
+    existingContainer.remove();
+  }
 
-  // wrap <img>
+  // Create new container
   const container = document.createElement('div');
   container.className = 'drawingContainer';
   img.parentNode.insertBefore(container, img);
@@ -1002,12 +1016,11 @@ function setupDrawing(questionId) {
 
   // Wait for next frame to ensure image is fully rendered
   requestAnimationFrame(() => {
-    // Get the ACTUAL displayed dimensions of the image
+    // Rest of the function remains the same...
     const rect = img.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
 
-    // drawing canvas - set BOTH CSS and canvas dimensions to match displayed image size
     const drawC = document.createElement('canvas');
     drawC.id = 'drawingCanvas';
     drawC.width = w;
@@ -1016,7 +1029,6 @@ function setupDrawing(questionId) {
     drawC.style.height = h + 'px';
     container.appendChild(drawC);
 
-    // cursor canvas - same exact dimensions
     const cursorC = document.createElement('canvas');
     cursorC.id = 'cursorCanvas';
     cursorC.width = w;
@@ -1025,16 +1037,16 @@ function setupDrawing(questionId) {
     cursorC.style.height = h + 'px';
     container.appendChild(cursorC);
 
-    // toolbar (hidden until hover)
     const toolbar = document.createElement('div');
     toolbar.id = 'drawingToolbar';
     ['pencil','rect','eraser'].forEach(mode => {
       const btn = document.createElement('button');
       btn.textContent = mode[0].toUpperCase() + mode.slice(1);
+      if (mode === currentTool) btn.classList.add('active');
       btn.onclick = () => setTool(mode, btn);
       toolbar.appendChild(btn);
     });
-    // Clear button
+    
     const clearBtn = document.createElement('button');
     clearBtn.textContent = 'Clear';
     clearBtn.onclick = () => {
@@ -1043,7 +1055,7 @@ function setupDrawing(questionId) {
       localStorage.removeItem('drawing_' + questionId);
     };
     toolbar.appendChild(clearBtn);
-    // thickness slider
+    
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.min = 1;
@@ -1063,6 +1075,18 @@ function initCanvas(canvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+
+  // Create an overlay canvas for drawing previews
+  const previewCanvas = document.createElement('canvas');
+  previewCanvas.width = canvas.width;
+  previewCanvas.height = canvas.height;
+  previewCanvas.style.position = 'absolute';
+  previewCanvas.style.top = '0';
+  previewCanvas.style.left = '0';
+  previewCanvas.style.pointerEvents = 'none';
+  previewCanvas.style.zIndex = '11'; // Above drawing canvas, below cursor
+  canvas.parentNode.appendChild(previewCanvas);
+  const previewCtx = previewCanvas.getContext('2d');
 
   // draw back any saved strokes
   const saved = localStorage.getItem('drawing_' + qid);
@@ -1108,9 +1132,24 @@ function initCanvas(canvas, qid) {
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
+    
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
+    } else if (currentTool === 'rect') {
+      // Clear the preview canvas
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      
+      // Draw preview rectangle with dashed stroke outline
+      previewCtx.setLineDash([5, 3]); // Dashed line pattern
+      previewCtx.strokeStyle = 'rgba(0,0,0,0.8)';
+      previewCtx.lineWidth = 2;
+      previewCtx.strokeRect(sx, sy, x - sx, y - sy);
+      
+      // Draw semi-transparent fill
+      previewCtx.setLineDash([]);
+      previewCtx.fillStyle = 'rgba(0,0,0,0.2)';
+      previewCtx.fillRect(sx, sy, x - sx, y - sy);
     }
   };
 
@@ -1120,17 +1159,30 @@ function initCanvas(canvas, qid) {
     const r = canvas.getBoundingClientRect();
     const ex = e.clientX - r.left;
     const ey = e.clientY - r.top;
+    
     if (currentTool === 'rect') {
+      // Clear the preview
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      
+      // Draw actual filled rectangle on the main canvas
       ctx.globalCompositeOperation = 'source-over';
-      ctx.lineWidth = currentThickness;
-      ctx.strokeRect(sx, sy, ex - sx, ey - sy);
+      ctx.fillStyle = 'black'; // You can customize the fill color if needed
+      ctx.fillRect(sx, sy, ex - sx, ey - sy);
     }
+    
     canvas.releasePointerCapture(e.pointerId);
     // Save with the current dimensions
     localStorage.setItem('drawing_' + qid, canvas.toDataURL());
   };
 
   canvas.style.touchAction = 'none';
+  
+  // Clean up function to remove preview canvas when needed
+  canvas.cleanup = () => {
+    if (previewCanvas && previewCanvas.parentNode) {
+      previewCanvas.parentNode.removeChild(previewCanvas);
+    }
+  };
 }
 
 function initCursor(drawC, cursorC) {
