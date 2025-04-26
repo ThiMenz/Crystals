@@ -982,28 +982,32 @@ function setThickness(val) {
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
   const img  = disp.querySelector('img');
-  if (!img || disp.querySelector('.drawingContainer')) return;
+  if (!img) return;
+  if (!img.complete) {
+    img.onload = () => setupDrawing(questionId);
+    return;
+  }
+  if (disp.querySelector('.drawingContainer')) return;
 
-  // 1) container
+  // wrap the <img>
   const container = document.createElement('div');
   container.className = 'drawingContainer';
-  container.style.width  = img.clientWidth + 'px';
-  container.style.height = img.clientHeight + 'px';
   img.parentNode.insertBefore(container, img);
   container.appendChild(img);
 
-  // 2) drawing canvas
+  // drawing canvas
   const drawC = document.createElement('canvas');
-  drawC.id     = 'drawingCanvas';
-  drawC.width  = img.clientWidth;
-  drawC.height = img.clientHeight;
+  drawC.id = 'drawingCanvas';
+  // use naturalWidth/Height, not clientWidth
+  drawC.width  = img.naturalWidth;
+  drawC.height = img.naturalHeight;
   container.appendChild(drawC);
 
-  // 3) cursor canvas (for hover circle)
+  // cursor canvas
   const cursorC = document.createElement('canvas');
   cursorC.id     = 'cursorCanvas';
-  cursorC.width  = img.clientWidth;
-  cursorC.height = img.clientHeight;
+  cursorC.width  = img.naturalWidth;
+  cursorC.height = img.naturalHeight;
   container.appendChild(cursorC);
 
   // 4) toolbar
