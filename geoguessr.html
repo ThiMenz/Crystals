@@ -163,6 +163,21 @@
     button:hover {
       background-color: #005fa3;
     }
+	/* --- Drawing container, canvas & toolbar --- */
+	.drawingContainer { position: relative; display: inline-block; }
+	#drawingCanvas { position: absolute; top: 0; left: 0; z-index: 10; }
+	#drawingToolbar {
+	  position: absolute;
+	  top: 10px; left: 50%; transform: translateX(-50%);
+	  background: rgba(255,255,255,0.9);
+	  padding: 5px; border-radius: 4px;
+	  display: flex; gap: 5px; z-index: 20;
+	}
+	#drawingToolbar button,
+	#drawingToolbar input[type=range] {
+	  font-size: 0.9em; padding: 3px;
+	}
+	/* --- end drawing CSS --- */
   </style>
   <script src="https://openlayers.org/api/OpenLayers.js"></script>
 </head>
@@ -902,6 +917,106 @@
         quizButtonHandler();
       }
     });
+	// ---------- Drawing Tool Implementation ----------
+let currentTool = 'pencil';
+let currentThickness = 5;
+function setTool(tool) { currentTool = tool; }
+function setThickness(value) { currentThickness = parseInt(value, 10); }
+
+function setupDrawing(questionId) {
+  const disp = document.getElementById('quizDisplay');
+  const img = disp.querySelector('img');
+  if (!img || disp.querySelector('.drawingContainer')) return;
+  // wrap image in container + toolbar + canvas
+  const container = document.createElement('div');
+  container.className = 'drawingContainer';
+  container.style.width = img.clientWidth + 'px';
+  container.style.height = img.clientHeight + 'px';
+  img.parentNode.insertBefore(container, img);
+  container.appendChild(img);
+
+  const canvas = document.createElement('canvas');
+  canvas.id = 'drawingCanvas';
+  canvas.width = img.clientWidth;
+  canvas.height = img.clientHeight;
+  container.appendChild(canvas);
+
+  const toolbar = document.createElement('div');
+  toolbar.id = 'drawingToolbar';
+  ['pencil','rect','eraser'].forEach(tool => {
+    const btn = document.createElement('button');
+    btn.textContent = tool.charAt(0).toUpperCase()+tool.slice(1);
+    btn.onclick = () => setTool(tool);
+    toolbar.appendChild(btn);
+  });
+  const range = document.createElement('input');
+  range.type = 'range'; range.min = 1; range.max = 50;
+  range.value = currentThickness;
+  range.oninput = () => setThickness(range.value);
+  toolbar.appendChild(range);
+  container.appendChild(toolbar);
+
+  initCanvas(canvas, img, questionId);
+}
+
+function initCanvas(canvas, img, qid) {
+  const ctx = canvas.getContext('2d');
+  ctx.lineCap = 'round';
+  // restore existing drawing
+  const saved = localStorage.getItem('drawing_'+qid);
+  if (saved) {
+    const imgData = new Image();
+    imgData.onload = () => ctx.drawImage(imgData,0,0,canvas.width,canvas.height);
+    imgData.src = saved;
+  }
+  let drawing=false, sx=0, sy=0;
+  canvas.onpointerdown = e => {
+    drawing = true;
+    const r = canvas.getBoundingClientRect();
+    sx = e.clientX - r.left; sy = e.clientY - r.top;
+    if (currentTool==='pencil'||currentTool==='eraser') {
+      ctx.beginPath();
+      ctx.lineWidth = currentThickness;
+      ctx.globalCompositeOperation = currentTool==='eraser'?'destination-out':'source-over';
+      ctx.moveTo(sx,sy);
+    }
+  };
+  canvas.onpointermove = e => {
+    if (!drawing) return;
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (currentTool==='pencil'||currentTool==='eraser') { ctx.lineTo(x,y); ctx.stroke(); }
+  };
+  canvas.onpointerup = e => {
+    if (!drawing) return;
+    drawing = false;
+    const r = canvas.getBoundingClientRect();
+    const ex = e.clientX - r.left, ey = e.clientY - r.top;
+    if (currentTool==='rect') {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillRect(sx,sy,ex-sx,ey-sy);
+    }
+    // save on lift
+    localStorage.setItem('drawing_'+qid, canvas.toDataURL());
+  };
+  canvas.style.touchAction = 'none';
+}
+// ---------- End Drawing Tool Implementation ----------
+
+// Hook it into your quiz flow:
+const _origQuizBtn = quizButtonHandler;
+quizButtonHandler = function() {
+  _origQuizBtn();
+  if (currentQuizQuestion?.data?.url && isImage(currentQuizQuestion.data.url))
+    setupDrawing(currentQuizQuestion.id);
+};
+const _origShowReplay = showCurrentReplayQuestion;
+showCurrentReplayQuestion = function() {
+  _origShowReplay();
+  if (currentQuizQuestion?.data?.url && isImage(currentQuizQuestion.data.url))
+    setupDrawing(currentQuizQuestion.id);
+};
+
   </script>
 </body>
 </html>
