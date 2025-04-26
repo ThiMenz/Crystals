@@ -166,74 +166,46 @@
 	
 	
 	
-	/* --- Drawing container, canvas & toolbar --- */
-	
-	
-	
-	/* make the container span the full quiz width */
+	/* --- Drawing container & canvases & cursor --- */
 	.drawingContainer {
 	  position: relative;
 	  display: block;
 	  width: 100%;
-	  /* height will follow the image’s aspect-ratio */
+	  height: auto;
 	}
-
-	/* ensure the canvas covers 100% of that container */
-	#drawingCanvas {
-	  position: absolute;
-	  top: 0; left: 0;
-	  z-index: 10;
-	  width: 100%;
-	  height: 100%;
-	}
-
-	/* pin the toolbar in the top-left (fully visible) */
-	#drawingToolbar {
-	  position: absolute;
-	  top: 10px;
-	  left: 10px;
-	  transform: none;
-	  background: rgba(255,255,255,0.9);
-	  padding: 5px;
-	  border-radius: 4px;
-	  display: flex;
-	  gap: 5px;
-	  z-index: 20;
-	}
-
-	/* slider width stays 80px */
-	#drawingToolbar input[type=range] {
-	  font-size: 0.9em;
-	  padding: 3px;
-	  width: 80px;
-	}
-
-	/* Prevent the <img> from being dragged/clicked */
 	.drawingContainer img {
 	  user-select: none;
 	  pointer-events: none;
 	  -webkit-user-drag: none;
 	}
-
-	/* Make sure both canvases cover the full container */
-	.drawingContainer canvas {
-	  position: absolute;
-	  top: 0; left: 0;
+	#drawingCanvas {
+	  position: absolute; top: 0; left: 0;
 	  width: 100%; height: 100%;
-	  pointer-events: all;
+	  z-index: 10;
 	}
-
-	/* Outline the active tool button */
+	#cursorCanvas {
+	  position: absolute; top: 0; left: 0;
+	  width: 100%; height: 100%;
+	  z-index: 15;
+	  pointer-events: none;
+	}
+	#drawingToolbar {
+	  position: absolute;
+	  top: 10px; left: 10px;
+	  background: rgba(255,255,255,0.9);
+	  padding: 5px; border-radius: 4px;
+	  display: flex; gap: 5px;
+	  z-index: 20;
+	}
 	#drawingToolbar button.active {
 	  background-color: #005fa3;
 	  color: #fff;
 	}
-
-	/* Cursor-canvas sits above the drawing layer */
-	#cursorCanvas {
-	  z-index: 15;
-	  pointer-events: none;
+	#drawingToolbar input[type=range] {
+	  width: 80px;
 	}
+	/* --- end drawing CSS --- */
+
 
 
 
@@ -990,24 +962,25 @@
 let currentTool = 'pencil';
 let currentThickness = 5;
 
+// highlight the active tool button
 function setTool(tool, btn) {
   currentTool = tool;
-  // highlight active button
   btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-function setThickness(value) {
-  currentThickness = parseInt(value, 10);
+// update brush thickness
+function setThickness(val) {
+  currentThickness = parseInt(val, 10);
 }
 
-// main setup: image → container → canvases + toolbar
+// wrap the image, add two canvases + toolbar
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
   const img  = disp.querySelector('img');
   if (!img || disp.querySelector('.drawingContainer')) return;
 
-  // wrap in container
+  // 1) container
   const container = document.createElement('div');
   container.className = 'drawingContainer';
   container.style.width  = img.clientWidth + 'px';
@@ -1015,45 +988,44 @@ function setupDrawing(questionId) {
   img.parentNode.insertBefore(container, img);
   container.appendChild(img);
 
-  // drawing canvas
+  // 2) drawing canvas
   const drawC = document.createElement('canvas');
   drawC.id     = 'drawingCanvas';
   drawC.width  = img.clientWidth;
   drawC.height = img.clientHeight;
   container.appendChild(drawC);
 
-  // cursor indicator canvas
+  // 3) cursor canvas (for hover circle)
   const cursorC = document.createElement('canvas');
   cursorC.id     = 'cursorCanvas';
   cursorC.width  = img.clientWidth;
   cursorC.height = img.clientHeight;
   container.appendChild(cursorC);
 
-  // toolbar
+  // 4) toolbar
   const toolbar = document.createElement('div');
   toolbar.id = 'drawingToolbar';
   ['pencil','rect','eraser'].forEach(mode => {
     const btn = document.createElement('button');
     btn.textContent = mode[0].toUpperCase() + mode.slice(1);
-    btn.onclick = () => setTool(mode, btn);
+    btn.onclick     = () => setTool(mode, btn);
     toolbar.appendChild(btn);
   });
-  // Clear button
   const clearBtn = document.createElement('button');
   clearBtn.textContent = 'Clear';
   clearBtn.onclick = () => {
     const ctx = drawC.getContext('2d');
-    ctx.clearRect(0, 0, drawC.width, drawC.height);
+    ctx.clearRect(0,0,drawC.width,drawC.height);
     localStorage.removeItem('drawing_'+questionId);
   };
   toolbar.appendChild(clearBtn);
 
-  // thickness slider
   const slider = document.createElement('input');
-  slider.type = 'range'; slider.min = 1; slider.max = 50;
-  slider.value = currentThickness;
+  slider.type    = 'range';
+  slider.min     = 1;
+  slider.max     = 50;
+  slider.value   = currentThickness;
   slider.oninput = () => setThickness(slider.value);
-  slider.style.width = '80px';
   toolbar.appendChild(slider);
 
   container.appendChild(toolbar);
@@ -1062,82 +1034,98 @@ function setupDrawing(questionId) {
   initCursor(drawC, cursorC);
 }
 
-// restore strokes
+// restore any saved drawing and wire up drawing events
 function initCanvas(canvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
+
+  // load saved strokes
   const saved = localStorage.getItem('drawing_'+qid);
   if (saved) {
     const imgData = new Image();
-    imgData.onload = () => ctx.drawImage(imgData, 0, 0, canvas.width, canvas.height);
+    imgData.onload = () =>
+      ctx.drawImage(imgData, 0, 0, canvas.width, canvas.height);
     imgData.src = saved;
   }
-  let drawing=false, sx=0, sy=0;
 
+  let drawing = false, sx = 0, sy = 0;
+  
   canvas.onpointerdown = e => {
     drawing = true;
     const r = canvas.getBoundingClientRect();
     sx = e.clientX - r.left; sy = e.clientY - r.top;
-    if (currentTool==='pencil'||currentTool==='eraser') {
+    
+    // configure for pencil or eraser
+    if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.beginPath();
-      ctx.lineWidth = currentThickness;
+      ctx.lineWidth               = currentThickness;
+      ctx.strokeStyle             = 'black';
       ctx.globalCompositeOperation =
-        currentTool==='eraser' ? 'destination-out' : 'source-over';
+        currentTool === 'eraser' ? 'destination-out' : 'source-over';
       ctx.moveTo(sx, sy);
     }
   };
+
   canvas.onpointermove = e => {
     if (!drawing) return;
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
-    if (currentTool==='pencil'||currentTool==='eraser') {
+    if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
     }
   };
+
   canvas.onpointerup = e => {
-    if (!drawing) return drawing=false;
+    if (!drawing) return;
+    drawing = false;
     const r = canvas.getBoundingClientRect();
     const ex = e.clientX - r.left, ey = e.clientY - r.top;
-    if (currentTool==='rect') {
+    if (currentTool === 'rect') {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillRect(sx, sy, ex-sx, ey-sy);
+      ctx.fillRect(sx, sy, ex - sx, ey - sy);
     }
+    // save on pointer-up
     localStorage.setItem('drawing_'+qid, canvas.toDataURL());
   };
+
   canvas.style.touchAction = 'none';
 }
 
-// hover-circle indicator
+// draw the hover circle on the cursor canvas
 function initCursor(drawC, cursorC) {
   const ctx = cursorC.getContext('2d');
-  cursorC.style.position = 'absolute';
-  cursorC.style.top = cursorC.style.left = '0px';
+  
   drawC.addEventListener('pointermove', e => {
     const r = drawC.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
-    ctx.clearRect(0,0, cursorC.width, cursorC.height);
+    ctx.clearRect(0, 0, cursorC.width, cursorC.height);
     ctx.beginPath();
-    ctx.lineWidth = 1;
+    ctx.lineWidth   = 1;
     ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-    ctx.arc(x, y, currentThickness/2, 0, Math.PI*2);
+    ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
     ctx.stroke();
   });
-  drawC.addEventListener('pointerleave', () => ctx.clearRect(0,0, cursorC.width, cursorC.height));
+
+  drawC.addEventListener('pointerleave', () =>
+    ctx.clearRect(0, 0, cursorC.width, cursorC.height)
+  );
 }
 
-// hook into quiz flow
-const _q  = quizButtonHandler;
-quizButtonHandler = () => {
-  _q();
+// hook into your quiz flow so every image question gets drawing enabled
+const _origQuizBtn = quizButtonHandler;
+quizButtonHandler = function() {
+  _origQuizBtn();
   if (currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
-const _r = showCurrentReplayQuestion;
-showCurrentReplayQuestion = () => {
-  _r();
+
+const _origReplay = showCurrentReplayQuestion;
+showCurrentReplayQuestion = function() {
+  _origReplay();
   if (currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
 // ---------- End Drawing Tool Implementation ----------
+
 
 
   </script>
