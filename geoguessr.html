@@ -163,20 +163,55 @@
     button:hover {
       background-color: #005fa3;
     }
+	
+	
+	
 	/* --- Drawing container, canvas & toolbar --- */
-	.drawingContainer { position: relative; display: inline-block; }
-	#drawingCanvas { position: absolute; top: 0; left: 0; z-index: 10; }
+	
+	
+	
+	/* make the container span the full quiz width */
+	.drawingContainer {
+	  position: relative;
+	  display: block;
+	  width: 100%;
+	  /* height will follow the image’s aspect-ratio */
+	}
+
+	/* ensure the canvas covers 100% of that container */
+	#drawingCanvas {
+	  position: absolute;
+	  top: 0; left: 0;
+	  z-index: 10;
+	  width: 100%;
+	  height: 100%;
+	}
+
+	/* pin the toolbar in the top-left (fully visible) */
 	#drawingToolbar {
 	  position: absolute;
-	  top: 10px; left: 50%; transform: translateX(-50%);
+	  top: 10px;
+	  left: 10px;
+	  transform: none;
 	  background: rgba(255,255,255,0.9);
-	  padding: 5px; border-radius: 4px;
-	  display: flex; gap: 5px; z-index: 20;
+	  padding: 5px;
+	  border-radius: 4px;
+	  display: flex;
+	  gap: 5px;
+	  z-index: 20;
 	}
-	 #drawingToolbar button,
--#drawingToolbar input[type=range] {
--  font-size: 0.9em; padding: 3px;
--}
+
+	/* slider width stays 80px */
+	#drawingToolbar input[type=range] {
+	  font-size: 0.9em;
+	  padding: 3px;
+	  width: 80px;
+	}
+
+
+
+
+
 +#drawingToolbar input[type=range] {
 +  font-size: 0.9em;
 +  padding: 3px;
