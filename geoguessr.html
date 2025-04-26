@@ -967,20 +967,28 @@
         quizButtonHandler();
       }
     });
-	// ---------- Drawing Tool Implementation ----------
+// ---------- Drawing Tool Implementation ----------
 let currentTool = 'pencil';
 let currentThickness = 5;
+let fillShape = false; // Add this variable to track fill state
 
 // highlight active button
 function setTool(tool, btn) {
   currentTool = tool;
-  btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.parentNode.querySelectorAll('button.tool').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
 // update brush thickness
 function setThickness(val) {
   currentThickness = parseInt(val, 10);
+}
+
+// toggle fill mode
+function toggleFill(btn) {
+  fillShape = !fillShape;
+  btn.classList.toggle('active');
+  btn.textContent = fillShape ? 'Fill: ON' : 'Fill: OFF';
 }
 
 // called whenever a new question image appears
@@ -1041,12 +1049,23 @@ function setupDrawing(questionId) {
     toolbar.id = 'drawingToolbar';
     ['pencil','rect','eraser'].forEach(mode => {
       const btn = document.createElement('button');
+      btn.className = 'tool';
       btn.textContent = mode[0].toUpperCase() + mode.slice(1);
       if (mode === currentTool) btn.classList.add('active');
       btn.onclick = () => setTool(mode, btn);
       toolbar.appendChild(btn);
     });
     
+<<<<<<< Updated upstream
+=======
+    // Add fill toggle button
+    const fillBtn = document.createElement('button');
+    fillBtn.textContent = 'Fill: OFF';
+    fillBtn.onclick = () => toggleFill(fillBtn);
+    toolbar.appendChild(fillBtn);
+    
+    // Clear button
+>>>>>>> Stashed changes
     const clearBtn = document.createElement('button');
     clearBtn.textContent = 'Clear';
     clearBtn.onclick = () => {
@@ -1056,6 +1075,10 @@ function setupDrawing(questionId) {
     };
     toolbar.appendChild(clearBtn);
     
+<<<<<<< Updated upstream
+=======
+    // thickness slider
+>>>>>>> Stashed changes
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.min = 1;
@@ -1066,15 +1089,19 @@ function setupDrawing(questionId) {
 
     container.appendChild(toolbar);
 
-    initCanvas(drawC, questionId);
+    initCanvas(drawC, cursorC, questionId);
     initCursor(drawC, cursorC);
+    
+    // Set first button as active by default
+    toolbar.querySelector('button.tool').classList.add('active');
   });
 }
 
-function initCanvas(canvas, qid) {
+function initCanvas(canvas, cursorCanvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  const previewCtx = cursorCanvas.getContext('2d');
 
   // Create an overlay canvas for drawing previews
   const previewCanvas = document.createElement('canvas');
@@ -1121,6 +1148,7 @@ function initCanvas(canvas, qid) {
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.beginPath();
       ctx.lineWidth = currentThickness;
+      ctx.strokeStyle = currentTool === 'eraser' ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,1)';
       ctx.globalCompositeOperation = 
         currentTool === 'eraser' ? 'destination-out' : 'source-over';
       ctx.moveTo(sx, sy);
@@ -1128,15 +1156,20 @@ function initCanvas(canvas, qid) {
   };
 
   canvas.onpointermove = e => {
-    if (!drawing) return;
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
     
+<<<<<<< Updated upstream
+=======
+    if (!drawing) return;
+    
+>>>>>>> Stashed changes
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
     } else if (currentTool === 'rect') {
+<<<<<<< Updated upstream
       // Clear the preview canvas
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       
@@ -1150,6 +1183,23 @@ function initCanvas(canvas, qid) {
       previewCtx.setLineDash([]);
       previewCtx.fillStyle = 'rgba(0,0,0,0.2)';
       previewCtx.fillRect(sx, sy, x - sx, y - sy);
+=======
+      // Clear the preview canvas for rectangle preview
+      previewCtx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw the preview rectangle
+      previewCtx.lineWidth = currentThickness;
+      previewCtx.strokeStyle = 'rgba(0,0,0,1)';
+      previewCtx.fillStyle = 'rgba(0,0,0,0.3)';
+      
+      previewCtx.beginPath();
+      previewCtx.rect(sx, sy, x - sx, y - sy);
+      
+      if (fillShape) {
+        previewCtx.fill();
+      }
+      previewCtx.stroke();
+>>>>>>> Stashed changes
     }
   };
 
@@ -1166,13 +1216,37 @@ function initCanvas(canvas, qid) {
       
       // Draw actual filled rectangle on the main canvas
       ctx.globalCompositeOperation = 'source-over';
+<<<<<<< Updated upstream
       ctx.fillStyle = 'black'; // You can customize the fill color if needed
       ctx.fillRect(sx, sy, ex - sx, ey - sy);
+=======
+      ctx.lineWidth = currentThickness;
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      
+      // Clear the preview
+      previewCtx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw the final rectangle
+      ctx.beginPath();
+      ctx.rect(sx, sy, ex - sx, ey - sy);
+      
+      if (fillShape) {
+        ctx.fill();
+      }
+      ctx.stroke();
+>>>>>>> Stashed changes
     }
     
     canvas.releasePointerCapture(e.pointerId);
     // Save with the current dimensions
     localStorage.setItem('drawing_' + qid, canvas.toDataURL());
+  };
+
+  canvas.onpointerleave = () => {
+    if (drawing && currentTool === 'rect') {
+      // Clear rectangle preview when pointer leaves canvas
+      previewCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   };
 
   canvas.style.touchAction = 'none';
@@ -1194,15 +1268,30 @@ function initCursor(drawC, cursorC) {
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
     
-    ctx.clearRect(0, 0, cursorC.width, cursorC.height);
+    // Only clear a portion around the cursor for better performance
+    const clearSize = Math.max(currentThickness * 2, 40);
+    ctx.clearRect(x - clearSize/2, y - clearSize/2, clearSize, clearSize);
     
     // Only draw if within bounds
     if (x >= 0 && x <= cursorC.width && y >= 0 && y <= cursorC.height) {
-      ctx.beginPath();
-      ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      if (currentTool === 'rect') {
+        // For rectangle tool, show a crosshair cursor
+        ctx.beginPath();
+        ctx.moveTo(x - 10, y);
+        ctx.lineTo(x + 10, y);
+        ctx.moveTo(x, y - 10);
+        ctx.lineTo(x, y + 10);
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        // For pencil and eraser, show a circle cursor
+        ctx.beginPath();
+        ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
   }
 
