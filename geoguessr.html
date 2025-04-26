@@ -978,7 +978,7 @@ function setThickness(val) {
   currentThickness = parseInt(val, 10);
 }
 
-// wrap the image, add two canvases + toolbar
+// wrap the <img>, add canvases + toolbar
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
   const img  = disp.querySelector('img');
@@ -989,49 +989,48 @@ function setupDrawing(questionId) {
   }
   if (disp.querySelector('.drawingContainer')) return;
 
-  // wrap the <img>
+  // 1) wrap the <img>
   const container = document.createElement('div');
   container.className = 'drawingContainer';
   img.parentNode.insertBefore(container, img);
   container.appendChild(img);
 
-  // drawing canvas
+  // 2) drawing canvas at natural resolution
   const drawC = document.createElement('canvas');
-  drawC.id = 'drawingCanvas';
-  // use naturalWidth/Height, not clientWidth
+  drawC.id     = 'drawingCanvas';
   drawC.width  = img.naturalWidth;
   drawC.height = img.naturalHeight;
   container.appendChild(drawC);
 
-  // cursor canvas
+  // 3) cursor canvas (for hover circle)
   const cursorC = document.createElement('canvas');
   cursorC.id     = 'cursorCanvas';
   cursorC.width  = img.naturalWidth;
   cursorC.height = img.naturalHeight;
   container.appendChild(cursorC);
 
-  // 4) toolbar
+  // 4) toolbar (hidden until hover by CSS)
   const toolbar = document.createElement('div');
   toolbar.id = 'drawingToolbar';
   ['pencil','rect','eraser'].forEach(mode => {
     const btn = document.createElement('button');
     btn.textContent = mode[0].toUpperCase() + mode.slice(1);
-    btn.onclick     = () => setTool(mode, btn);
+    btn.onclick = () => setTool(mode, btn);
     toolbar.appendChild(btn);
   });
   const clearBtn = document.createElement('button');
   clearBtn.textContent = 'Clear';
   clearBtn.onclick = () => {
     const ctx = drawC.getContext('2d');
-    ctx.clearRect(0,0,drawC.width,drawC.height);
-    localStorage.removeItem('drawing_'+questionId);
+    ctx.clearRect(0, 0, drawC.width, drawC.height);
+    localStorage.removeItem('drawing_' + questionId);
   };
   toolbar.appendChild(clearBtn);
 
   const slider = document.createElement('input');
   slider.type    = 'range';
   slider.min     = 1;
-  slider.max     = 200;
+  slider.max     = 200;                // increased max size
   slider.value   = currentThickness;
   slider.oninput = () => setThickness(slider.value);
   toolbar.appendChild(slider);
@@ -1042,13 +1041,13 @@ function setupDrawing(questionId) {
   initCursor(drawC, cursorC);
 }
 
-// restore any saved drawing and wire up drawing events
+// restore & wire up drawing with scaled coords
 function initCanvas(canvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
 
   // load saved strokes
-  const saved = localStorage.getItem('drawing_'+qid);
+  const saved = localStorage.getItem('drawing_' + qid);
   if (saved) {
     const imgData = new Image();
     imgData.onload = () =>
@@ -1057,21 +1056,20 @@ function initCanvas(canvas, qid) {
   }
 
   let drawing = false, sx = 0, sy = 0;
-  
-canvas.onpointerdown = e => {
-	  drawing = true;
-	  const r = canvas.getBoundingClientRect();
-	  sx = e.clientX - r.left; 
-	  sy = e.clientY - r.top;
 
-	// lock pointer to this canvas so pointerup fires even outside
-	canvas.setPointerCapture(e.pointerId);
+  canvas.onpointerdown = e => {
+    drawing = true;
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    sx = (e.clientX - r.left) * scaleX;
+    sy = (e.clientY - r.top)  * scaleY;
 
-    // configure for pencil or eraser
+    canvas.setPointerCapture(e.pointerId);
+
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.beginPath();
-      ctx.lineWidth               = currentThickness;
-      ctx.strokeStyle             = 'black';
+      ctx.lineWidth = currentThickness;
       ctx.globalCompositeOperation =
         currentTool === 'eraser' ? 'destination-out' : 'source-over';
       ctx.moveTo(sx, sy);
@@ -1081,7 +1079,11 @@ canvas.onpointerdown = e => {
   canvas.onpointermove = e => {
     if (!drawing) return;
     const r = canvas.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const x = (e.clientX - r.left) * scaleX;
+    const y = (e.clientY - r.top)  * scaleY;
+
     if (currentTool === 'pencil' || currentTool === 'eraser') {
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -1089,30 +1091,38 @@ canvas.onpointerdown = e => {
   };
 
   canvas.onpointerup = e => {
-  if (!drawing) return;
-  drawing = false;
-  const r = canvas.getBoundingClientRect();
-    const ex = e.clientX - r.left, ey = e.clientY - r.top;
+    if (!drawing) return;
+    drawing = false;
+
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const ex = (e.clientX - r.left) * scaleX;
+    const ey = (e.clientY - r.top)  * scaleY;
+
     if (currentTool === 'rect') {
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillRect(sx, sy, ex - sx, ey - sy);
     }
-	// release pointer
-	canvas.releasePointerCapture(e.pointerId);
-    // save on pointer-up
-    localStorage.setItem('drawing_'+qid, canvas.toDataURL());
+
+    canvas.releasePointerCapture(e.pointerId);
+    localStorage.setItem('drawing_' + qid, canvas.toDataURL());
   };
 
   canvas.style.touchAction = 'none';
 }
 
-// draw the hover circle on the cursor canvas
+// draw hover circle
 function initCursor(drawC, cursorC) {
   const ctx = cursorC.getContext('2d');
-  
+
   drawC.addEventListener('pointermove', e => {
     const r = drawC.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const scaleX = cursorC.width  / r.width;
+    const scaleY = cursorC.height / r.height;
+    const x = (e.clientX - r.left) * scaleX;
+    const y = (e.clientY - r.top)  * scaleY;
+
     ctx.clearRect(0, 0, cursorC.width, cursorC.height);
     ctx.beginPath();
     ctx.lineWidth   = 1;
@@ -1122,11 +1132,11 @@ function initCursor(drawC, cursorC) {
   });
 
   drawC.addEventListener('pointerleave', () =>
-    ctx.clearRect(0, 0, cursorC.width, cursorC.height)
+    cursorC.getContext('2d').clearRect(0, 0, cursorC.width, cursorC.height)
   );
 }
 
-// hook into your quiz flow so every image question gets drawing enabled
+// hook into quiz flow
 const _origQuizBtn = quizButtonHandler;
 quizButtonHandler = function() {
   _origQuizBtn();
@@ -1139,14 +1149,13 @@ showCurrentReplayQuestion = function() {
   if (currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 };
 
+// also watch for any image-node insertions
 const quizDisp = document.getElementById('quizDisplay');
 new MutationObserver(() => {
-  if (currentQuizQuestion?.id) {
-    setupDrawing(currentQuizQuestion.id);
-  }
+  if (currentQuizQuestion?.id) setupDrawing(currentQuizQuestion.id);
 }).observe(quizDisp, { childList: true, subtree: true });
-
 // ---------- End Drawing Tool Implementation ----------
+
 
 
 
