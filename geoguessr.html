@@ -962,11 +962,31 @@
     
     // Allow Space bar to trigger quiz button.
     document.addEventListener('keydown', (e) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        quizButtonHandler();
-      }
-    });
+	  if (e.code === "Space") {
+		e.preventDefault();
+		quizButtonHandler();
+	  } else if (e.code === "KeyH") {
+		e.preventDefault();
+		toggleImageVisibility();
+	  }
+	});
+	
+	function toggleImageVisibility() {
+  const quizDisplay = document.getElementById('quizDisplay');
+  const img = quizDisplay.querySelector('img');
+  if (img) {
+    // If img is in drawing container, toggle container visibility instead
+    const container = img.closest('.drawingContainer');
+    const element = container || img;
+    
+    if (element.style.visibility === 'hidden') {
+      element.style.visibility = 'visible';
+    } else {
+      element.style.visibility = 'hidden';
+    }
+  }
+}
+	
 	// ---------- Drawing Tool Implementation ----------
 let currentTool = 'pencil';
 let currentThickness = 5;
@@ -1053,6 +1073,11 @@ function setupDrawing(questionId) {
       btn.onclick = () => setTool(mode, btn);
       toolbar.appendChild(btn);
     });
+	const fillBtn = document.createElement('button');
+	fillBtn.textContent = 'Fill';
+	fillBtn.classList.add('active'); // Default to active
+	fillBtn.onclick = () => toggleFill(fillBtn);
+	toolbar.appendChild(fillBtn);
     // Clear button
     const clearBtn = document.createElement('button');
     clearBtn.textContent = 'Clear';
@@ -1123,31 +1148,58 @@ function initCanvas(canvas, qid) {
   };
 
   canvas.onpointermove = e => {
-    if (!drawing) return;
-    const r = canvas.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  };
+	  if (!drawing) return;
+	  const r = canvas.getBoundingClientRect();
+	  const x = e.clientX - r.left;
+	  const y = e.clientY - r.top;
+	  if (currentTool === 'pencil' || currentTool === 'eraser') {
+		ctx.lineTo(x, y);
+		ctx.stroke();
+	  } else if (currentTool === 'rect') {
+		// Live preview for rectangle tool
+		// First clear the previous preview
+		const tempCtx = cursorC.getContext('2d');
+		tempCtx.clearRect(0, 0, cursorC.width, cursorC.height);
+		
+		// Draw preview rectangle on cursor canvas
+		tempCtx.globalCompositeOperation = 'source-over';
+		tempCtx.lineWidth = currentThickness;
+		tempCtx.strokeStyle = 'rgba(0,0,0,0.8)';
+		tempCtx.strokeRect(sx, sy, x - sx, y - sy);
+		
+		// Show semi-transparent fill
+		tempCtx.fillStyle = `rgba(128,128,255,${fillOpacity})`;
+		if (fillRectangle) {
+		  tempCtx.fillRect(sx, sy, x - sx, y - sy);
+		}
+	  }
+	};
 
-  canvas.onpointerup = e => {
-    if (!drawing) return;
-    drawing = false;
-    const r = canvas.getBoundingClientRect();
-    const ex = e.clientX - r.left;
-    const ey = e.clientY - r.top;
-    if (currentTool === 'rect') {
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.lineWidth = currentThickness;
-      ctx.strokeRect(sx, sy, ex - sx, ey - sy);
-    }
-    canvas.releasePointerCapture(e.pointerId);
-    // Save with the current dimensions
-    localStorage.setItem('drawing_' + qid, canvas.toDataURL());
-  };
+	 canvas.onpointerup = e => {
+	  if (!drawing) return;
+	  drawing = false;
+	  const r = canvas.getBoundingClientRect();
+	  const ex = e.clientX - r.left;
+	  const ey = e.clientY - r.top;
+	  if (currentTool === 'rect') {
+		ctx.globalCompositeOperation = 'source-over';
+		ctx.lineWidth = currentThickness;
+		ctx.strokeRect(sx, sy, ex - sx, ey - sy);
+		
+		// Fill rectangle with semi-transparent color
+		ctx.fillStyle = `rgba(128,128,255,${fillOpacity})`;
+		if (fillRectangle) {
+		  ctx.fillRect(sx, sy, ex - sx, ey - sy);
+		}
+		
+		// Clear the preview
+		const tempCtx = cursorC.getContext('2d');
+		tempCtx.clearRect(0, 0, cursorC.width, cursorC.height);
+	  }
+	  canvas.releasePointerCapture(e.pointerId);
+	  // Save with the current dimensions
+	  localStorage.setItem('drawing_' + qid, canvas.toDataURL());
+	};
 
   canvas.style.touchAction = 'none';
 }
