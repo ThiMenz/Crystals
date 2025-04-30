@@ -972,17 +972,13 @@
 	});
 	
 	function toggleImageVisibility() {
-  const quizDisplay = document.getElementById('quizDisplay');
-  const img = quizDisplay.querySelector('img');
-  if (img) {
-    // If img is in drawing container, toggle container visibility instead
-    const container = img.closest('.drawingContainer');
-    const element = container || img;
-    
-    if (element.style.visibility === 'hidden') {
-      element.style.visibility = 'visible';
+  const drawingCanvas = document.getElementById('drawingCanvas');
+  if (drawingCanvas) {
+    // Toggle just the drawing canvas visibility
+    if (drawingCanvas.style.visibility === 'hidden') {
+      drawingCanvas.style.visibility = 'visible';
     } else {
-      element.style.visibility = 'hidden';
+      drawingCanvas.style.visibility = 'hidden';
     }
   }
 }
@@ -1168,7 +1164,7 @@ function initCanvas(canvas, qid) {
 		tempCtx.strokeRect(sx, sy, x - sx, y - sy);
 		
 		// Show semi-transparent fill
-		tempCtx.fillStyle = `rgba(128,128,255,${fillOpacity})`;
+		tempCtx.fillStyle = `rgba(0,0,0,${fillOpacity})`;  // Change to black with opacity
 		if (fillRectangle) {
 		  tempCtx.fillRect(sx, sy, x - sx, y - sy);
 		}
@@ -1187,7 +1183,7 @@ function initCanvas(canvas, qid) {
 		ctx.strokeRect(sx, sy, ex - sx, ey - sy);
 		
 		// Fill rectangle with semi-transparent color
-		ctx.fillStyle = `rgba(128,128,255,${fillOpacity})`;
+		ctx.fillStyle = `rgba(0,0,0,${fillOpacity})`;
 		if (fillRectangle) {
 		  ctx.fillRect(sx, sy, ex - sx, ey - sy);
 		}
