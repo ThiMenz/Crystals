@@ -970,6 +970,8 @@
 	// ---------- Drawing Tool Implementation ----------
 let currentTool = 'pencil';
 let currentThickness = 5;
+let fillRectangle = true;
+let fillOpacity = 0.3;
 
 // highlight active button
 function setTool(tool, btn) {
@@ -981,6 +983,12 @@ function setTool(tool, btn) {
 // update brush thickness
 function setThickness(val) {
   currentThickness = parseInt(val, 10);
+}
+
+// toggle fill rectangle
+function toggleFill(btn) {
+  fillRectangle = !fillRectangle;
+  btn.classList.toggle('active', fillRectangle);
 }
 
 // called whenever a new question image appears
