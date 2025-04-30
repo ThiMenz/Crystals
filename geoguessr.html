@@ -784,15 +784,12 @@
 	  } else {
 		content = `<iframe src="${q.data.url}" style="width:100%; height:300px;" frameborder="0"></iframe>`;
 	  }
-	  
-	  // First update the quiz display content
 	  let html = `<div>${content}</div>`;
 	  if (q.answerShown) {
 		html = `<h2 id="quizHeader">${q.country} - ${q.header} (Question ${q.index + 1})</h2><div>${content}</div><div class="answer">${q.data.html}</div>`;
 	  }
-	  document.getElementById('quizDisplay').innerHTML = html;
-	  
-	  // Update progress counter for replay mode vs normal mode
+
+	  // 🔁 Update x/y counter for replay mode vs normal mode
 	  const progressDone = q.answerShown ? replayIndex + 1 : replayIndex;
 	  if (replayMode) {
 		document.getElementById('questionStats').textContent = `Knowledge: ${progressDone} / ${replayQuestions.length}`;
@@ -800,13 +797,9 @@
 		updateQuestionStats();
 	  }
 
+	  document.getElementById('quizDisplay').innerHTML = html;
 	  const btn = document.getElementById('quizButton');
 	  btn.textContent = q.answerShown ? "Next Replay Question" : "Show Answer";
-	  
-	  // Set a brief timeout to ensure the DOM has settled before setting up drawing
-	  setTimeout(() => {
-		if (q.id) setupDrawing(q.id);
-	  }, 50);
 	}
 
     
@@ -974,15 +967,14 @@
         quizButtonHandler();
       }
     });
-// ---------- Drawing Tool Implementation ----------
+	// ---------- Drawing Tool Implementation ----------
 let currentTool = 'pencil';
 let currentThickness = 5;
-let fillRect = true; // Control whether rectangles are filled
 
 // highlight active button
 function setTool(tool, btn) {
   currentTool = tool;
-  btn.parentNode.querySelectorAll('button.tool').forEach(b => b.classList.remove('active'));
+  btn.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -991,75 +983,27 @@ function setThickness(val) {
   currentThickness = parseInt(val, 10);
 }
 
-// toggle rectangle fill
-function toggleFill(btn) {
-  fillRect = !fillRect;
-  btn.textContent = fillRect ? "Fill: ON" : "Fill: OFF";
-}
-
 // called whenever a new question image appears
-// Find the setupDrawing function and replace it with this improved version
 function setupDrawing(questionId) {
   const disp = document.getElementById('quizDisplay');
   const img = disp.querySelector('img');
   if (!img) return;
-  
-  // Set up an onload handler for images that aren't fully loaded yet
   if (!img.complete) {
-    img.onload = () => {
-      // Small delay to ensure DOM is stable before manipulating
-      setTimeout(() => setupDrawing(questionId), 50);
-    };
+    img.onload = () => setupDrawing(questionId);
     return;
   }
-  
-  // Check if this image already has a drawing container parent
-  if (img.parentNode.classList.contains('drawingContainer')) {
-    // If already set up, just make sure we have the latest dimensions
-    const drawC = document.getElementById('drawingCanvas');
-    const cursorC = document.getElementById('cursorCanvas');
-    if (drawC && cursorC) {
-      const rect = img.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      
-      // Update dimensions if needed
-      if (drawC.width !== w || drawC.height !== h) {
-        drawC.width = w;
-        drawC.height = h;
-        cursorC.width = w;
-        cursorC.height = h;
-        // Redraw from storage if dimensions changed
-        const saved = localStorage.getItem('drawing_' + questionId);
-        if (saved) {
-          const ctx = drawC.getContext('2d');
-          const imgData = new Image();
-          imgData.onload = () => {
-            ctx.drawImage(imgData, 0, 0, w, h);
-          };
-          imgData.src = saved;
-        }
-      }
-      return; // Already set up, no need to continue
-    }
-  }
+  if (disp.querySelector('.drawingContainer')) return;
 
-  // Create new wrapper that exactly matches the image
+  // wrap <img>
   const container = document.createElement('div');
   container.className = 'drawingContainer';
-  
-  // Clone the original image to avoid issues with existing event handlers
-  const newImg = img.cloneNode(true);
-  
-  // Replace the old image with our container + new image
   img.parentNode.insertBefore(container, img);
-  container.appendChild(newImg);
-  img.remove(); // Safely remove the original
+  container.appendChild(img);
 
   // Wait for next frame to ensure image is fully rendered
   requestAnimationFrame(() => {
     // Get the ACTUAL displayed dimensions of the image
-    const rect = newImg.getBoundingClientRect();
+    const rect = img.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
 
@@ -1068,6 +1012,8 @@ function setupDrawing(questionId) {
     drawC.id = 'drawingCanvas';
     drawC.width = w;
     drawC.height = h;
+    drawC.style.width = w + 'px';
+    drawC.style.height = h + 'px';
     container.appendChild(drawC);
 
     // cursor canvas - same exact dimensions
@@ -1075,27 +1021,19 @@ function setupDrawing(questionId) {
     cursorC.id = 'cursorCanvas';
     cursorC.width = w;
     cursorC.height = h;
+    cursorC.style.width = w + 'px';
+    cursorC.style.height = h + 'px';
     container.appendChild(cursorC);
 
     // toolbar (hidden until hover)
     const toolbar = document.createElement('div');
     toolbar.id = 'drawingToolbar';
-    
-    // Drawing tools
     ['pencil','rect','eraser'].forEach(mode => {
       const btn = document.createElement('button');
-      btn.className = 'tool';
       btn.textContent = mode[0].toUpperCase() + mode.slice(1);
       btn.onclick = () => setTool(mode, btn);
       toolbar.appendChild(btn);
     });
-    
-    // Fill toggle button
-    const fillBtn = document.createElement('button');
-    fillBtn.textContent = fillRect ? "Fill: ON" : "Fill: OFF";
-    fillBtn.onclick = () => toggleFill(fillBtn);
-    toolbar.appendChild(fillBtn);
-    
     // Clear button
     const clearBtn = document.createElement('button');
     clearBtn.textContent = 'Clear';
@@ -1105,7 +1043,6 @@ function setupDrawing(questionId) {
       localStorage.removeItem('drawing_' + questionId);
     };
     toolbar.appendChild(clearBtn);
-    
     // thickness slider
     const slider = document.createElement('input');
     slider.type = 'range';
@@ -1117,19 +1054,15 @@ function setupDrawing(questionId) {
 
     container.appendChild(toolbar);
 
-    initCanvas(drawC, cursorC, questionId);
+    initCanvas(drawC, questionId);
     initCursor(drawC, cursorC);
-    
-    // Set first button as active by default
-    toolbar.querySelector('button.tool').classList.add('active');
   });
 }
 
-function initCanvas(canvas, cursorCanvas, qid) {
+function initCanvas(canvas, qid) {
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  const previewCtx = cursorCanvas.getContext('2d');
 
   // draw back any saved strokes
   const saved = localStorage.getItem('drawing_' + qid);
@@ -1171,27 +1104,13 @@ function initCanvas(canvas, cursorCanvas, qid) {
   };
 
   canvas.onpointermove = e => {
+    if (!drawing) return;
     const r = canvas.getBoundingClientRect();
     const x = e.clientX - r.left;
     const y = e.clientY - r.top;
-    
-    if (drawing) {
-      if (currentTool === 'pencil' || currentTool === 'eraser') {
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      } else if (currentTool === 'rect') {
-        // Show rectangle preview
-        previewCtx.clearRect(0, 0, canvas.width, canvas.height);
-        previewCtx.lineWidth = currentThickness;
-        previewCtx.strokeStyle = 'black';
-        previewCtx.fillStyle = 'rgba(0,0,0,0.3)';
-        
-        // Draw preview rectangle
-        previewCtx.beginPath();
-        previewCtx.rect(sx, sy, x - sx, y - sy);
-        if (fillRect) previewCtx.fill();
-        previewCtx.stroke();
-      }
+    if (currentTool === 'pencil' || currentTool === 'eraser') {
+      ctx.lineTo(x, y);
+      ctx.stroke();
     }
   };
 
@@ -1201,32 +1120,14 @@ function initCanvas(canvas, cursorCanvas, qid) {
     const r = canvas.getBoundingClientRect();
     const ex = e.clientX - r.left;
     const ey = e.clientY - r.top;
-    
     if (currentTool === 'rect') {
-      // Clear preview
-      previewCtx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw final rectangle
       ctx.globalCompositeOperation = 'source-over';
       ctx.lineWidth = currentThickness;
-      ctx.fillStyle = 'black';
-      
-      ctx.beginPath();
-      ctx.rect(sx, sy, ex - sx, ey - sy);
-      if (fillRect) ctx.fill();
-      ctx.stroke();
+      ctx.strokeRect(sx, sy, ex - sx, ey - sy);
     }
-    
     canvas.releasePointerCapture(e.pointerId);
     // Save with the current dimensions
     localStorage.setItem('drawing_' + qid, canvas.toDataURL());
-  };
-
-  // Clear rectangle preview if we leave the canvas while drawing
-  canvas.onpointerleave = () => {
-    if (drawing && currentTool === 'rect') {
-      previewCtx.clearRect(0, 0, canvas.width, canvas.height);
-    }
   };
 
   canvas.style.touchAction = 'none';
@@ -1245,24 +1146,11 @@ function initCursor(drawC, cursorC) {
     
     // Only draw if within bounds
     if (x >= 0 && x <= cursorC.width && y >= 0 && y <= cursorC.height) {
-      if (currentTool === 'rect') {
-        // Show crosshair cursor for rectangle tool
-        ctx.beginPath();
-        ctx.moveTo(x - 10, y);
-        ctx.lineTo(x + 10, y);
-        ctx.moveTo(x, y - 10);
-        ctx.lineTo(x, y + 10);
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      } else {
-        // Show circle cursor for pencil/eraser
-        ctx.beginPath();
-        ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
+      ctx.beginPath();
+      ctx.arc(x, y, currentThickness / 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
   }
 
@@ -1273,18 +1161,18 @@ function initCursor(drawC, cursorC) {
   });
 }
 
-// Handle window resize - completely rebuild the drawing canvas
-function resizeDrawingCanvas() {
-  if (currentQuizQuestion?.id) {
-    setupDrawing(currentQuizQuestion.id);
-  }
-}
-
-// Add debounced window resize handler
-let resizeTimer;
 window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(resizeDrawingCanvas, 250); // Debounce resize event
+  if (currentQuizQuestion?.id) {
+    // Remove existing drawing container to force recreation
+    const container = document.querySelector('.drawingContainer');
+    if (container) {
+      const img = container.querySelector('img');
+      container.parentNode.insertBefore(img, container);
+      container.remove();
+      // Recreate the drawing setup
+      setupDrawing(currentQuizQuestion.id);
+    }
+  }
 });
 
 // hook into quiz flow
