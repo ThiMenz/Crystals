@@ -1006,23 +1006,34 @@ function setupDrawing(questionId) {
     const rect = img.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
-
-    // drawing canvas - set BOTH CSS and canvas dimensions to match displayed image size
+    
+    // Calculate the actual dimensions of the image display area
+    const imageComputedStyle = window.getComputedStyle(img);
+    const imageWidth = img.offsetWidth;
+    const imageHeight = img.offsetHeight;
+    
+    // Calculate the positioning offset
+    // If the image isn't taking the full width, center the canvas
+    const leftOffset = (container.offsetWidth - imageWidth) / 2;
+    
+    // drawing canvas - center it over the image
     const drawC = document.createElement('canvas');
     drawC.id = 'drawingCanvas';
-    drawC.width = w;
-    drawC.height = h;
-    drawC.style.width = w + 'px';
-    drawC.style.height = h + 'px';
+    drawC.width = imageWidth;
+    drawC.height = imageHeight;
+    drawC.style.width = imageWidth + 'px';
+    drawC.style.height = imageHeight + 'px';
+    drawC.style.left = leftOffset + 'px'; // Set the left position to center it
     container.appendChild(drawC);
 
-    // cursor canvas - same exact dimensions
+    // cursor canvas - same exact dimensions and position
     const cursorC = document.createElement('canvas');
     cursorC.id = 'cursorCanvas';
-    cursorC.width = w;
-    cursorC.height = h;
-    cursorC.style.width = w + 'px';
-    cursorC.style.height = h + 'px';
+    cursorC.width = imageWidth;
+    cursorC.height = imageHeight;
+    cursorC.style.width = imageWidth + 'px';
+    cursorC.style.height = imageHeight + 'px';
+    cursorC.style.left = leftOffset + 'px'; // Set the left position to center it
     container.appendChild(cursorC);
 
     // toolbar (hidden until hover)
@@ -1039,7 +1050,7 @@ function setupDrawing(questionId) {
     clearBtn.textContent = 'Clear';
     clearBtn.onclick = () => {
       const ctx = drawC.getContext('2d');
-      ctx.clearRect(0, 0, w, h);
+      ctx.clearRect(0, 0, imageWidth, imageHeight);
       localStorage.removeItem('drawing_' + questionId);
     };
     toolbar.appendChild(clearBtn);
