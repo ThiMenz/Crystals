@@ -1066,7 +1066,7 @@ function setupDrawing(questionId) {
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.min = 1;
-    slider.max = 20;
+    slider.max = 80;
     slider.value = currentThickness;
     slider.oninput = () => setThickness(slider.value);
     toolbar.appendChild(slider);
