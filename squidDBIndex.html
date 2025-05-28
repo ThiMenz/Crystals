@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Boss Speedrun Visualizer</title>
+  <!-- GSAP for animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+  
+	:root {
+  --sidebar-total: 510px;
+  --controls-height: 50px;
+}
+
+  
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: grid; grid-template-columns: 250px 5px 250px 5px 1fr; grid-template-rows: 100vh; background: #1e1e1e; color: #eee; }
+
+    .sidebar { background: rgba(30,30,30,0.95); border-right: 1px solid #444; padding: 1rem; overflow-y: auto; transform: translateX(-20px); opacity: 0; transition: transform 0.6s ease, opacity 0.6s ease; }
+    .sidebar.visible { transform: translateX(0); opacity: 1; }
+    h2 { margin-top: 0; font-size: 1.4rem; color: #fff; }
+
+    #divider1, #divider2 { background: #444; cursor: col-resize; transition: background 0.3s; }
+    #divider1:hover, #divider2:hover { background: #666; }
+
+    .tree ul { list-style: none; padding-left: 1rem; margin: 0; }
+    .tree li { margin: 0.3rem 0; }
+    .tree .label { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; background: #2a2a2a; transition: background 0.3s; }
+    .tree .label:hover { background: #3a3a3a; }
+    .tree .prefix { font-weight: bold; color: #89ddff; }
+    .tree .desc { margin-left: 0.5rem; color: #bbb; }
+    .tree li.collapsed > ul { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
+    .tree li > ul { max-height: 1000px; transition: max-height 0.5s ease; }
+
+    #search-input { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: none; border-radius: 4px; background: #333; color: #fff; }
+    .search-result { padding: 0.5rem; border-bottom: 1px solid #444; cursor: pointer; transition: background 0.3s; }
+    .search-result:hover { background: #444; }
+    #result-count { margin-bottom:0.5rem; color:#888; font-size:0.9rem; }
+
+    #controls { padding: 0.6rem; background: rgba(40,40,40,0.95); display: flex; gap: 0.6rem; align-items: center; border-bottom: 1px solid #444; }
+    button, select, input[type=range] { padding: 0.5rem; border-radius: 4px; border: none; outline: none; }
+    button { background: #007bff; color: white; box-shadow: 0 0 8px rgba(0,123,255,0.5); transition: transform 0.2s, box-shadow 0.2s; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,123,255,0.6); }
+    button:disabled { background: #555; box-shadow: none; cursor: not-allowed; }
+    select { background: #333; color: #fff; }
+    input[type=range] { flex:1; }
+    #timeDisplay { font-family: monospace; }
+
+    .download-buttons { position: fixed; bottom: 1rem; left: 1rem; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.6rem; background: rgba(40,40,40,0.9); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 100; }
+    .download-buttons a { padding: 0.5rem 0.8rem; background: #007bff; color: #fff; text-decoration: none; border-radius: 4px; text-align: center; font-size: 0.9rem; transition: background 0.3s; }
+    .download-buttons a:hover { background: #0056b3; }
+
+    #canvas-container {
+      flex: 1;
+	    width: 100%;
+  height: 100%;
+      position: relative;
+      background: none;
+      resize: both;
+      overflow: hidden;
+      max-width:  calc(100vw - var(--sidebar-total));
+      max-height: calc(100vh - var(--controls-height));
+      min-width: 75px;
+      min-height: 40px;
+    }
+
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <aside id="pattern-sidebar" class="sidebar">
+    <h2>Pattern Tree</h2>
+    <div id="pattern-tree" class="tree"></div>
+  </aside>
+  <div id="divider1"></div>
+  <aside id="search-sidebar" class="sidebar">
+    <h2>Search Replays</h2>
+    <input id="search-input" placeholder="e.g. d,d,m,d" />
+    <div id="result-count"></div>
+    <div id="search-results"></div>
+  </aside>
+  <div id="divider2"></div>
+  <section id="main">
+    <div id="controls">
+      <div class="download-buttons">
+        <a href="sorted.txt" download>Download Tree TXT</a>
+        <a href="mod.bps" download>Download IPS</a>
+        <a href="platformNamingConvention.png" download>Download Legend</a>
+      </div>
+      <button id="playPause">Play</button>
+      <button id="rewind">⏮</button>
+      <button id="forward">⏭</button>
+      <label>Speed:
+        <select id="speedSelect">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </label>
+      <input type="range" id="seekBar" min="0" max="0" value="0" />
+      <span id="timeDisplay">0 / 0</span>
+    </div>
+    <div id="canvas-container">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+  </section>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.sidebar').forEach(el => el.classList.add('visible'));
+      // Animate control buttons sliding up from below
+      gsap.fromTo('#controls button',
+  { y: 15, opacity: 0 },
+  { y: 0,  opacity: 1,
+    stagger: 0.1,
+    duration: 0.5,
+    ease: 'power2.out'
+  }
+);
+
+      // Ensure canvas scales correctly
+      if (typeof resizeCanvas === 'function') resizeCanvas();
+    });
+      let snailScale = 0.07;
+let squidScale = 0.6;
+let offsetX = 200;
+let offsetY = 0;
+let scaleX = 5;
+let scaleY = 5;
+
+
+	const bgImg = new Image();
+	bgImg.src = 'background.png';
+
+    // Resizable Columns
+    const divider1 = document.getElementById('divider1'), divider2 = document.getElementById('divider2');
+    let isDragging = false, dragIndex = null;
+    [divider1, divider2].forEach((div, i) => {
+      div.addEventListener('mousedown', () => { isDragging = true; dragIndex = i; });
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const total = window.innerWidth;
+      let cols = getComputedStyle(document.body).gridTemplateColumns.split(' ');
+      let c1 = parseInt(cols[0]), c2 = parseInt(cols[2]);
+      if (dragIndex === 0) {
+        c1 = Math.max(100, Math.min(e.clientX, total - c2 - 150));
+      } else {
+        const start = parseInt(cols[0]) + parseInt(cols[1]);
+        c2 = Math.max(100, Math.min(e.clientX - start, total - c1 - 150));
+      }
+      document.body.style.gridTemplateColumns = `${c1}px 5px ${c2}px 5px 1fr`;
+    });
+
+    // Core Data & Drawing
+    const fights = [], currentFrames = [];
+    let frameIndex = 0, playInterval = null, fps = 30;
+    const snailImg = new Image(), squidImg = new Image();
+    snailImg.src = 'snail.png'; squidImg.src = 'squid.png';
+
+    const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
+    window.addEventListener('resize', () => {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      drawFrame();
+    });
+// Maintain actual canvas pixel size
+const BASE_WIDTH = 1920;
+const BASE_HEIGHT = 1080;
+
+function resizeCanvas() {
+  const container = document.getElementById('canvas-container');
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+
+  // Maintain aspect ratio
+  const aspectRatio = BASE_WIDTH / BASE_HEIGHT;
+  let newWidth = containerWidth;
+  let newHeight = newWidth / aspectRatio;
+
+  if (newHeight > containerHeight) {
+    newHeight = containerHeight;
+    newWidth = newHeight * aspectRatio;
+  }
+
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  canvas.style.width = `${newWidth}px`;
+  canvas.style.height = `${newHeight}px`;
+
+  // Compute scale & offset for drawing
+  scaleFactor = newWidth / BASE_WIDTH;
+  offsetX = (canvas.width - BASE_WIDTH * scaleFactor) / 2;
+  offsetY = (canvas.height - BASE_HEIGHT * scaleFactor) / 2;
+
+  drawFrame();
+}
+window.addEventListener('resize', resizeCanvas);
+
+// after your DOM is ready, or inside your IIFE at the bottom:
+const canvasContainer = document.getElementById('canvas-container');
+
+// create a ResizeObserver that calls your resizeCanvas
+const ro = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    // you could inspect entry.contentRect if you wanted
+    resizeCanvas(); 
+  }
+});
+
+// start observing
+ro.observe(canvasContainer);
+
+
+function drawFrame() {
+  if (!currentFrames.length) return;
+  const fr = currentFrames[0][frameIndex];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw background
+  if (bgImg.complete) {
+    ctx.drawImage(
+      bgImg,
+      0, 0, bgImg.width, bgImg.height,
+      0, 0, BASE_WIDTH * scaleFactor, BASE_HEIGHT * scaleFactor
+    );
+  }
+
+  // Compute scaling for game elements
+  const scaleX = scaleFactor;
+  const scaleY = scaleFactor;
+
+  // Draw Snail
+  if (snailImg.complete) {
+    const sw = snailImg.width * snailScale * scaleX;
+    const sh = snailImg.height * snailScale * scaleY;
+    const px = fr.player.x * 0.6666 * scaleX + 1;
+    const py = fr.player.y * 0.6666 * scaleY - 1.5;
+    ctx.drawImage(snailImg, px - sw / 2, py - sh / 2, sw, sh);
+  }
+
+  // Draw Squid
+  if (squidImg.complete) {
+    const sw2 = squidImg.width * fr.scale * squidScale * scaleX;
+    const sh2 = squidImg.height * fr.scale * squidScale * scaleY;
+    const sx = fr.squid.x * 0.6666 * scaleX + 1;
+    const sy = fr.squid.y * 0.6666 * scaleY - 1.5;
+    ctx.drawImage(squidImg, sx - sw2 / 2, sy - sh2 / 2, sw2, sh2);
+  }
+
+  document.getElementById('seekBar').value = frameIndex;
+  document.getElementById('timeDisplay').textContent = `${frameIndex} / ${currentFrames[0].length - 1}`;
+}
+
+
+
+
+    document.getElementById('playPause').addEventListener('click', e => {
+      const btn = e.currentTarget;
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        btn.textContent = 'Play';
+      } else {
+        const speed = parseFloat(document.getElementById('speedSelect').value);
+        playInterval = setInterval(() => {
+          frameIndex = Math.min(frameIndex + 1, currentFrames[0].length - 1);
+          drawFrame();
+          if (frameIndex >= currentFrames[0].length - 1) {
+            clearInterval(playInterval);
+            playInterval = null;
+            btn.textContent = 'Play';
+          }
+        }, 1000 / (fps * speed));
+        btn.textContent = 'Pause';
+      }
+    });
+
+    document.getElementById('rewind').addEventListener('click', () => {
+      frameIndex = Math.max(frameIndex - 1, 0);
+      drawFrame();
+    });
+
+    document.getElementById('forward').addEventListener('click', () => {
+      frameIndex = Math.min(frameIndex + 1, currentFrames[0].length - 1);
+      drawFrame();
+    });
+
+    document.getElementById('speedSelect').addEventListener('change', () => {
+      if (playInterval) document.getElementById('playPause').click();
+    });
+
+    document.getElementById('seekBar').addEventListener('input', e => {
+      frameIndex = +e.target.value;
+      drawFrame();
+    });
+
+    async function loadText(path) {
+      const res = await fetch(path);
+      return res.ok ? res.text() : '';
+    }
+
+    function buildPatternTree(txt) {
+  const lines = txt.split(/\r?\n/).filter(l => l.trim());
+  const trie = { children: {}, info: null };
+  lines.forEach(line => {
+    const idx = line.indexOf(':');
+    if (idx < 0) return;
+    const key = line.slice(0, idx).trim();
+    const desc = line.slice(idx + 1).trim();
+    let node = trie;
+    for (const ch of key) {
+      node.children[ch] = node.children[ch] || { children: {}, info: null };
+      node = node.children[ch];
+    }
+    node.info = { prefix: key, desc };
+  });
+
+  const container = document.getElementById('pattern-tree');
+  container.innerHTML = '';
+
+  function compress(node, path = '') {
+    // Collapse if: no info AND only one child
+    while (!node.info && Object.keys(node.children).length === 1) {
+      const [key] = Object.keys(node.children);
+      path += key;
+      node = node.children[key];
+    }
+    return { node, path };
+  }
+
+  function render(node, path = '') {
+    const ul = document.createElement('ul');
+    Object.entries(node.children).forEach(([ch, childNode]) => {
+      let fullPath = ch;
+      let { node: compressedNode, path: rest } = compress(childNode, ch);
+      fullPath = rest;
+
+      const li = document.createElement('li'); li.classList.add('collapsed');
+      const lbl = document.createElement('div'); lbl.className = 'label';
+
+      if (compressedNode.info) {
+        const pre = document.createElement('span'); pre.className = 'prefix'; pre.textContent = compressedNode.info.prefix;
+        const d = document.createElement('span'); d.className = 'desc'; d.textContent = compressedNode.info.desc;
+        lbl.append(pre, d);
+        lbl.addEventListener('click', e => { loadReplays(compressedNode.info.prefix); e.stopPropagation(); });
+      } else {
+        const pre = document.createElement('span'); pre.className = 'prefix'; pre.textContent = fullPath;
+        lbl.append(pre);
+      }
+
+      lbl.addEventListener('click', e => { li.classList.toggle('collapsed'); e.stopPropagation(); });
+      li.append(lbl);
+      if (Object.keys(compressedNode.children).length) li.append(render(compressedNode, fullPath));
+      ul.append(li);
+    });
+    return ul;
+  }
+
+  ['m','t','d'].forEach(r => {
+    if (trie.children[r]) {
+      container.append(render({ children: { [r]: trie.children[r] } }));
+    }
+  });
+}
+
+
+    function buildFights(txt) {
+      const lines = txt.split(/\r?\n/).filter(l => l.trim());
+      lines.forEach(line => {
+        const parts = line.split('|');
+        if (parts.length < 3) return;
+        const timer = parseFloat(parts[0]), pat = parts[1];
+        const frames = parts[2].split(';').map(f => {
+          const [p,s] = f.split(':'); if (!p || !s) return null;
+          const [px,py] = p.split(',').map(Number), [sx,sy,ss] = s.split(',').map(Number);
+          if (isNaN(px)) return null;
+          return { player: { x: px, y: py }, squid: { x: sx, y: sy }, scale: ss };
+        }).filter(f => f);
+        fights.push({ timer, pattern: pat, frames });
+      });
+    }
+
+    function loadReplays(prefix) {
+      currentFrames.length = 0;
+      fights.filter(f => f.pattern.replace(/,/g, '').startsWith(prefix.replace(/,/g, '')))
+        .sort((a,b) => a.timer - b.timer)
+        .forEach(f => currentFrames.push(f.frames));
+      if (!currentFrames.length) return;
+      frameIndex = 0;
+      document.getElementById('seekBar').max = currentFrames[0].length - 1;
+      drawFrame();
+    }
+
+    document.getElementById('search-input').addEventListener('input', () => {
+  const q = document.getElementById('search-input')
+                  .value
+                  .replace(/,/g,'')
+                  .trim();
+  const resultsDiv = document.getElementById('search-results');
+  const countDiv   = document.getElementById('result-count');
+  
+  resultsDiv.innerHTML = '';
+  
+  if (!q) {
+    // if the query is empty, clear the message
+    countDiv.textContent = '';
+    return;
+  }
+  
+  // filter & sort as before
+  const matches = fights
+    .filter(f => f.pattern.replace(/,/g,'').startsWith(q))
+    .sort((a,b) => a.timer - b.timer);
+
+  // show the count
+  const n = matches.length;
+  countDiv.textContent = `${n} result${n !== 1 ? 's' : ''} found`;
+  
+  // now render each match
+  matches.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'search-result';
+    div.textContent = `${f.pattern} (${f.timer.toFixed(2)}s)`;
+    div.addEventListener('click', () => {
+      currentFrames.length = 0;
+      currentFrames.push(f.frames);
+      frameIndex = 0;
+      document.getElementById('seekBar').max = f.frames.length - 1;
+      drawFrame();
+    });
+    resultsDiv.append(div);
+  });
+});
+
+
+    // Initial loading
+    (async () => {
+      const [patterns, data] = await Promise.all([
+        loadText('sorted.txt'),
+        loadText('squidDB.txt')
+      ]);
+      buildPatternTree(patterns);
+      buildFights(data);
+      window.dispatchEvent(new Event('resize'));
+    })();
+  </script>
+</body>
+</html>

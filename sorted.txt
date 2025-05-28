@@ -1,0 +1,296 @@
+m       : Spoon L - UpsideL R
+md      : Spoon L (just as an intermediate stopping point) - G12 tip (make a long y-coordinate keeping hug with the UpsideL wall) - G1 - G12 tip
+mdd     : Spoon LE - Colloseum - Sword LT
+mddd    : (try to make him dash in a straight line) - Sword RB - Sword T
+mdddd*  : Colloseum - Spoon - LFIN
+mdddm*  : Colloseum R - LFIN
+mdddt*  : Swan RE - LFIN
+mddm    : Sword RT - Bowl
+mddmd*  : Sword T - LFIN
+mddmm   : P3 - Streetlamp - LFIN
+mddmt*  : P2 - LFIN
+mddt    : Bowl
+mddt*   : Sword RB - Sword T - LFIN
+mddtm*  : P3 - Streetlamp - LFIN
+mdm     : Spoon LE
+mdm*    : Colloseum - LFIN
+mdmd*   : Colloseum ML (jumping!!) - Plane - Stick LFIN
+mdt     : Colloseum ML 
+mdtd    : Colloseum - Sword R
+mdtdd   : Sword ML - G2 (barely works when enough damage was dealt in the beginning)
+mdtdm*  : Colloseum - LFIN
+mdtdt*  : Swan RE - LFIN
+mdtm    : Colloseum MR
+mdtm*   : Colloseum R - LFIN
+mdtmd*  : Colloseum M (jump over him to lure the dash further upwards) - Sword - Stick - Rice - Bowl - LFIN
+mdtmt   : Colloseum R
+mdtmtd  : Sword - Stick - LFIN
+mdtt    : Colloseum M
+mdttd   : Colloseum ML (by jumping) - Plane (following Squid) - Rice
+mdttd*  : Bowl - LFIN
+mdttdd* : Bowl - Plane - LFIN
+mdttm*  : Colloseum - Sword - LFIN
+mdttt   : Colloseum R
+mdtttd* : Sword RB - Sword T - LFIN
+mdtttm* : Sword - LFIN
+mdtttt* : Swan RE
+mm      : UpsideL R (as long as possible!) - G1 M
+mmd     : G2 M (you need to react quite quickly & position a fair bit right of the G2 gap) - Spoon L
+mmdd    : Colloseum - Sword - Stick
+mmddd*  : Plane (to dodge dash) - LFIN
+mmddm*  : Bowl - Sword RB - LFIN
+mmddt*  : Sword R - LFIN
+mmdm*   : Colloseum - LFIN
+mmdt*   : Colloseum ML (as close to the tp destination as possible - in the air!) - LFIN
+mmm     : G1 M
+mmmd    : Bottom TPlat L
+mmmdd*  : UpsideL - Hinge - Swan L - P1 - LFIN
+mmmdm*  : UpsideL L - TPlat R - LFIN
+mmmdt*  : UpsideL L (there's technically a really tight window for a line of sight) - TRANSPOSE INTO mmmd
+mmmm    : G1 L (slowly, even staying on the full left) - Throne R
+mmmmd*  : TPlat - Ruler - LFIN
+mmmmm*  : Throne L - TPlat L - LFIN
+mmmmt*  : Bottom TPlat R - LFIN
+mmmt    : Bottom TPlat (jumping to damage Squid properly) - G1 R ("predicted" & precisely underneath the left of UpsideL)
+mmmt*   : Spoon L - Colloseum - Sword L - LFIN
+mmmtt   : G12 Tip
+mmmtt*  : Spoon L - Colloseum - LFIN
+mmmttd* : G2 - G23 Tip - LFIN
+mmt     : G2 L
+mmtd    : Spoon - Colloseum - Sword L
+mmtd*   : Torch R - LFIN
+mmtdd   : G34 tip
+mmtddd  : Colloseum R - LFIN
+mmtm*   : Colloseum - LFIN (rather Sword - Stick than Plane - Stick)
+mmtt    : Spoon L
+mmttd*  : UpsideL R - Hinge L - Bird - Swan - LFIN
+mmttm*  : Colloseum - LFIN
+mmttt*  : Colloseum L - LFIN
+mt      : Spoon MR (as far right as possible, so that you can still move into the middle when a projectile is being aimed)
+mtd     : Spoon M (the middle of the snail should be over the block division) - Torch RE (attack transition here) - Sword LB
+mtdd*   : Colloseum R - Sword RB - P2 - LFIN
+mtdm*   : Swan RE - LFIN
+mtdt    : Colloseum RE  (tp destination should be on Torch RE)
+mtdtd   : Swan L
+mtdtdd* : Swan - P1 - Spoon - LFIN
+mtdtdm* : Bird - LFIN
+mtdtdt* : Swan R - LFIN
+mtdtm*  : Colloseum R - Swan RE - Stone RE - LFIN
+mtdtt*  : Colloseum M - LFIN
+mtm     : Colloseum M
+mtmd    : Colloseum M (maybe jumping a bit, but not much) - Sword LB - Sword T - Plane T
+mtmd*   : Plane - Stone - LFIN
+mtmdt*  : Swan RE - LFIN
+mtmm*   : Colloseum or Sword T (I'd prefer Sword T) - LFIN (can't do better than logical Plane mtmmdd finish)
+mtmt    : Colloseum M (get noticable height during transition)
+mtmtd*  : (jumping) - Sword T - Sword LB - Plane (you need to be quick here) - LFIN
+mtmtm*  : Sword - LFIN
+mtmtt   : Sword T 
+mtmttd* : Sword T (jump over Squid's Dash) - LFIN
+mtmttm* : Sword - Stick - LFIN
+mtmttt* : Swan - LFIN
+mtt     : Colloseum ME
+mttd    : Sword - Stick
+mttdd*  : Bowl - Sword RB - Sword TRE - Plane RE - LFIN
+mttdm*  : Bowl - P2 - LFIN
+mttdt*  : Sword T - LFIN
+mttm    : Colloseum R
+mttmd*  : Colloseum M (jumping) - Sword - Stick - Sword T - LFIN
+mttmm*  : Sword T - LFIN
+mttmt*  : Colloseum MR (gap) - LFIN
+mttt    : Colloseum MR (~next free spot; small jump into transition)
+mtttd*  : Colloseum M (jump on the block divider) - Plane - Sword T - LFIN (to the left) 
+mtttm*  : Colloseum - Sword - Stick - LFIN
+mtttt   : Sword T
+mttttd* : Sword T (jumping) - Stick - LFIN
+mttttm* : Sword T - Stick - LFIN
+mttttt* : Colloseum (gap) - LFIN
+t       : Spoon M - UpsideL MR (so that you'll hit Squid - do NOT face right)
+td      : Spoon - G23 tip - G3 (semi-jumping, so that transition is in the air)
+tdd     : P3 (Jumping against bottom of Torch first) - Sword RB
+tddd    : (Begin Tip Jumping on Sword RB) - Colloseum L - Colloseum M
+tddd*   : Colloseum R - LFIN
+tdddd*  : Colloseum ML - G4 - LFIN
+tddm    : Sword RE - Plane RE
+tddmd   : (Stay as long as possible on Plane) - Stone
+tddmd*  : LFIN
+tddmdd  : Colloseum R - LFIN
+tddmt   : Stone R
+tddmt*  : Stone - LFIN
+tddmtd* : Colloseum - LFIN
+tddt    : Sword RE
+tddtd*  : G3 R - G3 L - LFIN
+tddtm*  : Colloseum - LFIN
+tddtt*  : Swan R - LFIN
+tdm     : G3 - G34 tip (stay permanently closeby)
+tdmd    : P3 - Sword RB - Sword RT 
+tdmd*   : Swan RE - LFIN
+tdmdd*  : Colloseum - Spoon - LFIN
+tdmm*   : P2 - P3 - LFIN (alternatively Torch RE - Colloseum RE - LFIN)
+tdmt    : P2
+tdmt*   : P3 - Sword - LFIN (when played optimally you can barely finish Squid on tdmttd during the last dash)
+tdmtd*  : (tip-jumping) - Sword RB - Sword T - LFIN
+tdt     : G3
+tdtd    : G34 tip - Torch RE
+tdtd*   : Colloseum RE - LFIN
+tdtdd*  : Colloseum RE - Bird - LFIN
+tdtm    : G3 - Torch - Spoon R
+tdtmd*  : Spoon L - G1 - LFIN
+tdtmm   : Spoon L - LFIN
+tdtmt*  : UpsideL RE (jumping) - LFIN
+tdtt    : G34 tip
+tdttd   : Sword LB
+tdttd*  : Plane - LFIN
+tdttm*  : Sword LB - Coloseum RE - LFIN
+tdttt   : Sword LB
+tdtttd* : Colloseum R - Sword RB
+tdtttm* : Swan RE - LFIN
+tdtttt* : Colloseum RE - LFIN
+tm      : UpsideL L - UpsideL R
+tmd     : G3 - G34 tip
+tmdd    : Sword LB Torch - Colloseum - Sword T R
+tmddd*  : Sword T L - Torch - G2 - LFIN
+tmddm*  : Sword - Colloseum R - LFIN
+tmddt*  : Swan - LFIN
+tmdm*   : Sword LB (stay fairly long, but switch before the next transition happens) - Colloseum RE - LFIN
+tmdt    : Sword LB ("predicted" jump, so that the possible tp destination is as low as possible)
+tmdtd*  : Colloseum - Sword RB - LFIN
+tmdtm*  : Sword LB - Colloseum RE - LFIN
+tmdtt*  : Colloseum RE - LFIN
+tmm     : Spoon L
+tmm*    : Colloseum - LFIN
+tmmd*   : Spoon R (instantly!) - G34 tip - Torch (wait until transition here) - LFIN (3x d is finishable before Squid gets off-bound)
+tmt     : Spoon L
+tmtd*   : Spoon R (jumping) - G3 - G34 tip (jump to the right) - Colloseum RE - LFIN (tripple d is pretty unpleasent here)
+tmtm*   : Colloseum - LFIN
+tmtt*   : Colloseum ("predicted" jump, as close as possible to Squid) - LFIN
+tt      : UpsideL - Spoon L
+ttd     : Spoon R (jumping) - G3 - G4 - Streetlamp
+ttdd    : P3 - Sword - Plane T
+ttdd*   : Stone - LFIN (the jumps in correlation to the movement with ttddtd can be screwed up quite easily)
+ttddd*  : Sword T - G2 - LFIN
+ttdm*   : P3 - Sword RB - Plane RE - LFIN
+ttdt    : Streetlamp - Sword LB (jump first to the right for a possible tp destination!!) 
+ttdt*   : Sword TRE - Swan - LFIN (ttdtdd: - Hinge RE - LFIN)
+ttdtm*  : (..) - Plane RE - LFIN
+ttm     : TRANPOSE mtm
+ttmd    : (jump more)
+ttmdd*  : Stay on Sword T - Torch - LFIN
+ttt     : Colloseum L
+tttd    : Colloseum L - Sword T (jumping to the right)
+tttd*   : Sword LB - LFIN
+tttdd*  : Sword LB - P2 - Colloseum RE - LFIN 
+tttm*   : Colloseum - LFIN (usually finish in the top right corner; tttmdd finishable by Sword T - Torch dash)
+tttt    : Colloseum M (next spot)
+ttttd*  : Colloseum M (jump on block divider) - Stick - Sword - LFIN
+ttttm*  : Colloseum R - Sword - Stick - LFIN
+ttttt*  : Sword TM - Swan RE - LFIN
+d       : Spoon L (jumping against the side of UpsideL in the correct timing) - UpsideL L
+dd      : Spoon R (first staying on UpsideL) - Spoon L
+ddd     : G12 tip - G2 (dodge dash optimally as close as possible to Squid) - G12 tip
+dddd    : Colloseum ME - Sword R
+ddddd*  : Sword LB - LFIN (* = d e.g. finishable on Plane) 
+ddddm*  : (stay) - LFIN
+ddddt*  : Colloseum R (gap) - LFIN
+dddm*   : Spoon L - LFIN
+dddm*   : Spoon L - LFIN (kinda: especially * = dd and also * = td are close and should be finished in the top right of the arena)
+ddm     : Spoon R (as soon as in line of sight)
+ddmd    : Spoon ML (slightly after Squid begun to aim) - Spoon R (so that youll barely avoid Squid) - G2
+ddmdd*  : G12 - G2 (following Dash, "hiding" right next to G23) - Torch (moving over) - Colloseum R - LFIN
+ddmdm*  : Spoon L - LFIN
+ddmdt*  : Spoon L - LFIN
+ddmm    : Spoon L - UpsideL R
+ddmmd*  : Ruler R (as soon as Squid dashes) - LFIN
+ddmmm   : TPlat - LFIN
+ddmmt*  : TPlat R - LFIN
+ddmt    : Spoon L (continously jumping)
+ddmtd*  : UpsideL R - TPlat R (temporarily during dash) - Throne - Ruler L - LFIN
+ddmtm   : UpsideL R
+ddmtm*  : LFIN
+ddmtmt* : Elevator - LFIN
+ddmtt*  : Colloseum (nearest available spot) - LFIN
+ddt     : Colloseum ME
+ddtd    : Colloseum - Sword (if needed: Sword LB)
+ddtd*   : Colloseum R - LFIN
+ddtdd*  : Sword LE - LFIN
+ddtm    : Colloseum R (quite a bit of distance to Squid)
+ddtmd*  : (jump continously) - Plane - LFIN
+ddtmm*  : (stay until you need to avoid collision) - Sword - LFIN
+ddtmt*  : Colloseum R (gap) - LFIN
+ddtt    : Colloseum R
+ddttd*  : TRANSPOSE ddtmd 
+ddttm*  : Sword - LFIN
+ddttt*  : Colloseum M (gap) - LFIN
+dm      : UpsideL L - UpsideL R (don't jump, staying as close to Squid as possible and only moving if necessary helps)
+dmd     : UpsideL L - Spoon - Colloseum M
+dmdd    : Spoon - UpsideL - Spoon
+dmddd   : G2 - LFIN
+dmddm   : G12 tip - Spoon LE - LFIN
+dmddt*  : G1 - LFIN
+dmdm    : Colloseum M - Colloseum ML (temporarily jumping necessary)
+dmdmd*  : Colloseum MR - Spoon - LFIN
+dmdmm*  : P1 - Hinge RE - LFIN
+dmdmt*  : Spoon - LFIN
+dmdt    : Spoon MR
+dmdtd*  : Stick - Plane - LFIN
+dmdtm*  : Sword T - LFIN
+dmdtt   : Sword T
+dmdtt*  : Sword T - LFIN (you can't stay on the tp dest if Squid decides to tp four times in a row)
+dmdttd* : Stick - LFIN
+dmm     : Hinge LE - Hinge TE
+dmmd*   : Stone R - Colloseum R - G34 tip - LFIN
+dmmm    : Swan LE
+dmmm*   : Stone - LFIN
+dmmmd*  : Stone (sometimes jumping is preferable) - Bowl - LFIN
+dmmt    : Swan L
+dmmt*   : Stone - LFIN (dmmtmt* can't be finished on the final tp destination)
+dmmtd*  : Stone - Stick - Sword - LFIN
+dmt     : UpsideL R - Spoon L
+dmtd    : Spoon M (further specifications: mtd) - G34 tip - Sword LB
+dmtd*   : Colloseum RE - LFIN
+dmtdd*  : Colloseum - Sword RB - LFIN
+dmtm*   : Colloseum - LFIN (I could specify further, however these are super classical ending sequences)
+dmtmtd  : (utilize space over Sword T to jump over the dash of Squid)
+dmtt    : Colloseum L
+dmttd*  : Stick - Bowl - LFIN (react quickly if * = m*)
+dmttm*  : Colloseum - LFIN
+dmttt   : Colloseum (M)R (create gap between possible tp destination)
+dmtttd* : Colloseum M (jumping over Squid) - Plane - Stick - LFIN
+dmtttm* : Sword T - LFIN
+dmtttt* : Colloseum M (move into gap) - LFIN
+dt      : UpsideL L - Bottom TPlat L
+dtd     : Elevator ML - Throne - G1 (stay as far left as possible)
+dtdd    : G1 R - G2 - G3 - G34 tip
+dtddd*  : Sword LB - Colloseum R - Sword RB - LFIN
+dtddm*  : Sword LB - Colloseum RE - Swan RE - LFIN
+dtddt*  : Sword LB - Colloseum RE ("cliff jumping") - Colloseum R - LFIN
+dtdm*   : G1 R - Colloseum - LFIN
+dtdt    : G1 - Spoon LE
+dtdt*   : Colloseum - LFIN
+dtdtd*  : Colloseum - Sword - Torch - G34 tip - LFIN
+dtm     : G1 L (until Squid overlaps the TL part of the Bottom TPlat) - G12 tip
+dtmd    : G2 - G3 - G34 tip (- P2)
+dtmd*   : P2 - P3 - LFIN
+dtmdd   : P3 - Sword LB
+dtmdd*  : Sword T - LFIN
+dtmddd* : Sword T - Colloseum - LFIN
+dtmm*   : Colloseum - LFIN
+dtmt    : G2
+dtmtd*  : G3 - Torch R - Colloseum RE - LFIN
+dtmtm*  : G2 R - LFIN
+dtmtt   : G2 MR - G23 tip
+dtmtt*  : Torch - LFIN
+dtmttt* : G2 R - LFIN
+dtt     : Bottom TPlat L - G12 tip
+dttd    : G2 R - G3 - G34 tip - Torch RE (jump during transition)
+dttd*   : Colloseum RE - LFIN
+dttdd   : Torch RE - Colloseum RE
+dttdd*  : TRANSPOSE mtdtd - LFIN
+dttddd* : Hinge RE - LFIN
+dttm*   : G2 L (important for the correct angle!) - Colloseum - LFIN (dttmdd should be finished on Stick)
+dttt    : Spoon LE
+dttt*   : Colloseum L - LFIN
+dtttd   : Colloseum - Sword R
+dtttdd* : G34 tip - LFIN
+dtttdm* : Colloseum RE - G34 tip - LFIN
+dtttdt* : Colloseum R - LFIN
