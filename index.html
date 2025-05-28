@@ -22,7 +22,8 @@
 		<button onclick="GoToWoLiHistoryURL()", type="submit">WoLi History</button>
 		<h3>{ GeoGuessr }</h3>
 		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button>
-		
+		<h3>{ Will You Snail? }</h3>
+		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button>
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
 		<br></br>
@@ -50,6 +51,11 @@
 		const geogessrURL = "geoguessr.html"; 
 		const woliengineURL = "woliengine.html"; 
 		const wolihistoryURL = "wolihistory.html"; //Error.html
+		const wyssquiddbURL = "squidDBIndex.html"; //Error.html
+		
+		function GoToWYSSquidDBUrl() {
+			window.location.replace(wyssquiddbURL);
+		}
 		
 		function GoToGeoguessrURL() {
 			window.location.replace(geogessrURL);
