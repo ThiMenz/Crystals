@@ -234,6 +234,82 @@
       text-align: left;
       color: var(--text-color);
     }
+	
+	/* ======================= BEGIN: quiz.css ======================= */
+
+/* Übergreifende Container-Styles */
+#buchstaben-auswahl,
+#quiz-bereich {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+/* 1) Auswahl-Checkboxen: Gitter-Layout */
+#checkbox-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  grid-gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+}
+
+.checkbox-item input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+.checkbox-item label {
+  margin-left: 0.5rem;
+}
+
+/* 2) Buttons: Einheitliches Aussehen */
+button {
+  margin-top: 0.8rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: #fff;
+}
+
+button[disabled] {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* 3) Quiz-Bereich: Fragen/Antwort/Feedback */
+#frage-container p {
+  margin: 0.5rem 0;
+  font-size: 1.25rem;
+}
+
+#antwort-container {
+  margin: 1rem 0;
+}
+
+#antwort-input {
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 200px;
+}
+
+#feedback-container {
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* ======================== END: quiz.css ======================== */
   </style>
 </head>
 <body>
@@ -539,6 +615,40 @@
       </div>
     </div>
   </div>
+  
+  <section id="buchstaben-auswahl">
+  <h2>Wähle die Zeichen aus, die Du üben möchtest</h2>
+  <p>Markiere hier alle Thai-Konsonanten, Vokal- bzw. Diakritika-Zeichen, die Du später im Quiz abfragen lassen willst:</p>
+  <div id="checkbox-container">
+    <!-- 
+      Alle Checkboxen werden von quiz.js hier automatisch eingefügt.
+      Du siehst also keine festen <input>-Zeilen hier – quiz.js generiert sie bei DOMContentLoaded.
+    -->
+  </div>
+  <button id="quiz-start-button" disabled>Quiz starten</button>
+</section>
+
+<!-- 2) Quiz-Bereich: wird erst sichtbar, wenn man "Quiz starten" klickt -->
+<section id="quiz-bereich" style="display: none;">
+  <h2>Quiz</h2>
+
+  <div id="frage-container">
+    <!-- Hier wird die aktuelle Frage angezeigt (z. B. Zeichen groß) -->
+  </div>
+
+  <div id="antwort-container">
+    <input type="text" id="antwort-input" placeholder="Deine Antwort" autocomplete="off"/>
+    <button id="antwort-check-button">Antwort prüfen</button>
+  </div>
+
+  <div id="feedback-container">
+    <!-- Hier erscheint „Richtig!“ oder „Falsch…“ -->
+  </div>
+
+  <button id="weiter-button" style="display: none;">Weiter</button>
+  <button id="quiz-reset-button">Quiz zurücksetzen</button>
+</section>
+<!-- ======================== END: Quiz-Sektion ======================== -->
 
   <script>
     // Listen der RTGS-Komponenten
@@ -567,6 +677,365 @@
       {thai: 'ุ', rtgs: 'u'}, {thai: 'ู', rtgs: 'u'}, {thai: 'เ', rtgs: 'e'}, {thai: 'แ', rtgs: 'ae'}, {thai: 'โ', rtgs: 'o'},
       {thai: 'ใ', rtgs: 'ai'}, {thai: 'ไ', rtgs: 'ai'}, {thai: 'ำ', rtgs: 'am'}, {thai: 'เอ', rtgs: 'e'}, {thai: 'อ', rtgs: 'o'}
     ];
+	
+	// ======================= BEGIN: quiz.js =======================
+
+// 1) Vollständige Listen: Thai-Konsonanten, Vokale, Diakritika
+const KONSONANTEN = [
+  "ก","ข","ฃ","ค","ฅ","ฆ","ง","จ","ฉ","ช","ซ","ฌ","ญ","ฎ","ฏ","ฐ",
+  "ฑ","ฒ","ณ","ด","ต","ถ","ท","ธ","น","บ","ป","ผ","ฝ","พ","ฟ","ภ",
+  "ม","ย","ร","ฤ","ล","ฦ","ว","ศ","ษ","ส","ห","ฬ","อ","ฮ"
+];
+
+const VOKALE = [
+  "ะ","า","ิ","ี","ึ","ื","ุ","ู","เ","แ","โ","ใ","ไ","ำ"
+];
+
+//  Liste aller Diakritik-/Tone-Markierungen:
+const DIAKRITIKER = [
+  "่","้","๊","๋","์","ํ","็","ฺ","๎","๏"
+];
+
+// 2) Storage-Key für localStorage
+const STORAGE_KEY = "auswahlBuchstaben";
+
+// ===== Funktionen zum Speichern/Laden der Auswahl in localStorage =====
+function ladeAuswahl() {
+  const json = localStorage.getItem(STORAGE_KEY);
+  if (!json) return [];
+  try {
+    const arr = JSON.parse(json);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    console.error("Fehler beim Parsen der Auswahl:", e);
+    return [];
+  }
+}
+
+function speichereAuswahl(auswahlArray) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(auswahlArray));
+}
+
+// ===== Checkbox-Generierung =====
+function generiereCheckboxen() {
+  const container = document.getElementById("checkbox-container");
+  container.innerHTML = ""; // Alte Einträge entfernen
+
+  const gespeicherteAuswahl = ladeAuswahl();
+
+  // Hilfsfunktion: Baut ein einzelnes <div class="checkbox-item"> mit Checkbox + Label
+  function baueCheckbox(zeichen, idSuffix) {
+    const div = document.createElement("div");
+    div.classList.add("checkbox-item");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = "chk-" + idSuffix;
+    checkbox.value = zeichen;
+    if (gespeicherteAuswahl.includes(zeichen)) {
+      checkbox.checked = true;
+    }
+
+    const label = document.createElement("label");
+    label.htmlFor = "chk-" + idSuffix;
+    label.textContent = zeichen;
+
+    // Immer beim Ändern einer Checkbox: Auswahl updaten und Quiz-Button (de)aktivieren
+    checkbox.addEventListener("change", () => {
+      aktualisiereGespeicherteAuswahl();
+      aktualisiereQuizButton();
+    });
+
+    div.appendChild(checkbox);
+    div.appendChild(label);
+    return div;
+  }
+
+  // 2.1) Alle Konsonanten-Checkboxen
+  KONSONANTEN.forEach((k, i) => {
+    container.appendChild(baueCheckbox(k, "con" + i));
+  });
+
+  // 2.2) Alle Vokal-Checkboxen
+  VOKALE.forEach((v, i) => {
+    container.appendChild(baueCheckbox(v, "vow" + i));
+  });
+
+  // 2.3) Alle Diakritika-Checkboxen
+  DIAKRITIKER.forEach((d, i) => {
+    container.appendChild(baueCheckbox(d, "dia" + i));
+  });
+}
+
+// Liest alle Checkboxen aus, speichert die markierten Zeichen ins localStorage
+function aktualisiereGespeicherteAuswahl() {
+  const alleCheckboxes = document.querySelectorAll("#checkbox-container input[type='checkbox']");
+  const ausgewaehlte = [];
+  alleCheckboxes.forEach(chk => {
+    if (chk.checked) ausgewaehlte.push(chk.value);
+  });
+  speichereAuswahl(ausgewaehlte);
+}
+
+// Aktiviert/Deaktiviert den „Quiz starten“-Button je nach Anzahl ausgewählter Zeichen
+function aktualisiereQuizButton() {
+  const btn = document.getElementById("quiz-start-button");
+  const ausgewaehlte = ladeAuswahl();
+  btn.disabled = (ausgewaehlte.length === 0);
+}
+
+// ===== Quiz-Ablauf: Variablen für Zustand =====
+let quizListe = [];       // Array mit allen ausgewählten Zeichen in Zufallsreihenfolge
+let aktuellerIndex = 0;   // Index des gerade abgefragten Zeichens
+let zeichenZuAntwort = {}; // Mapping: Zeichen → korrekte Antwort (RTGS-Transliteration oder Name)
+
+/**
+ * Mischt ein Array (Fisher–Yates).
+ */
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+/**
+ * Initialisiert das Mapping „Zeichen → korrekte Antwort“. 
+ * Hier sind alle Thai-Konsonanten, Vokale und Diakritika enthalten.
+ * Passe einzelne Einträge an, falls Du andere Namen/Transkriptionen verwenden möchtest.
+ */
+function initialisiereAntwortMapping() {
+  zeichenZuAntwort = {};
+
+  // 1) Konsonanten (RTGS-Transkription)
+  zeichenZuAntwort["ก"] = "k";
+  zeichenZuAntwort["ข"] = "kh";
+  zeichenZuAntwort["ฃ"] = "kh";
+  zeichenZuAntwort["ค"] = "kh";
+  zeichenZuAntwort["ฅ"] = "kh";
+  zeichenZuAntwort["ฆ"] = "kh";
+  zeichenZuAntwort["ง"] = "ng";
+  zeichenZuAntwort["จ"] = "j";
+  zeichenZuAntwort["ฉ"] = "ch";
+  zeichenZuAntwort["ช"] = "ch";
+  zeichenZuAntwort["ซ"] = "s";
+  zeichenZuAntwort["ฌ"] = "ch";
+  zeichenZuAntwort["ญ"] = "y";
+  zeichenZuAntwort["ฎ"] = "d";
+  zeichenZuAntwort["ฏ"] = "t";
+  zeichenZuAntwort["ฐ"] = "th";
+  zeichenZuAntwort["ฑ"] = "th";
+  zeichenZuAntwort["ฒ"] = "th";
+  zeichenZuAntwort["ณ"] = "n";
+  zeichenZuAntwort["ด"] = "d";
+  zeichenZuAntwort["ต"] = "t";
+  zeichenZuAntwort["ถ"] = "th";
+  zeichenZuAntwort["ท"] = "th";
+  zeichenZuAntwort["ธ"] = "th";
+  zeichenZuAntwort["น"] = "n";
+  zeichenZuAntwort["บ"] = "b";
+  zeichenZuAntwort["ป"] = "p";
+  zeichenZuAntwort["ผ"] = "ph";
+  zeichenZuAntwort["ฝ"] = "f";
+  zeichenZuAntwort["พ"] = "ph";
+  zeichenZuAntwort["ฟ"] = "f";
+  zeichenZuAntwort["ภ"] = "ph";
+  zeichenZuAntwort["ม"] = "m";
+  zeichenZuAntwort["ย"] = "y";
+  zeichenZuAntwort["ร"] = "r";
+  zeichenZuAntwort["ฤ"] = "rue";  // oder "r"
+  zeichenZuAntwort["ล"] = "l";
+  zeichenZuAntwort["ฦ"] = "lue";  // oder "l"
+  zeichenZuAntwort["ว"] = "w";
+  zeichenZuAntwort["ศ"] = "s";
+  zeichenZuAntwort["ษ"] = "s";
+  zeichenZuAntwort["ส"] = "s";
+  zeichenZuAntwort["ห"] = "h";
+  zeichenZuAntwort["ฬ"] = "l";
+  zeichenZuAntwort["อ"] = "ʼ";   // oft stumm / Apostroph
+  zeichenZuAntwort["ฮ"] = "h";
+
+  // 2) Vokale (jeweils phonetische Umschrift)
+  zeichenZuAntwort["ะ"] = "a";
+  zeichenZuAntwort["า"] = "aa";
+  zeichenZuAntwort["ิ"] = "i";
+  zeichenZuAntwort["ี"] = "ii";
+  zeichenZuAntwort["ึ"] = "ue";
+  zeichenZuAntwort["ื"] = "uee";
+  zeichenZuAntwort["ุ"] = "u";
+  zeichenZuAntwort["ู"] = "uu";
+  zeichenZuAntwort["เ"] = "e";
+  zeichenZuAntwort["แ"] = "ae";
+  zeichenZuAntwort["โ"] = "o";
+  zeichenZuAntwort["ใ"] = "ai";
+  zeichenZuAntwort["ไ"] = "ai";
+  zeichenZuAntwort["ำ"] = "am";
+
+  // 3) Diakritika / Tone-Marken / Sonderzeichen (Name des Zeichens, nicht Lautwert)
+  zeichenZuAntwort["่"] = "mai ek";           // ◌่ (Tonmarke: fallend)
+  zeichenZuAntwort["้"] = "mai tho";          // ◌้ (Tonmarke: steigend)
+  zeichenZuAntwort["๊"] = "mai tri";          // ◌๊ (Tonmarke: höher)
+  zeichenZuAntwort["๋"] = "mai chattawa";     // ◌๋ (Tonmarke: tiefer)
+  zeichenZuAntwort["์"] = "thanthakhat";      // ◌์ (Marke zum Auslöschen)
+  zeichenZuAntwort["ํ"] = "nikkhahit";        // ◌ํ (Nikkhahit, Nukthā)
+  zeichenZuAntwort["็"] = "mai han-akat";     // ◌็ (kurzer Vokal-Marker)
+  zeichenZuAntwort["ฺ"] = "phinthu";          // ◌ฺ (analog zum Vokal-Auslösch-Zeichen)
+  zeichenZuAntwort["๎"] = "yamakkan";         // ◌๎
+  zeichenZuAntwort["๏"] = "fongman";          // ◌๏ (Markierung am Ende von Versen)
+
+/* 
+  Wenn Du noch weitere Sonderzeichen in Deinen Listen hattest, 
+  müsstest Du hier entsprechende Schlüssel/Werte ergänzen.
+*/
+}
+
+/**
+ * Startet das Quiz: 
+ *   • Liest die Auswahl (Array von Zeichen) aus localStorage aus. 
+ *   • Baut die Liste in zufälliger Reihenfolge. 
+ *   • Blendet den Auswahl-Bereich aus und zeigt den Quiz-Bereich. 
+ *   • Ruft die erste Frage auf.
+ */
+function starteQuiz() {
+  const ausgewaehlte = ladeAuswahl();
+  if (ausgewaehlte.length === 0) return;
+
+  // Mapping initialisieren (falls noch nicht geschehen)
+  initialisiereAntwortMapping();
+
+  // zufällige Reihenfolge:
+  quizListe = [...ausgewaehlte];
+  shuffleArray(quizListe);
+  aktuellerIndex = 0;
+
+  // Anzeige umschalten
+  document.getElementById("buchstaben-auswahl").style.display = "none";
+  document.getElementById("quiz-bereich").style.display = "block";
+
+  zeigeAktuelleFrage();
+}
+
+/**
+ * Zeigt die Frage für den aktuellen Index. 
+ * Bei jedem Schritt: 
+ *   • Setzt Feedback & Input zurück. 
+ *   • Zeigt das Zeichen in groß. 
+ *   • Fordert zur Eingabe der RTGS-Transliteration bzw. des Namens auf.
+ */
+function zeigeAktuelleFrage() {
+  const frageCont = document.getElementById("frage-container");
+  const feedbackCont = document.getElementById("feedback-container");
+  const weiterBtn = document.getElementById("weiter-button");
+  const antwortInput = document.getElementById("antwort-input");
+  const antwortCheckBtn = document.getElementById("antwort-check-button");
+
+  // Reset Feedback & Input
+  feedbackCont.textContent = "";
+  antwortInput.value = "";
+  weiterBtn.style.display = "none";
+  antwortCheckBtn.disabled = false;
+  antwortInput.disabled = false;
+  antwortInput.focus();
+
+  // Wenn kein Zeichen mehr übrig ist, beende das Quiz:
+  if (aktuellerIndex >= quizListe.length) {
+    frageCont.innerHTML = `<p>🎉 Du hast alle ${quizListe.length} Zeichen geübt!</p>`;
+    document.getElementById("antwort-container").style.display = "none";
+    weiterBtn.style.display = "none";
+    return;
+  }
+
+  // Andernfalls: aktuelles Zeichen anzeigen
+  const aktuellesZeichen = quizListe[aktuellerIndex];
+  frageCont.innerHTML = `
+    <p><strong>Zeichen ${aktuellerIndex + 1} von ${quizListe.length}:</strong></p>
+    <p style="font-size: 3rem; margin: 0.5rem 0;">${aktuellesZeichen}</p>
+    <p>Gib die RTGS-Transliteration (bei Konsonanten/Vokalen) oder den Namen (bei Diakritika) ein:</p>
+  `;
+}
+
+/**
+ * Prüft die Benutzereingabe gegen die korrekte Antwort 
+ * (in zeichenZuAntwort[aktuellesZeichen]). 
+ * Gibt Feedback (richtig/falsch) aus und zeigt „Weiter“-Button.
+ */
+function pruefeAntwort() {
+  const antwortInput = document.getElementById("antwort-input");
+  const feedbackCont = document.getElementById("feedback-container");
+  const weiterBtn = document.getElementById("weiter-button");
+  const antwortCheckBtn = document.getElementById("antwort-check-button");
+
+  const userAnswer = antwortInput.value.trim().toLowerCase();
+  const aktuellesZeichen = quizListe[aktuellerIndex];
+  const korrekt = (zeichenZuAntwort[aktuellesZeichen] || "").toLowerCase();
+
+  if (userAnswer === korrekt) {
+    feedbackCont.innerHTML = `<span style="color: green;">✓ Richtig! „${korrekt}“</span>`;
+  } else {
+    feedbackCont.innerHTML = `<span style="color: red;">✗ Falsch. Korrekt wäre: „${korrekt}“</span>`;
+  }
+
+  // Input deaktivieren, Button für Weiter anzeigen
+  antwortInput.disabled = true;
+  antwortCheckBtn.disabled = true;
+  weiterBtn.style.display = "inline-block";
+}
+
+/**
+ * Springt beim Klick auf „Weiter“ zum nächsten Zeichen im Quiz.
+ */
+function geheZuNaechster() {
+  aktuellerIndex++;
+  zeigeAktuelleFrage();
+}
+
+/**
+ * Setzt das Quiz komplett zurück: 
+ *   • Entfernt die gespeicherte Auswahl aus localStorage 
+ *   • Blendet Quiz-Bereich aus, Auswahl-Bereich wieder ein 
+ *   • Baut die Checkboxen neu und deaktiviert den Quiz-Button
+ */
+function resetQuiz() {
+  localStorage.removeItem(STORAGE_KEY);
+
+  document.getElementById("buchstaben-auswahl").style.display = "block";
+  document.getElementById("quiz-bereich").style.display = "none";
+
+  generiereCheckboxen();
+  aktualisiereQuizButton();
+}
+
+// ===== Beim Laden der Seite (DOMContentLoaded) =====
+window.addEventListener("DOMContentLoaded", () => {
+  // 1) Checkboxen für alle Zeichen erzeugen
+  generiereCheckboxen();
+
+  // 2) Quiz-Button (De)Aktivierung
+  aktualisiereQuizButton();
+
+  // 3) Event-Listener „Quiz starten“
+  document
+    .getElementById("quiz-start-button")
+    .addEventListener("click", starteQuiz);
+
+  // 4) Event-Listener „Antwort prüfen“
+  document
+    .getElementById("antwort-check-button")
+    .addEventListener("click", pruefeAntwort);
+
+  // 5) Event-Listener „Weiter“
+  document
+    .getElementById("weiter-button")
+    .addEventListener("click", geheZuNaechster);
+
+  // 6) Event-Listener „Quiz zurücksetzen“
+  document
+    .getElementById("quiz-reset-button")
+    .addEventListener("click", resetQuiz);
+});
+
+// ======================== END: quiz.js ========================
+
 
     let quizItems = [];
     let liveMode = false;
