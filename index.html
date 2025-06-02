@@ -23,7 +23,8 @@
 		<h3>{ GeoGuessr }</h3>
 		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button>
 		<h3>{ Will You Snail? }</h3>
-		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button>
+		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button> <br> <br>
+		<button onclick="GoToThaiURL()", type="submit">RTGS</button>
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
 		<br></br>
@@ -52,6 +53,7 @@
 		const woliengineURL = "woliengine.html"; 
 		const wolihistoryURL = "wolihistory.html"; //Error.html
 		const wyssquiddbURL = "squidDBIndex.html"; //Error.html
+		const thaiURL = "thai.html"; //Error.html
 		
 		function GoToWYSSquidDBUrl() {
 			window.location.replace(wyssquiddbURL);
@@ -68,6 +70,10 @@
 				
 		function GoToWoLiHistoryURL() {
 			window.location.replace(wolihistoryURL);
+		}
+		
+		function GoToThaiURL() {
+			window.location.replace(thaiURL);
 		}
 	
 		function SubmitPassword() {

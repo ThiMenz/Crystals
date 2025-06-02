@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTGS Lernseite</title>
+  <!-- Google Font für bessere Typografie -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #f5f7fa;
+      --accent-color: #ffba08;
+      --text-color: #333;
+      --bg-color: #f9f9f9;
+      --table-header-bg: #e1e8f0;
+      --table-row-hover: #eef4fb;
+      --border-radius: 8px;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      font-weight: 500;
+      text-align: center;
+      margin: 40px 0 20px;
+      color: var(--primary-color);
+      position: relative;
+    }
+
+    h2::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background-color: var(--accent-color);
+      margin: 8px auto 0;
+      border-radius: 2px;
+    }
+
+    .section {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    thead {
+      background-color: var(--table-header-bg);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      font-size: 1.2rem;
+      border-bottom: 1px solid #e0e0e0;
+      transition: background-color var(--transition-speed);
+    }
+
+    tbody tr:hover {
+      background-color: var(--table-row-hover);
+    }
+
+    th {
+      font-weight: 500;
+      font-size: 1.3rem;
+    }
+
+    .large-char {
+      font-size: 2.5rem;
+      font-weight: 600;
+    }
+
+    /* Quiz-Bereich */
+    .quiz-container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .quiz-container button {
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
+    }
+
+    .quiz-container button:hover {
+      background-color: var(--accent-color);
+      transform: translateY(-2px);
+    }
+
+    .quiz-container button:active {
+      transform: translateY(0);
+    }
+
+    #settings label {
+      font-size: 1rem;
+      color: var(--text-color);
+    }
+
+    #settings input {
+      width: 60px;
+      padding: 8px;
+      margin-left: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      transition: border-color var(--transition-speed);
+    }
+
+    #settings input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    #quizArea {
+      margin-top: 20px;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    #questions div {
+      margin: 12px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    #questions span {
+      font-size: 1.5rem;
+      margin-right: 10px;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    #questions input {
+      width: 50%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      transition: border-color var(--transition-speed), background-color var(--transition-speed);
+    }
+
+    #questions input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      background-color: #fcfcfc;
+    }
+
+    #checkAnswersBtn {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
+      margin-top: 15px;
+    }
+
+    #checkAnswersBtn:hover {
+      background-color: var(--primary-color);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    #feedback {
+      font-size: 1.1rem;
+      margin-top: 15px;
+      min-height: 1.5rem;
+      color: var(--text-color);
+      transition: color var(--transition-speed);
+    }
+
+    #stats {
+      margin-top: 15px;
+      font-size: 1.1rem;
+      text-align: left;
+      color: var(--text-color);
+    }
+  </style>
+</head>
+<body>
+  <h1>RTGS Lernseite</h1>
+
+  <h2>Komprimierte RTGS-Tabelle: Konsonanten</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>RTGS</th>
+        <th>Onset (Anlaut-Zeichen)</th>
+        <th>Coda (Auslaut-Zeichen)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- RTGS = k -->
+      <tr>
+        <td>k</td>
+        <td class="large-char">ก</td>
+        <td class="large-char">ก, ข, ค, ฆ</td>
+      </tr>
+      <!-- RTGS = kh -->
+      <tr>
+        <td>kh</td>
+        <td class="large-char">ข, ฃ, ค, ฅ, ฆ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = ng -->
+      <tr>
+        <td>ng</td>
+        <td class="large-char">ง</td>
+        <td class="large-char">ง</td>
+      </tr>
+      <!-- RTGS = ch -->
+      <tr>
+        <td>ch</td>
+        <td class="large-char">จ, ฉ, ช, ฌ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = s -->
+      <tr>
+        <td>s</td>
+        <td class="large-char">ซ, ศ, ษ, ส</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = y -->
+      <tr>
+        <td>y</td>
+        <td class="large-char">ญ, ย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = d -->
+      <tr>
+        <td>d</td>
+        <td class="large-char">ฎ, ด</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = t -->
+      <tr>
+        <td>t</td>
+        <td class="large-char">ฏ, ต</td>
+        <td class="large-char">จ, ช, ซ, ฌ, ด, ฎ, ต, ฏ, ถ, ท, ธ, ส, ศ, ษ, ร</td>
+      </tr>
+      <!-- RTGS = th -->
+      <tr>
+        <td>th</td>
+        <td class="large-char">ฐ, ฑ, ฒ, ถ, ท, ธ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = n -->
+      <tr>
+        <td>n</td>
+        <td class="large-char">ณ, น</td>
+        <td class="large-char">ณ, น, ร, ล, ฬ</td>
+      </tr>
+      <!-- RTGS = b -->
+      <tr>
+        <td>b</td>
+        <td class="large-char">บ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = p -->
+      <tr>
+        <td>p</td>
+        <td class="large-char">ป</td>
+        <td class="large-char">ป, บ, พ, ฟ, ภ</td>
+      </tr>
+      <!-- RTGS = ph -->
+      <tr>
+        <td>ph</td>
+        <td class="large-char">ผ, พ, ภ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = f -->
+      <tr>
+        <td>f</td>
+        <td class="large-char">ฝ, ฟ</td>
+        <td class="large-char">ฝ</td>
+      </tr>
+      <!-- RTGS = m -->
+      <tr>
+        <td>m</td>
+        <td class="large-char">ม</td>
+        <td class="large-char">ม</td>
+      </tr>
+      <!-- RTGS = r -->
+      <tr>
+        <td>r</td>
+        <td class="large-char">ร</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = l -->
+      <tr>
+        <td>l</td>
+        <td class="large-char">ล, ฬ</td>
+        <td class="large-char">ล, ฬ</td>
+      </tr>
+      <!-- RTGS = w -->
+      <tr>
+        <td>w</td>
+        <td class="large-char">ว</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = h -->
+      <tr>
+        <td>h</td>
+        <td class="large-char">ห, ฮ</td>
+        <td class="large-char">ห</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Komprimierte RTGS-Tabelle: Vokale</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>RTGS</th>
+        <th>Ohne Final (offene Silben)</th>
+        <th>Mit Final (geschlossene Silben)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- RTGS = a -->
+      <tr>
+        <td>a</td>
+        <td class="large-char">◌า, ◌อ, เ◌ะ, แ◌ะ, โ◌ะ</td>
+        <td class="large-char">◌ะ, เ◌าะ, อ◌อ</td>
+      </tr>
+      <!-- RTGS = am -->
+      <tr>
+        <td>am</td>
+        <td class="large-char">◌ำ</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = i -->
+      <tr>
+        <td>i</td>
+        <td class="large-char">◌ิ, ◌ี</td>
+        <td class="large-char">เ◌ิ</td>
+      </tr>
+      <!-- RTGS = u -->
+      <tr>
+        <td>u</td>
+        <td class="large-char">◌ุ, ◌ู</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = ue -->
+      <tr>
+        <td>ue</td>
+        <td class="large-char">◌ึ, ◌ื</td>
+        <td class="large-char">เ◌ือะ, เ◌ือ</td>
+      </tr>
+      <!-- RTGS = e -->
+      <tr>
+        <td>e</td>
+        <td class="large-char">เ◌, แ◌</td>
+        <td class="large-char">เ◌ะ, แ◌ะ, เ◌าะ</td>
+      </tr>
+      <!-- RTGS = ae -->
+      <tr>
+        <td>ae</td>
+        <td class="large-char">แ◌</td>
+        <td class="large-char">แ◌ะ</td>
+      </tr>
+      <!-- RTGS = oe -->
+      <tr>
+        <td>oe</td>
+        <td class="large-char">เ◌อ, ◌เอย</td>
+        <td class="large-char">เ◌อะ, ◌เออะ</td>
+      </tr>
+      <!-- RTGS = o -->
+      <tr>
+        <td>o</td>
+        <td class="large-char">โ◌, ◌อ</td>
+        <td class="large-char">โ◌ะ, เ◌าะ, ◌อ</td>
+      </tr>
+      <!-- RTGS = ia -->
+      <tr>
+        <td>ia</td>
+        <td class="large-char">เ◌ีย</td>
+        <td class="large-char">เ◌ียะ</td>
+      </tr>
+      <!-- RTGS = uea -->
+      <tr>
+        <td>uea</td>
+        <td class="large-char">เ◌ือ</td>
+        <td class="large-char">เ◌ือะ</td>
+      </tr>
+      <!-- RTGS = ua -->
+      <tr>
+        <td>ua</td>
+        <td class="large-char">◌ัว</td>
+        <td class="large-char">◌ัวะ</td>
+      </tr>
+      <!-- RTGS = ai -->
+      <tr>
+        <td>ai</td>
+        <td class="large-char">ใ◌, ไ◌, ◌าย</td>
+        <td class="large-char">◌ัย</td>
+      </tr>
+      <!-- RTGS = ao -->
+      <tr>
+        <td>ao</td>
+        <td class="large-char">◌าว</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = oi -->
+      <tr>
+        <td>oi</td>
+        <td class="large-char">โ◌ย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = ui -->
+      <tr>
+        <td>ui</td>
+        <td class="large-char">◌ุย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = io -->
+      <tr>
+        <td>io</td>
+        <td class="large-char">◌ิว</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = eo -->
+      <tr>
+        <td>eo</td>
+        <td class="large-char">เ◌ว</td>
+        <td class="large-char">เ◌็ว</td>
+      </tr>
+      <!-- RTGS = aeo -->
+      <tr>
+        <td>aeo</td>
+        <td class="large-char">แ◌ว</td>
+        <td class="large-char">แ◌็ว</td>
+      </tr>
+      <!-- RTGS = oei -->
+      <tr>
+        <td>oei</td>
+        <td class="large-char">เ◌ย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = ueai -->
+      <tr>
+        <td>ueai</td>
+        <td class="large-char">เ◌ือย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = uai -->
+      <tr>
+        <td>uai</td>
+        <td class="large-char">◌วย</td>
+        <td class="large-char">—</td>
+      </tr>
+      <!-- RTGS = iao -->
+      <tr>
+        <td>iao</td>
+        <td class="large-char">เ◌ียว</td>
+        <td class="large-char">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section" id="quiz">
+    <h2>2. Interaktiver Übersetzungstest</h2>
+    <p>Wähle eine der beiden Testvarianten aus:</p>
+    <div class="quiz-container">
+      <button onclick="initQuiz(false)">Modus: Nachträgliche Überprüfung</button>
+      <button onclick="initQuiz(true)">Modus: Live-Feedback</button>
+      
+      <div id="settings" style="margin-top:20px; text-align:left; display:none;">
+        <label>Anzahl Silben:
+          <input type="number" id="syllableCount" value="5" min="1" max="20">
+        </label>
+        <button onclick="startQuiz()">Quiz starten</button>
+      </div>
+
+      <div id="quizArea" style="display:none; margin-top:20px;">
+        <div id="questions"></div>
+        <button id="checkAnswersBtn" onclick="checkAnswers()" style="display:none;">Antworten überprüfen</button>
+        <div id="feedback" class="feedback"></div>
+        <div id="stats" class="stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Listen der RTGS-Komponenten
+    const onsets = [
+      {thai: 'ก', rtgs: 'k'}, {thai: 'ข', rtgs: 'kh'}, {thai: 'ค', rtgs: 'kh'}, {thai: 'ฆ', rtgs: 'kh'},
+      {thai: 'ง', rtgs: 'ng'}, {thai: 'จ', rtgs: 'ch'}, {thai: 'ช', rtgs: 'ch'}, {thai: 'ซ', rtgs: 's'}, {thai: 'ฌ', rtgs: 'ch'},
+      {thai: 'ด', rtgs: 'd'}, {thai: 'ต', rtgs: 't'}, {thai: 'ถ', rtgs: 'th'}, {thai: 'ท', rtgs: 'th'}, {thai: 'ธ', rtgs: 'th'},
+      {thai: 'น', rtgs: 'n'}, {thai: 'บ', rtgs: 'b'}, {thai: 'ป', rtgs: 'p'}, {thai: 'ผ', rtgs: 'ph'}, {thai: 'ฝ', rtgs: 'f'}, {thai: 'พ', rtgs: 'ph'}, {thai: 'ฟ', rtgs: 'f'}, {thai: 'ภ', rtgs: 'ph'},
+      {thai: 'ม', rtgs: 'm'}, {thai: 'ย', rtgs: 'y'}, {thai: 'ร', rtgs: 'r'}, {thai: 'ล', rtgs: 'l'}, {thai: 'ว', rtgs: 'w'},
+      {thai: 'ส', rtgs: 's'}, {thai: 'ห', rtgs: 'h'}, {thai: 'ฬ', rtgs: 'l'},
+      {thai: 'กก', rtgs: 'kk'}, {thai: 'กร', rtgs: 'kr'}, {thai: 'กล', rtgs: 'kl'}, {thai: 'กว', rtgs: 'kw'},
+      {thai: 'พร', rtgs: 'phr'}, {thai: 'ปร', rtgs: 'pr'}, {thai: 'พล', rtgs: 'phl'},
+      {thai: 'ทร', rtgs: 'thr'}, {thai: 'คร', rtgs: 'khr'}, {thai: 'ตร', rtgs: 'tr'}, {thai: 'บล', rtgs: 'bl'},
+      {thai: 'ฟร', rtgs: 'fr'}
+    ];
+    const codas = [
+      {thai: 'ก', rtgs: 'k'}, {thai: 'ข', rtgs: 'k'}, {thai: 'ค', rtgs: 'k'}, {thai: 'ฆ', rtgs: 'k'}, {thai: 'ง', rtgs: 'ng'},
+      {thai: 'จ', rtgs: 't'}, {thai: 'ช', rtgs: 't'}, {thai: 'ซ', rtgs: 't'}, {thai: 'ฌ', rtgs: 't'},
+      {thai: 'ด', rtgs: 't'}, {thai: 'ฎ', rtgs: 't'}, {thai: 'ต', rtgs: 't'}, {thai: 'ฏ', rtgs: 't'}, {thai: 'ท', rtgs: 't'}, {thai: 'ถ', rtgs: 't'}, {thai: 'ธ', rtgs: 't'},
+      {thai: 'น', rtgs: 'n'}, {thai: 'ณ', rtgs: 'n'}, {thai: 'บ', rtgs: 'p'}, {thai: 'ป', rtgs: 'p'}, {thai: 'พ', rtgs: 'p'}, {thai: 'ฟ', rtgs: 'p'}, {thai: 'ภ', rtgs: 'p'},
+      {thai: 'ม', rtgs: 'm'}, {thai: 'ย', rtgs: 'i'}, {thai: 'ร', rtgs: 't'}, {thai: 'ล', rtgs: 'l'}, {thai: 'ฬ', rtgs: 'l'}, {thai: 'ว', rtgs: 'w'},
+      {thai: 'ส', rtgs: 't'}, {thai: 'ศ', rtgs: 't'}, {thai: 'ษ', rtgs: 't'}, {thai: 'ห', rtgs: 'h'}, {thai: 'ฝ', rtgs: 'f'}
+    ];
+    const vowels = [
+      {thai: 'ะ', rtgs: 'a'}, {thai: 'า', rtgs: 'a'}, {thai: 'ิ', rtgs: 'i'}, {thai: 'ี', rtgs: 'i'},
+      {thai: 'ุ', rtgs: 'u'}, {thai: 'ู', rtgs: 'u'}, {thai: 'เ', rtgs: 'e'}, {thai: 'แ', rtgs: 'ae'}, {thai: 'โ', rtgs: 'o'},
+      {thai: 'ใ', rtgs: 'ai'}, {thai: 'ไ', rtgs: 'ai'}, {thai: 'ำ', rtgs: 'am'}, {thai: 'เอ', rtgs: 'e'}, {thai: 'อ', rtgs: 'o'}
+    ];
+
+    let quizItems = [];
+    let liveMode = false;
+    let totalQuestions = 0;
+    let correctAnswers = 0;
+
+    // Hilfsfunktion: Zufällige Auswahl aus Array
+    function randomPick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // Erzeuge eine zufällige Silbe (ohne Tonzeichen)
+    function generateSyllable() {
+      const onset = randomPick(onsets);
+      const vowel = randomPick(vowels);
+      // Optional Coda (50% Chance)
+      let coda = {thai: '', rtgs: ''};
+      if (Math.random() < 0.5) {
+        coda = randomPick(codas);
+      }
+      const thaiSyl = onset.thai + vowel.thai + coda.thai;
+      const rtgsSyl = onset.rtgs + vowel.rtgs + coda.rtgs;
+      return {thai: thaiSyl, rtgs: rtgsSyl};
+    }
+
+    // Quiz initialisieren
+    function initQuiz(isLive) {
+      liveMode = isLive;
+      document.getElementById('settings').style.display = 'block';
+      document.getElementById('quizArea').style.display = 'none';
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('stats').textContent = '';
+    }
+
+    // Quiz starten
+    function startQuiz() {
+      quizItems = [];
+      totalQuestions = parseInt(document.getElementById('syllableCount').value);
+      correctAnswers = 0;
+      const questionsDiv = document.getElementById('questions');
+      questionsDiv.innerHTML = '';
+
+      for (let i = 0; i < totalQuestions; i++) {
+        const syl = generateSyllable();
+        quizItems.push(syl);
+        const rowDiv = document.createElement('div');
+        rowDiv.style.margin = '10px 0';
+        const label = document.createElement('span');
+        label.textContent = `${i + 1}. ${syl.thai} → `;
+        label.style.fontSize = '1.5rem';
+        const input = document.createElement('input');
+        input.id = `input-${i}`;
+        input.setAttribute('data-index', i);
+        input.placeholder = 'RTGS eingeben';
+        if (liveMode) {
+          input.addEventListener('input', liveCheck);
+        }
+        rowDiv.appendChild(label);
+        rowDiv.appendChild(input);
+        questionsDiv.appendChild(rowDiv);
+      }
+
+      document.getElementById('checkAnswersBtn').style.display = liveMode ? 'none' : 'inline-block';
+      document.getElementById('quizArea').style.display = 'block';
+      document.getElementById('settings').style.display = 'none';
+      updateStats();
+    }
+
+    // Live-Feedback Handler
+    function liveCheck(event) {
+      const idx = parseInt(event.target.getAttribute('data-index'));
+      const userInput = event.target.value.trim().toLowerCase();
+      const correct = quizItems[idx].rtgs.toLowerCase();
+      const feedbackDiv = document.getElementById('feedback');
+      if (userInput === correct) {
+        event.target.style.borderColor = 'green';
+        feedbackDiv.textContent = `Silbe ${idx + 1} korrekt!`;
+        feedbackDiv.style.color = '#333'; /* verwende Standard-Textfarbe */
+      } else {
+        event.target.style.borderColor = userInput === '' ? '#ccc' : 'red';
+        feedbackDiv.textContent = '';
+        feedbackDiv.style.color = '#333';
+      }
+      computeLiveStats();
+    }
+
+    // Nachträgliche Überprüfung
+    function checkAnswers() {
+      const feedbackDiv = document.getElementById('feedback');
+      feedbackDiv.innerHTML = '';
+      correctAnswers = 0;
+      quizItems.forEach((item, i) => {
+        const userInput = document.getElementById(`input-${i}`).value.trim().toLowerCase();
+        const correct = item.rtgs.toLowerCase();
+        const inputField = document.getElementById(`input-${i}`);
+        if (userInput === correct) {
+          inputField.style.borderColor = 'green';
+          correctAnswers++;
+        } else {
+          inputField.style.borderColor = 'red';
+          const hint = document.createElement('div');
+          hint.style.color = 'gray';
+          hint.textContent = `Richtig: ${correct}`;
+          feedbackDiv.appendChild(hint);
+        }
+      });
+      feedbackDiv.style.color = '#333';
+      updateStats();
+    }
+
+    // Statistik aktualisieren
+    function updateStats() {
+      const statsDiv = document.getElementById('stats');
+      statsDiv.textContent = `Fragen: ${totalQuestions}  |  Korrekt: ${correctAnswers}`;
+    }
+
+    function computeLiveStats() {
+      let correct = 0;
+      quizItems.forEach((item, i) => {
+        const userInput = document.getElementById(`input-${i}`).value.trim().toLowerCase();
+        if (userInput === item.rtgs.toLowerCase()) {
+          correct++;
+        }
+      });
+      correctAnswers = correct;
+      updateStats();
+    }
+  </script>
+</body>
+</html>

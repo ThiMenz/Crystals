@@ -58,7 +58,7 @@ mmmtt*  : Spoon L - Colloseum - LFIN
 mmmttd* : G2 - G23 Tip - LFIN
 mmt     : G2 L
 mmtd    : Spoon - Colloseum - Sword L
-mmtd*   : Torch R - LFIN
+mmtd*   : Sword R - LFIN
 mmtdd   : G34 tip
 mmtddd  : Colloseum R - LFIN
 mmtm*   : Colloseum - LFIN (rather Sword - Stick than Plane - Stick)
