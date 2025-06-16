@@ -25,6 +25,7 @@
 		<h3>{ Will You Snail? }</h3>
 		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button> <br> <br>
 		<button onclick="GoToThaiURL()", type="submit">RTGS</button>
+		<button onclick="GoTothaiProvAbbrevURL()", type="submit">Thai Province Abbreviations</button>
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
 		<br></br>
@@ -54,6 +55,7 @@
 		const wolihistoryURL = "wolihistory.html"; //Error.html
 		const wyssquiddbURL = "squidDBIndex.html"; //Error.html
 		const thaiURL = "thai.html"; //Error.html
+		const thaiProvAbbrevURL = "thaiProvinceAbbreviations.html"; //Error.html
 		
 		function GoToWYSSquidDBUrl() {
 			window.location.replace(wyssquiddbURL);
@@ -74,6 +76,10 @@
 		
 		function GoToThaiURL() {
 			window.location.replace(thaiURL);
+		}
+		
+		function GoTothaiProvAbbrevURL() {
+			window.location.replace(thaiProvAbbrevURL);
 		}
 	
 		function SubmitPassword() {

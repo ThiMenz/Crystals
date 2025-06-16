@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thai Provinces Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .quiz-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(45deg, #10ac84, #00d2d3);
+            box-shadow: 0 4px 15px rgba(16, 172, 132, 0.3);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(116, 185, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .question-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3436;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(252, 182, 159, 0.3);
+        }
+
+        .input-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 3px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .answer-input:focus {
+            border-color: #74b9ff;
+            box-shadow: 0 0 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .answer-input.correct {
+            border-color: #00b894;
+            background: #d1f2eb;
+        }
+
+        .answer-input.incorrect {
+            border-color: #e74c3c;
+            background: #fadbd8;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-height: 25px;
+        }
+
+        .feedback.correct {
+            color: #00b894;
+        }
+
+        .feedback.incorrect {
+            color: #e74c3c;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894, #00cec9);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #fd79a8, #e84393);
+            color: white;
+            box-shadow: 0 4px 15px rgba(253, 121, 168, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .final-stats {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            border-radius: 20px;
+            margin-top: 20px;
+        }
+
+        .final-stats h2 {
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #e17055;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .question {
+                font-size: 1.4rem;
+                padding: 15px;
+            }
+            
+            .answer-input {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇹🇭 Thai Provinces Quiz</h1>
+            <p>Test your knowledge of Thai province names and abbreviations</p>
+        </div>
+
+        <div class="quiz-card">
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="setMode('nameToAbbr')">Name → Abbreviation</button>
+                <button class="mode-btn" onclick="setMode('abbrToName')">Abbreviation → Name</button>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="score">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgTime">0.0s</div>
+                    <div class="stat-label">Avg Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="streak">0</div>
+                    <div class="stat-label">Streak</div>
+                </div>
+            </div>
+
+            <div class="timer">Time: <span id="currentTime">0.0</span>s</div>
+
+            <div class="question-container">
+                <div class="question" id="questionText">Click "Start Quiz" to begin!</div>
+                <div class="input-container">
+                    <input type="text" class="answer-input" id="answerInput" placeholder="Enter your answer..." disabled>
+                </div>
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn btn-primary" onclick="startQuiz()" id="startBtn">Start Quiz</button>
+                <button class="btn btn-secondary" onclick="skipQuestion()" id="skipBtn" disabled>Skip Question</button>
+                <button class="btn btn-secondary" onclick="resetQuiz()" id="resetBtn">Reset Stats</button>
+            </div>
+        </div>
+
+        <div class="final-stats" id="finalStats" style="display: none;">
+            <h2>🎉 Quiz Complete!</h2>
+            <p id="finalStatsText"></p>
+        </div>
+    </div>
+
+    <script>
+        const provinces = [
+            {name: "Amnat Charoen", abbr: "ACH"},
+            {name: "Ang Thong", abbr: "ATH"},
+            {name: "Bueng Kan", abbr: "BK"},
+            {name: "Buri Ram", abbr: "BR"},
+            {name: "Chachoengsao", abbr: "CHCH"},
+            {name: "Chai Nat", abbr: "CHN"},
+            {name: "Chaiyaphum", abbr: "CHY"},
+            {name: "Chanthaburi", abbr: "CHB"},
+            {name: "Chiang Mai", abbr: "CHM"},
+            {name: "Chiang Rai", abbr: "CHR"},
+            {name: "Chonburi", abbr: "CHB"},
+            {name: "Chumphon", abbr: "CHPH"},
+            {name: "Kalasin", abbr: "KS"},
+            {name: "Kamphaeng Phet", abbr: "KPH"},
+            {name: "Kanchanaburi", abbr: "KCH"},
+            {name: "Khon Kaen", abbr: "KHK"},
+            {name: "Krabi", abbr: "KB"},
+            {name: "Lampang", abbr: "LP"},
+            {name: "Lamphun", abbr: "LPH"},
+            {name: "Loei", abbr: "LY"},
+            {name: "Lopburi", abbr: "LB"},
+            {name: "Mae Hong Son", abbr: "MS"},
+            {name: "Maha Sarakham", abbr: "MKH"},
+            {name: "Mukdahan", abbr: "MH"},
+            {name: "Nakhon Nayok", abbr: "NY"},
+            {name: "Nakhon Pathom", abbr: "NTH"},
+            {name: "Nakhon Phanom", abbr: "NPH"},
+            {name: "Nakhon Ratchasima", abbr: "NM"},
+            {name: "Nakhon Sawan", abbr: "NW"},
+            {name: "Nakhon Si Thammarat", abbr: "NS"},
+            {name: "Nan", abbr: "NN"},
+            {name: "Narathiwat", abbr: "NTH"},
+            {name: "Nong Bua Lam Phu", abbr: "NPH"},
+            {name: "Nong Khai", abbr: "NKH"},
+            {name: "Nonthaburi", abbr: "NB"},
+            {name: "Pathum Thani", abbr: "PTH"},
+            {name: "Pattani", abbr: "PN"},
+            {name: "Phang nga", abbr: "PHNG"},
+            {name: "Phatthalung", abbr: "PHTH"},
+            {name: "Phayao", abbr: "PHY"},
+            {name: "Phetchabun", abbr: "PHCH"},
+            {name: "Phetchaburi", abbr: "PHB"},
+            {name: "Phichit", abbr: "PHCH"},
+            {name: "Phitsanulok", abbr: "PHL"},
+            {name: "Phra Nakhon Si Ayutthaya", abbr: "AY"},
+            {name: "Phrae", abbr: "PHR"},
+            {name: "Phuket", abbr: "PHK"},
+            {name: "PrachinBuri", abbr: "PCH"},
+            {name: "Prachuap Khiri Khan", abbr: "PKH"},
+            {name: "Ranong", abbr: "RN"},
+            {name: "Ratchaburi", abbr: "RB"},
+            {name: "Rayong", abbr: "RY"},
+            {name: "Roi Et", abbr: "RE"},
+            {name: "Sa Kaeo", abbr: "SK"},
+            {name: "Sakon Nakhon", abbr: "SN"},
+            {name: "Samut Prakan", abbr: "SP"},
+            {name: "Samut Sakhon", abbr: "SKH"},
+            {name: "Samut Songkhram", abbr: "SS"},
+            {name: "Saraburi", abbr: "SB"},
+            {name: "Satun", abbr: "ST"},
+            {name: "Si Sa Ket", abbr: "SK"},
+            {name: "Sing Buri", abbr: "SH"},
+            {name: "Songkhla", abbr: "SKH"},
+            {name: "Sukhothai", abbr: "STH"},
+            {name: "SuphanBuri", abbr: "SPH"},
+            {name: "SuratThani", abbr: "ST"},
+            {name: "Surin", abbr: "SR"},
+            {name: "Tak", abbr: "TK"},
+            {name: "Trang", abbr: "TNG"},
+            {name: "Trat", abbr: "TR"},
+            {name: "Ubon Ratchathani", abbr: "UB"},
+            {name: "Udon Thani", abbr: "UD"},
+            {name: "Uthai Thani", abbr: "UN"},
+            {name: "Uttaradit", abbr: "UT"},
+            {name: "Yala", abbr: "YL"},
+            {name: "Yasothon", abbr: "YS"}
+        ];
+
+        let currentMode = 'nameToAbbr';
+        let currentQuestion = null;
+        let questionStartTime = null;
+        let quizActive = false;
+        let stats = {
+            correct: 0,
+            total: 0,
+            totalTime: 0,
+            currentStreak: 0,
+            bestStreak: 0
+        };
+        let timer = null;
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (quizActive) {
+                generateQuestion();
+            }
+        }
+
+        function startQuiz() {
+            quizActive = true;
+            document.getElementById('startBtn').textContent = 'Next Question';
+            document.getElementById('skipBtn').disabled = false;
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('finalStats').style.display = 'none';
+            generateQuestion();
+        }
+
+        function generateQuestion() {
+            const randomProvince = provinces[Math.floor(Math.random() * provinces.length)];
+            currentQuestion = randomProvince;
+            
+            const questionText = document.getElementById('questionText');
+            const answerInput = document.getElementById('answerInput');
+            const feedback = document.getElementById('feedback');
+            
+            if (currentMode === 'nameToAbbr') {
+                questionText.textContent = `What is the abbreviation for: ${randomProvince.name}?`;
+            } else {
+                questionText.textContent = `Which province has the abbreviation: ${randomProvince.abbr}?`;
+            }
+            
+            answerInput.value = '';
+            answerInput.className = 'answer-input';
+            answerInput.focus();
+            feedback.textContent = '';
+            feedback.className = 'feedback';
+            
+            questionStartTime = Date.now();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(() => {
+                if (questionStartTime) {
+                    const elapsed = ((Date.now() - questionStartTime) / 1000).toFixed(1);
+                    document.getElementById('currentTime').textContent = elapsed;
+                }
+            }, 100);
+        }
+
+        function checkAnswer() {
+            if (!currentQuestion || !quizActive) return;
+            
+            const userAnswer = document.getElementById('answerInput').value.trim().toLowerCase();
+            const correctAnswer = currentMode === 'nameToAbbr' 
+                ? currentQuestion.abbr.toLowerCase() 
+                : currentQuestion.name.toLowerCase();
+            
+            const questionTime = (Date.now() - questionStartTime) / 1000;
+            const answerInput = document.getElementById('answerInput');
+            const feedback = document.getElementById('feedback');
+            
+            stats.total++;
+            stats.totalTime += questionTime;
+            
+            if (userAnswer === correctAnswer) {
+                stats.correct++;
+                stats.currentStreak++;
+                if (stats.currentStreak > stats.bestStreak) {
+                    stats.bestStreak = stats.currentStreak;
+                }
+                
+                answerInput.className = 'answer-input correct';
+                feedback.textContent = '✓ Correct!';
+                feedback.className = 'feedback correct';
+            } else {
+                stats.currentStreak = 0;
+                answerInput.className = 'answer-input incorrect';
+                feedback.textContent = `✗ Incorrect. The answer is: ${currentMode === 'nameToAbbr' ? currentQuestion.abbr : currentQuestion.name}`;
+                feedback.className = 'feedback incorrect';
+            }
+            
+            updateStats();
+            clearInterval(timer);
+            
+            setTimeout(() => {
+                generateQuestion();
+            }, 2000);
+        }
+
+        function skipQuestion() {
+            if (!quizActive) return;
+            
+            stats.total++;
+            stats.currentStreak = 0;
+            const questionTime = (Date.now() - questionStartTime) / 1000;
+            stats.totalTime += questionTime;
+            
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = `Skipped. The answer was: ${currentMode === 'nameToAbbr' ? currentQuestion.abbr : currentQuestion.name}`;
+            feedback.className = 'feedback incorrect';
+            
+            updateStats();
+            clearInterval(timer);
+            
+            setTimeout(() => {
+                generateQuestion();
+            }, 2000);
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = `${stats.correct}/${stats.total}`;
+            
+            const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            const avgTime = stats.total > 0 ? (stats.totalTime / stats.total).toFixed(1) : '0.0';
+            document.getElementById('avgTime').textContent = `${avgTime}s`;
+            
+            document.getElementById('streak').textContent = stats.currentStreak;
+            
+            const progress = Math.min((stats.total / provinces.length) * 100, 100);
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            if (stats.total >= provinces.length) {
+                showFinalStats();
+            }
+        }
+
+        function showFinalStats() {
+            quizActive = false;
+            clearInterval(timer);
+            
+            const finalStats = document.getElementById('finalStats');
+            const finalStatsText = document.getElementById('finalStatsText');
+            
+            const accuracy = Math.round((stats.correct / stats.total) * 100);
+            const avgTime = (stats.totalTime / stats.total).toFixed(1);
+            
+            finalStatsText.innerHTML = `
+                <strong>Final Score:</strong> ${stats.correct}/${stats.total} (${accuracy}%)<br>
+                <strong>Average Time:</strong> ${avgTime} seconds per question<br>
+                <strong>Best Streak:</strong> ${stats.bestStreak} correct answers<br>
+                <strong>Total Time:</strong> ${(stats.totalTime / 60).toFixed(1)} minutes
+            `;
+            
+            finalStats.style.display = 'block';
+            
+            document.getElementById('startBtn').textContent = 'Start New Quiz';
+            document.getElementById('skipBtn').disabled = true;
+            document.getElementById('answerInput').disabled = true;
+        }
+
+        function resetQuiz() {
+            quizActive = false;
+            clearInterval(timer);
+            
+            stats = {
+                correct: 0,
+                total: 0,
+                totalTime: 0,
+                currentStreak: 0,
+                bestStreak: 0
+            };
+            
+            updateStats();
+            
+            document.getElementById('questionText').textContent = 'Click "Start Quiz" to begin!';
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').className = 'answer-input';
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('currentTime').textContent = '0.0';
+            document.getElementById('startBtn').textContent = 'Start Quiz';
+            document.getElementById('skipBtn').disabled = true;
+            document.getElementById('finalStats').style.display = 'none';
+        }
+
+        // Event listeners
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        document.getElementById('startBtn').addEventListener('click', function() {
+            if (this.textContent === 'Start New Quiz') {
+                resetQuiz();
+                startQuiz();
+            }
+        });
+
+        // Initialize stats display
+        updateStats();
+    </script>
+</body>
+</html>
