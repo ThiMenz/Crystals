@@ -18,14 +18,15 @@
 		<h1>Möhrchens Website</h1>
 		<h3>{ Programming }</h3>
 		<h3>{ Pi Memorizing }</h3>
-		<button onclick="LoadWoLiEngine()", type="submit">WoLiEngine v2</button> <br> <br>
+		<button onclick="LoadWoLiEngine()", type="submit">WoLiEngine v2</button>
+		<button onclick="LoadWoLiEngine21()", type="submit">WoLiEngine v2.1</button> <br> <br>
 		<button onclick="GoToWoLiHistoryURL()", type="submit">WoLi History</button>
 		<h3>{ GeoGuessr }</h3>
-		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button>
-		<h3>{ Will You Snail? }</h3>
-		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button> <br> <br>
+		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button> <br> <br>
 		<button onclick="GoToThaiURL()", type="submit">RTGS</button>
 		<button onclick="GoTothaiProvAbbrevURL()", type="submit">Thai Province Abbreviations</button>
+		<h3>{ Will You Snail? }</h3>
+		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button> <br> <br>
 		<!--<h3>Use Website as Guest</h3>
 		<button type="submit">Continue as Guest</button>
 		<br></br>
@@ -52,6 +53,7 @@
 		const errorURL = "Error.html"; //error.html
 		const geogessrURL = "geoguessr.html"; 
 		const woliengineURL = "woliengine.html"; 
+		const woliengine2URL = "wolienginev2.html"; 
 		const wolihistoryURL = "wolihistory.html"; //Error.html
 		const wyssquiddbURL = "squidDBIndex.html"; //Error.html
 		const thaiURL = "thai.html"; //Error.html
@@ -67,6 +69,10 @@
 		
 		function LoadWoLiEngine() {
 			window.location.replace(woliengineURL);
+		}
+		
+		function LoadWoLiEngine21() {
+			window.location.replace(woliengine2URL);
 		}
 		
 				

@@ -1,0 +1,109 @@
+
+
+
+
+**B** 
+**S**
+**L**
+**N**
+**P**
+**PH**
+**R**
+**T **
+**Y**
+
+**B** 
+**S**
+**L**
+**N**
+**P**
+**PH**
+**R**
+**T **
+**Y**
+
+**B** 
+**S**
+**L**
+**N**
+**P**
+**PH**
+**R**
+**T **
+**Y**
+
+**B** 
+**S**
+**L**
+**N**
+**P**
+**PH**
+**R**
+**T **
+**Y**
+
+**B** 
+**S**
+**L**
+**N**
+**P**
+**PH**
+**R**
+**T **
+**Y**
+
+11 Fälle die man sich merken muss:
+> BK 
+> MS
+> YL
+> NN
+> RN
+
+NS Nakhon Si Thammarat
+BK Bueng Kan
+YS Yasothon
+RN Ranong
+LP Lupang
+NN Nan
+MS Mae Hong Son
+PHB Phetchaburi
+STH Sukothai
+YL Yala
+PN Pattani
+TR Trat
+
+
+
+BK
+KB
+MS
+YL
+NN
+
+RN
+NS
+PN
+LP
+PHB
+
+TR
+YS
+STH
+NTH
+CHCH
+
+KCH
+KHK
+KTH
+NPH
+
+0 - Wohnen
+1 - Arbeiten
+2 - Urlaub
+3 - Verlieben
+4 - Clown
+5 - Kämpfen
+6 - Famous
+7 - Glücksspielen
+8 - Sport
+9 - Sterben
