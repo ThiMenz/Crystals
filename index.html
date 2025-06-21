@@ -24,7 +24,8 @@
 		<h3>{ GeoGuessr }</h3>
 		<button onclick="GoToGeoguessrURL()", type="submit">GeoGuessr</button> <br> <br>
 		<button onclick="GoToThaiURL()", type="submit">RTGS</button>
-		<button onclick="GoTothaiProvAbbrevURL()", type="submit">Thai Province Abbreviations</button>
+		<button onclick="GoTothaiProvAbbrevURL()", type="submit">Thai Province Abbreviations</button> <br> <br>
+		<button onclick="GoTousaAreaCodesURL()", type="submit">USA Area Codes</button>
 		<h3>{ Will You Snail? }</h3>
 		<button onclick="GoToWYSSquidDBUrl()", type="submit">Squid Database</button> <br> <br>
 		<!--<h3>Use Website as Guest</h3>
@@ -58,6 +59,7 @@
 		const wyssquiddbURL = "squidDBIndex.html"; //Error.html
 		const thaiURL = "thai.html"; //Error.html
 		const thaiProvAbbrevURL = "thaiProvinceAbbreviations.html"; //Error.html
+		const usaAreaCodesURL = "usaareacodes.html"; //Error.html
 		
 		function GoToWYSSquidDBUrl() {
 			window.location.replace(wyssquiddbURL);
@@ -86,6 +88,10 @@
 		
 		function GoTothaiProvAbbrevURL() {
 			window.location.replace(thaiProvAbbrevURL);
+		}
+	
+		function GoTousaAreaCodesURL() {
+			window.location.replace(usaAreaCodesURL);
 		}
 	
 		function SubmitPassword() {
